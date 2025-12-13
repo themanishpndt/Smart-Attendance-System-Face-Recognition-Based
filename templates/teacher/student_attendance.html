@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+
+{% block title %}Student Attendance Records - {{ class_info.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="text-center"><i class="fas fa-calendar-check"></i> Student Attendance Records</h2>
+                    <h4 class="text-center text-muted">{{ class_info.name }}</h4>
+                    <p class="text-center text-muted">{{ class_info.description }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-filter"></i> Filter Attendance Records</h5>
+                </div>
+                <div class="card-body">
+                    <form id="filterForm" class="row">
+                        <div class="col-md-3 mb-3">
+                            <label>Start Date:</label>
+                            <input type="date" id="start_date" class="form-control" 
+                                   value="{{ dates[0]|default('') }}" 
+                                   onchange="convertDateFormat(this)">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>End Date:</label>
+                            <input type="date" id="end_date" class="form-control" 
+                                   value="{{ dates[-1]|default('') }}" 
+                                   onchange="convertDateFormat(this)">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label>Student:</label>
+                            <select id="student_filter" class="form-control">
+                                <option value="">All Students</option>
+                                {% for student in students %}
+                                <option value="{{ student.student_name }}">{{ student.student_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-3 d-flex align-items-end">
+                            <button type="button" id="applyFilter" class="btn btn-primary btn-block">
+                                <i class="fas fa-filter"></i> Apply Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Summary -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Attendance Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Present Days</th>
+                                    <th>Total Days</th>
+                                    <th>Attendance Rate</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="summary-table-body">
+                                {% for summary in attendance_summary %}
+                                <tr>
+                                    <td>{{ summary.name }}</td>
+                                    <td>{{ summary.present_count }}</td>
+                                    <td>{{ summary.total_days }}</td>
+                                    <td>{{ summary.attendance_rate }}%</td>
+                                    <td>
+                                        {% if summary.attendance_rate >= 85 %}
+                                            <span class="badge badge-success">Excellent</span>
+                                        {% elif summary.attendance_rate >= 75 %}
+                                            <span class="badge badge-info">Good</span>
+                                        {% elif summary.attendance_rate >= 60 %}
+                                            <span class="badge badge-warning">Average</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Poor</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Attendance -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-table"></i> Detailed Attendance Records</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="attendance-table">
+                            <thead>
+                                <tr>
+                                    <th style="position: sticky; left: 0; background-color: #f8f9fa;">Student Name</th>
+                                    {% for date in dates %}
+                                    <th>{{ date }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody id="attendance-table-body">
+                                {% for student in students %}
+                                <tr>
+                                    <td style="position: sticky; left: 0; background-color: #f8f9fa;">{{ student.student_name }}</td>
+                                    {% for date in dates %}
+                                        {% if date in attendance_records.get(student.student_name, {}) %}
+                                            <td class="bg-success text-white text-center" data-toggle="tooltip" 
+                                                title="Present at {{ attendance_records[student.student_name][date].time }}">
+                                                <i class="fas fa-check"></i>
+                                            </td>
+                                        {% else %}
+                                            <td class="bg-danger text-white text-center" data-toggle="tooltip" title="Absent">
+                                                <i class="fas fa-times"></i>
+                                            </td>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Options -->
+    <div class="row mt-4 mb-5">
+        <div class="col-md-12 text-center">
+            <button class="btn btn-success mr-2" id="exportCSV">
+                <i class="fas fa-file-csv"></i> Export to CSV
+            </button>
+            <button class="btn btn-primary mr-2" id="printReport">
+                <i class="fas fa-print"></i> Print Report
+            </button>
+            <a href="{{ url_for('view_class', class_id=class_info.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Class
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        $('[data-toggle="tooltip"]').tooltip();
+        
+        // Convert date format from yyyy-mm-dd to dd-mm-yyyy
+        function convertDateInputToFilterFormat(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return dateStr;
+        }
+        
+        // Handle date format conversion for filter inputs
+        window.convertDateFormat = function(input) {
+            const dateValue = input.value;
+            // Store the original format for filtering
+            if (dateValue) {
+                input.setAttribute('data-filter-value', convertDateInputToFilterFormat(dateValue));
+            }
+        };
+        
+        // Apply filter button click
+        document.getElementById('applyFilter').addEventListener('click', function() {
+            const startDate = document.getElementById('start_date');
+            const endDate = document.getElementById('end_date');
+            const studentName = document.getElementById('student_filter').value;
+            
+            // Create form data
+            const formData = new FormData();
+            if (startDate.getAttribute('data-filter-value')) {
+                formData.append('start_date', startDate.getAttribute('data-filter-value'));
+            }
+            if (endDate.getAttribute('data-filter-value')) {
+                formData.append('end_date', endDate.getAttribute('data-filter-value'));
+            }
+            if (studentName) {
+                formData.append('student_name', studentName);
+            }
+            
+            // Send request
+            fetch('/teacher/class/{{ class_info.id }}/student_attendance/filter', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateAttendanceTable(data);
+                    updateSummaryTable(data.attendance_summary);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while filtering records.');
+            });
+        });
+        
+        // Export to CSV
+        document.getElementById('exportCSV').addEventListener('click', function() {
+            // Get the table data
+            const table = document.getElementById('attendance-table');
+            let csv = [];
+            
+            // Get headers
+            let headers = [];
+            const headerCells = table.querySelectorAll('thead th');
+            headerCells.forEach(cell => {
+                headers.push(cell.textContent.trim());
+            });
+            csv.push(headers.join(','));
+            
+            // Get rows
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                let rowData = [];
+                const cells = row.querySelectorAll('td');
+                cells.forEach(cell => {
+                    // If cell has check icon, export as 'Present', otherwise 'Absent'
+                    if (cell.querySelector('.fa-check')) {
+                        rowData.push('Present');
+                    } else if (cell.querySelector('.fa-times')) {
+                        rowData.push('Absent');
+                    } else {
+                        rowData.push(cell.textContent.trim());
+                    }
+                });
+                csv.push(rowData.join(','));
+            });
+            
+            // Download CSV
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `attendance_{{ class_info.name }}_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+        
+        // Print report
+        document.getElementById('printReport').addEventListener('click', function() {
+            window.print();
+        });
+        
+        // Function to update attendance table
+        function updateAttendanceTable(data) {
+            const tableBody = document.getElementById('attendance-table-body');
+            const tableHead = document.getElementById('attendance-table').querySelector('thead tr');
+            
+            // Clear existing headers except first column
+            while (tableHead.children.length > 1) {
+                tableHead.removeChild(tableHead.lastChild);
+            }
+            
+            // Add date headers
+            data.dates.forEach(date => {
+                const th = document.createElement('th');
+                th.textContent = date;
+                tableHead.appendChild(th);
+            });
+            
+            // Clear existing rows
+            tableBody.innerHTML = '';
+            
+            // Add student rows
+            data.students.forEach(studentName => {
+                const tr = document.createElement('tr');
+                
+                // Add student name column
+                const tdName = document.createElement('td');
+                tdName.style.position = 'sticky';
+                tdName.style.left = '0';
+                tdName.style.backgroundColor = '#f8f9fa';
+                tdName.textContent = studentName;
+                tr.appendChild(tdName);
+                
+                // Add attendance status for each date
+                data.dates.forEach(date => {
+                    const td = document.createElement('td');
+                    td.className = 'text-center';
+                    
+                    if (data.attendance_records[studentName] && 
+                        data.attendance_records[studentName][date]) {
+                        // Present
+                        td.className = 'bg-success text-white text-center';
+                        td.setAttribute('data-toggle', 'tooltip');
+                        td.setAttribute('title', `Present at ${data.attendance_records[studentName][date].time}`);
+                        
+                        const icon = document.createElement('i');
+                        icon.className = 'fas fa-check';
+                        td.appendChild(icon);
+                    } else {
+                        // Absent
+                        td.className = 'bg-danger text-white text-center';
+                        td.setAttribute('data-toggle', 'tooltip');
+                        td.setAttribute('title', 'Absent');
+                        
+                        const icon = document.createElement('i');
+                        icon.className = 'fas fa-times';
+                        td.appendChild(icon);
+                    }
+                    
+                    tr.appendChild(td);
+                });
+                
+                tableBody.appendChild(tr);
+            });
+            
+            // Reinitialize tooltips
+            $('[data-toggle="tooltip"]').tooltip();
+        }
+        
+        // Function to update summary table
+        function updateSummaryTable(summaryData) {
+            const tableBody = document.getElementById('summary-table-body');
+            
+            // Clear existing rows
+            tableBody.innerHTML = '';
+            
+            // Add summary rows
+            summaryData.forEach(summary => {
+                const tr = document.createElement('tr');
+                
+                // Student name
+                const tdName = document.createElement('td');
+                tdName.textContent = summary.name;
+                tr.appendChild(tdName);
+                
+                // Present days
+                const tdPresent = document.createElement('td');
+                tdPresent.textContent = summary.present_count;
+                tr.appendChild(tdPresent);
+                
+                // Total days
+                const tdTotal = document.createElement('td');
+                tdTotal.textContent = summary.total_days;
+                tr.appendChild(tdTotal);
+                
+                // Attendance rate
+                const tdRate = document.createElement('td');
+                tdRate.textContent = summary.attendance_rate + '%';
+                tr.appendChild(tdRate);
+                
+                // Status
+                const tdStatus = document.createElement('td');
+                const span = document.createElement('span');
+                span.className = 'badge';
+                
+                if (summary.attendance_rate >= 85) {
+                    span.className += ' badge-success';
+                    span.textContent = 'Excellent';
+                } else if (summary.attendance_rate >= 75) {
+                    span.className += ' badge-info';
+                    span.textContent = 'Good';
+                } else if (summary.attendance_rate >= 60) {
+                    span.className += ' badge-warning';
+                    span.textContent = 'Average';
+                } else {
+                    span.className += ' badge-danger';
+                    span.textContent = 'Poor';
+                }
+                
+                tdStatus.appendChild(span);
+                tr.appendChild(tdStatus);
+                
+                tableBody.appendChild(tr);
+            });
+        }
+    });
+</script>
+
+<style>
+    @media print {
+        .btn, form, .card-header {
+            display: none !important;
+        }
+        .card {
+            border: none !important;
+        }
+        .card-body {
+            padding: 0 !important;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    }
+    
+    /* Make the table horizontally scrollable on small screens */
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    /* Style the fixed student name column */
+    td[style*="position: sticky"] {
+        z-index: 1;
+        box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}

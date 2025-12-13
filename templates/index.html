@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="display-4 mb-4">Welcome to Smart Attendance</h1>
+            <p class="lead mb-5">An intelligent face recognition system for automated attendance tracking</p>
+            <div class="mb-4">
+                <a href="{{ url_for('instructions') }}" class="btn btn-warning btn-lg">
+                    <i class="fas fa-info-circle mr-2"></i>View Instructions
+                </a>
+                {% if teacher_logged_in %}
+                <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-primary btn-lg ml-2">
+                    <i class="fas fa-tachometer-alt mr-2"></i>Teacher Dashboard
+                </a>
+                {% else %}
+                <a href="{{ url_for('teacher_login') }}" class="btn btn-primary btn-lg ml-2">
+                    <i class="fas fa-user-tie mr-2"></i>Teacher Login
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-plus fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title">Register New User</h5>
+                    <p class="card-text">Add new users to the system by capturing their facial data</p>
+                    <a href="{{ url_for('capture') }}" class="btn btn-primary">
+                        <i class="fas fa-camera mr-2"></i>Capture Face
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-check fa-3x mb-3 text-success"></i>
+                    <h5 class="card-title">Take Attendance</h5>
+                    <p class="card-text">Start face recognition to mark attendance</p>
+                    <a href="{{ url_for('recognize') }}" class="btn btn-success">
+                        <i class="fas fa-play mr-2"></i>Start Recognition
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-table fa-3x mb-3 text-info"></i>
+                    <h5 class="card-title">View Records</h5>
+                    <p class="card-text">Check attendance records and generate reports</p>
+                    <a href="{{ url_for('show_attendance') }}" class="btn btn-info">
+                        <i class="fas fa-list mr-2"></i>View Attendance
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-md-8 mx-auto">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="text-center mb-3">System Features</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check-circle text-success mr-2"></i>Real-time Face Detection</li>
+                                <li><i class="fas fa-check-circle text-success mr-2"></i>Automated Attendance Marking</li>
+                                <li><i class="fas fa-check-circle text-success mr-2"></i>Voice Feedback</li>
+                                <li><i class="fas fa-check-circle text-success mr-2"></i>Advanced Teacher Dashboard</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check-circle text-success mr-2"></i>CSV Export</li>
+                                <li><i class="fas fa-check-circle text-success mr-2"></i>User-friendly Interface</li>
+                                <li><i class="fas fa-check-circle text-success mr-2"></i>Secure Data Storage</li>
+                                <li><i class="fas fa-check-circle text-success mr-2"></i>Class Management</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if not teacher_logged_in %}
+    <!-- Teacher Section -->
+    <div class="row mt-4 mb-4">
+        <div class="col-md-12 text-center">
+            <h3>For Teachers</h3>
+            <p class="text-muted">Take control of your classroom attendance with our advanced teacher tools</p>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-tie fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title">Teacher Login</h5>
+                    <p class="card-text">Already have an account? Sign in to access your dashboard.</p>
+                    <a href="{{ url_for('teacher_login') }}" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-plus fa-3x mb-3 text-success"></i>
+                    <h5 class="card-title">Teacher Registration</h5>
+                    <p class="card-text">New to our system? Create a teacher account to get started.</p>
+                    <a href="{{ url_for('teacher_register') }}" class="btn btn-success">
+                        <i class="fas fa-user-plus mr-2"></i>Register
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

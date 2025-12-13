@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Class Details{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="text-center"><i class="fas fa-users"></i> {{ class_info.name }}</h2>
+                <p class="text-center text-muted">{{ class_info.description }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Students in Class -->
+    <div class="col-md-5 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user-graduate"></i> Students</h5>
+            </div>
+            <div class="card-body">
+                {% if students %}
+                <div class="list-group">
+                    {% for student in students %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-user"></i> {{ student.student_name }}
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary attendance-history" data-student="{{ student.student_name }}">
+                                <i class="fas fa-history"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger remove-student" data-student="{{ student.student_name }}">
+                                <i class="fas fa-user-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-user-graduate fa-3x text-muted mb-3"></i>
+                    <p>No students in this class yet.</p>
+                </div>
+                {% endif %}
+                
+                <div class="mt-4">
+                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#addStudentModal">
+                        <i class="fas fa-user-plus"></i> Add Student
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Attendance Statistics -->
+    <div class="col-md-7 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line"></i> Attendance Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-4">
+                        <div class="border rounded p-3">
+                            <h5 class="text-primary">{{ students|length }}</h5>
+                            <p class="text-muted mb-0">Total Students</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center mb-4">
+                        <div class="border rounded p-3">
+                            <h5 class="text-success">{{ attendance|length }}</h5>
+                            <p class="text-muted mb-0">Attendance Records</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center mb-4">
+                        <div class="border rounded p-3">
+                            <h5 class="text-info" id="attendance-rate">-</h5>
+                            <p class="text-muted mb-0">Attendance Rate</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <h5 class="mt-3 mb-3">Recent Attendance</h5>
+                {% if attendance %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in attendance[:10] %}
+                            <tr>
+                                <td>{{ record.student_name }}</td>
+                                <td>{{ record.date }}</td>
+                                <td>{{ record.time }}</td>
+                                <td><span class="badge badge-success">{{ record.status }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <p>No attendance records for this class yet.</p>
+                </div>
+                {% endif %}
+                
+                <div class="mt-3 text-center">
+                    <a href="{{ url_for('recognize') }}" class="btn btn-primary">
+                        <i class="fas fa-camera"></i> Take Attendance
+                    </a>
+                    <a href="{{ url_for('teacher_attendance') }}" class="btn btn-info">
+                        <i class="fas fa-list"></i> View All Records
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Student Modal -->
+<div class="modal fade" id="addStudentModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-user-plus"></i> Add Student to Class</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addStudentForm">
+                    <div class="form-group">
+                        <label for="student_name">Student Name</label>
+                        <input type="text" class="form-control" id="student_name" name="student_name" required>
+                        <small class="form-text text-muted">Enter the exact name used during face registration</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveStudent">Add Student</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add student functionality
+        const saveStudentBtn = document.getElementById('saveStudent');
+        if (saveStudentBtn) {
+            saveStudentBtn.addEventListener('click', function() {
+                const formData = new FormData(document.getElementById('addStudentForm'));
+                formData.append('class_id', '{{ class_info.id }}');
+                
+                fetch('/add_student', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        showError(data.error || 'Failed to add student');
+                    }
+                })
+                .catch(error => {
+                    showError('Network error occurred while adding student');
+                });
+            });
+        }
+
+        function showError(message) {
+            const errorAlert = document.createElement('div');
+            errorAlert.className = 'alert alert-danger alert-dismissible fade show';
+            errorAlert.role = 'alert';
+            errorAlert.innerHTML = `
+                ${message}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            `;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(errorAlert, container.firstChild);
+        }
+    });
+</script>
+
+<!-- Attendance data (proper JSON format) -->
+<script type="application/json" id="attendance-data">
+{{ attendance|tojson|safe }}
+</script>
+<script type="application/json" id="students-length">
+{{ students|length|tojson|safe }}
+</script>
+
+<!-- External calculation script -->
+<script src="{% static 'js/attendance-calculator.js' %}"></script>
+{% endblock %}
