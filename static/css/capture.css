@@ -1,0 +1,435 @@
+/* ===================================
+   Web-Based Face Capture Styles
+   Modern interactive camera interface
+   =================================== */
+
+/* Capture Container */
+.capture-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 0;
+}
+
+/* Video Wrapper - Horizontal Single Frame */
+.video-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    aspect-ratio: 16/9;  /* Horizontal wide format */
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    border: 3px solid var(--primary-color);
+}
+
+.video-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.2) 100%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Video Element */
+#camera-feed {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scaleX(-1); /* Mirror effect */
+    z-index: 1;
+}
+
+/* Canvas Overlay */
+#face-detection-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scaleX(-1); /* Mirror effect */
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* Progress Bar */
+.progress {
+    height: 30px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    transition: width 0.3s ease;
+}
+
+.progress-bar-striped {
+    background: linear-gradient(
+        45deg,
+        var(--success-color),
+        #00d4aa
+    );
+    background-size: 20px 20px;
+}
+
+/* Capture Counter */
+.capture-counter {
+    font-size: 1.1rem;
+    min-width: 80px;
+    text-align: center;
+}
+
+/* Progress Info */
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.05);
+    border-top: 1px solid var(--border-color);
+    border-radius: 0 0 8px 8px;
+}
+
+/* Capture Controls */
+.capture-controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.capture-controls .btn {
+    flex: 1;
+    min-width: 150px;
+    padding: 1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.capture-controls .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.capture-controls .btn:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Status Alert */
+#capture-status {
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+#capture-status.alert-success {
+    border-left: 4px solid var(--success-color);
+}
+
+#capture-status.alert-warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+#capture-status.alert-info {
+    border-left: 4px solid var(--info-color);
+}
+
+/* Feedback Container */
+#capture-feedback {
+    min-height: 50px;
+}
+
+#capture-feedback .alert {
+    margin-bottom: 0;
+}
+
+/* Card Headers */
+.card-header {
+    padding: 1.25rem;
+    font-weight: 600;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.card-header h5,
+.card-header h6 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-header i {
+    font-size: 1.2rem;
+}
+
+/* Stat Cards */
+.stat-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+/* Form Styles */
+#username-form .form-control {
+    padding: 0.875rem 1rem;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+}
+
+#username-form .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15);
+    outline: none;
+}
+
+#username-form .form-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+/* Instructions Card */
+.card.bg-light {
+    background: rgba(0, 0, 0, 0.02) !important;
+    border: 1px solid var(--border-color);
+}
+
+.card.bg-light .card-body {
+    padding: 1.5rem;
+}
+
+.card.bg-light h6 {
+    color: var(--primary-color);
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.card.bg-light ol {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.card.bg-light li {
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.card.bg-light li strong {
+    color: var(--text-primary);
+}
+
+/* Alert Styles */
+.alert {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.alert-info {
+    background: linear-gradient(135deg, rgba(76, 201, 240, 0.1), rgba(0, 210, 211, 0.1));
+    border-left: 4px solid var(--info-color);
+    color: var(--text-primary);
+}
+
+.alert-success {
+    background: linear-gradient(135deg, rgba(6, 214, 160, 0.1), rgba(0, 184, 148, 0.1));
+    border-left: 4px solid var(--success-color);
+    color: var(--text-primary);
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, rgba(255, 214, 10, 0.1), rgba(243, 156, 18, 0.1));
+    border-left: 4px solid var(--warning-color);
+    color: var(--text-primary);
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, rgba(247, 37, 133, 0.1), rgba(231, 76, 60, 0.1));
+    border-left: 4px solid var(--danger-color);
+    color: var(--text-primary);
+}
+
+.alert-heading {
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+/* Tips Box */
+.alert ul {
+    margin-bottom: 0;
+    padding-left: 1.5rem;
+}
+
+.alert ul li {
+    margin-bottom: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .capture-container {
+        padding: 1rem 0;
+    }
+
+    .capture-controls {
+        flex-direction: column;
+    }
+
+    .capture-controls .btn {
+        width: 100%;
+    }
+
+    .video-wrapper {
+        aspect-ratio: 16/9;
+    }
+
+    #capture-status {
+        font-size: 0.9rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Dark Theme Adjustments */
+[data-theme="dark"] .video-wrapper {
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .progress {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .card.bg-light {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Recording State */
+.video-wrapper.recording {
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.5);
+}
+
+/* Loading State */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn:disabled:hover {
+    transform: none !important;
+}
+
+/* Smooth Transitions */
+* {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Ensure proper display of video and canvas overlay */
+.video-wrapper canvas,
+.video-wrapper video {
+    display: block;
+}
+
+/* Live indicator animation */
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+.blink-animation {
+    animation: blink 1.5s infinite;
+}
+
+/* Enhanced video wrapper with gradient border */
+.video-wrapper {
+    box-shadow: 0 15px 50px rgba(6, 214, 160, 0.3) !important;
+}
+
+.video-wrapper.recording {
+    box-shadow: 0 0 0 4px rgba(6, 214, 160, 0.6),
+                0 15px 50px rgba(6, 214, 160, 0.4) !important;
+}
+
+/* Smooth progress bar animation */
+.progress-bar {
+    transition: width 0.5s ease-out;
+}
+
+/* Enhanced button styles */
+.capture-controls .btn {
+    font-size: 1.1rem;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Responsive design for horizontal camera */
+@media (max-width: 768px) {
+    .video-wrapper {
+        max-width: 100%;
+        border-radius: 12px;
+    }
+    
+    .capture-controls .btn {
+        font-size: 0.95rem;
+        padding: 0.6rem 1.5rem;
+    }
+}

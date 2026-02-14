@@ -20,6 +20,7 @@ from flask import (
     session,
     flash,
     jsonify,
+    make_response,
 )
 
 # Initialize Flask app
@@ -926,6 +927,175 @@ def capture():
     return render_template("capture.html")
 
 
+@app.route("/api/upload_capture", methods=["POST"])
+def upload_capture():
+    """
+    API endpoint for web-based face capture.
+    Receives base64 encoded images and saves them for training.
+    """
+    try:
+        data = request.get_json()
+        username = data.get("username", "").strip()
+        email = data.get("email", "").strip()
+        user_id = data.get("userId", "").strip()
+        department = data.get("department", "").strip()
+        phone = data.get("phone", "").strip()
+        role = data.get("role", "").strip()
+        notes = data.get("notes", "").strip()
+        images = data.get("images", [])
+        
+        # Validate input
+        if not username or not images:
+            return jsonify({"error": "Invalid input"}), 400
+        
+        if not all(c.isalpha() or c.isspace() for c in username):
+            return jsonify({"error": "Invalid username"}), 400
+        
+        if not email or '@' not in email:
+            return jsonify({"error": "Invalid email address"}), 400
+        
+        if not user_id:
+            return jsonify({"error": "ID number is required"}), 400
+        
+        if not department:
+            return jsonify({"error": "Department is required"}), 400
+        
+        if not role:
+            return jsonify({"error": "Role is required"}), 400
+        
+        # Require at least 20 images for good accuracy
+        if len(images) < 20:
+            return jsonify({"error": "At least 20 images required for accurate recognition"}), 400
+        
+        # Limit to prevent processing too many images
+        if len(images) > 100:
+            images = images[:100]  # Use first 100 if more provided
+        
+        # Create data directory
+        if not os.path.exists("data"):
+            os.makedirs("data")
+        
+        # Process and save images
+        faces_data = []
+        
+        for idx, image_data in enumerate(images):
+            try:
+                # Remove data:image/jpeg;base64, prefix if present
+                if "," in image_data:
+                    image_data = image_data.split(",")[1]
+                
+                # Decode base64
+                import base64
+                image_bytes = base64.b64decode(image_data)
+                nparr = np.frombuffer(image_bytes, np.uint8)
+                frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                
+                if frame is None:
+                    continue
+                
+                # Detect face
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                faces = facedetect.detectMultiScale(gray, 1.3, 5)
+                
+                if len(faces) > 0:
+                    x, y, w, h = max(faces, key=lambda rect: rect[2] * rect[3])
+                    # Crop and resize
+                    crop_img = frame[y:y+h, x:x+w]
+                    resized_img = cv2.resize(crop_img, (50, 50))
+                    faces_data.append(resized_img)
+            
+            except Exception as e:
+                print(f"Error processing image {idx}: {e}")
+                continue
+        
+        if len(faces_data) < 10:
+            return jsonify({"error": "Could not detect faces in images"}), 400
+        
+        # Convert to numpy array
+        faces_data = np.array(faces_data)
+        
+        # Load existing data if present
+        try:
+            if os.path.exists("data/faces_data.pkl"):
+                with open("data/faces_data.pkl", "rb") as f:
+                    existing_faces = pickle.load(f)
+                faces_data = np.append(existing_faces, faces_data, axis=0)
+            
+            if os.path.exists("data/names.pkl"):
+                with open("data/names.pkl", "rb") as f:
+                    existing_names = pickle.load(f)
+                new_names = [username] * len(faces_data)
+                names = existing_names + new_names[len(existing_names):]
+            else:
+                names = [username] * len(faces_data)
+        
+        except Exception as e:
+            print(f"Error loading existing data: {e}")
+            names = [username] * len(faces_data)
+        
+        # Save updated data
+        with open("data/faces_data.pkl", "wb") as f:
+            pickle.dump(faces_data, f)
+        
+        with open("data/names.pkl", "wb") as f:
+            pickle.dump(names, f)
+        
+        # Train KNN model
+        knn = KNeighborsClassifier(n_neighbors=5)
+        knn.fit(faces_data.reshape(faces_data.shape[0], -1), names)
+        
+        with open("data/face_recognizer.pkl", "wb") as f:
+            pickle.dump(knn, f)
+        
+        # Add user to database with all details
+        conn = get_db_connection()
+        try:
+            # First create the users table if it doesn't exist with all fields
+            conn.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    name TEXT NOT NULL,
+                    email TEXT UNIQUE NOT NULL,
+                    user_id TEXT UNIQUE NOT NULL,
+                    department TEXT NOT NULL,
+                    phone TEXT,
+                    role TEXT NOT NULL,
+                    notes TEXT,
+                    created_at TEXT NOT NULL
+                )
+            ''')
+            
+            # Insert or replace user data
+            conn.execute(
+                '''INSERT OR REPLACE INTO users 
+                   (username, name, email, user_id, department, phone, role, notes, created_at) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                (username, username, email, user_id, department, phone, role, notes, datetime.now().isoformat())
+            )
+            conn.commit()
+        except Exception as e:
+            print(f"Database error: {e}")
+        finally:
+            conn.close()
+        
+        return jsonify({
+            "success": True,
+            "message": f"Successfully registered {username} with {len(faces_data)} face samples",
+            "userData": {
+                "name": username,
+                "email": email,
+                "userId": user_id,
+                "department": department,
+                "role": role
+            }
+        }), 200
+    
+    except Exception as e:
+        print(f"Upload error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/recognize", methods=["GET", "POST"])
 def recognize():
     # Check if a teacher is logged in
@@ -957,84 +1127,185 @@ def recognize():
 
 @app.route("/attendance")
 def show_attendance():
+    # Get filter parameters from request
+    # Convert date format: HTML input uses YYYY-MM-DD, DB uses DD-MM-YYYY
+    filter_date_input = request.args.get('date', '')
+    
+    # If no date provided, default to today in DD-MM-YYYY format
+    if not filter_date_input:
+        filter_date = datetime.now().strftime("%d-%m-%Y")
+        filter_date_html = datetime.now().strftime("%Y-%m-%d")
+    else:
+        # Convert from YYYY-MM-DD to DD-MM-YYYY for database query
+        try:
+            date_obj = datetime.strptime(filter_date_input, "%Y-%m-%d")
+            filter_date = date_obj.strftime("%d-%m-%Y")
+            filter_date_html = filter_date_input
+        except:
+            filter_date = datetime.now().strftime("%d-%m-%Y")
+            filter_date_html = datetime.now().strftime("%Y-%m-%d")
+    
+    filter_department = request.args.get('department', '')
+    filter_name = request.args.get('name', '')
+    
     # Initialize empty list for attendance records
     attendance_records = []
-
-    # Add header row
-    attendance_records.append(["NAME", "DATE", "TIME"])
-
-    # Check the database first (more reliable source)
+    departments = []
+    
     try:
         conn = get_db_connection()
-        # Query all attendance records from the database, sorted by most recent first
-        db_records = conn.execute(
-            """
-            SELECT student_name, date, time 
-            FROM attendance_records 
-            WHERE student_name != "Unknown" AND student_name != "Error"
-            ORDER BY date DESC, time DESC
-        """
+        
+        # Get all departments for filter dropdown
+        all_depts = conn.execute(
+            "SELECT DISTINCT department FROM users WHERE department IS NOT NULL AND department != ''"
         ).fetchall()
+        departments = [d['department'] for d in all_depts]
+        
+        # Build query with filters - use LIKE for better matching
+        query = """
+            SELECT 
+                ar.student_name,
+                ar.date,
+                ar.time,
+                ar.status,
+                u.user_id,
+                u.department,
+                u.email
+            FROM attendance_records ar
+            LEFT JOIN users u ON (
+                u.name LIKE '%' || ar.student_name || '%' OR 
+                ar.student_name LIKE '%' || u.name || '%' OR
+                ar.student_name = u.username
+            )
+            WHERE ar.student_name != "Unknown" AND ar.student_name != "Error"
+        """
+        
+        params = []
+        
+        # Apply date filter (default to today)
+        if filter_date:
+            query += " AND ar.date = ?"
+            params.append(filter_date)
+        
+        # Apply department filter
+        if filter_department:
+            query += " AND u.department = ?"
+            params.append(filter_department)
+        
+        # Apply name filter
+        if filter_name:
+            query += " AND (ar.student_name LIKE ? OR u.user_id LIKE ?)"
+            params.append(f"%{filter_name}%")
+            params.append(f"%{filter_name}%")
+        
+        query += " ORDER BY ar.date DESC, ar.time DESC"
+        
+        db_records = conn.execute(query, params).fetchall()
+        
+        # Convert database records to list format
+        for record in db_records:
+            attendance_records.append({
+                'name': record['student_name'],
+                'date': record['date'],
+                'time': record['time'],
+                'status': record['status'] or 'Present',
+                'user_id': record['user_id'] or 'N/A',
+                'department': record['department'] or 'N/A',
+                'email': record['email'] or 'N/A'
+            })
+        
+        # Calculate statistics
+        today = datetime.now().strftime("%d-%m-%Y")
+        total_records = len(db_records)
+        unique_users = len(set(r['student_name'] for r in db_records))
+        today_count = sum(1 for r in db_records if r['date'] == today)
+        
+        # Department-wise stats for filtered results
+        dept_stats = {}
+        for record in db_records:
+            dept = record['department'] or 'N/A'
+            if dept not in dept_stats:
+                dept_stats[dept] = 0
+            dept_stats[dept] += 1
+        
         conn.close()
-
-        if db_records:
-            # Convert database records to the right format
-            for record in db_records:
-                attendance_records.append(
-                    [record["student_name"], record["date"], record["time"]]
-                )
-            print(f"Found {len(db_records)} records in database")
+        
     except Exception as e:
         print(f"Error querying database for attendance records: {str(e)}")
-
-    # Also check CSV files for any records that might not be in the database
-    date = datetime.now().strftime("%d-%m-%Y")
-    file_path = os.path.join(
-        r"C:\Users\MANISH SHARMA\OneDrive\Desktop\Smart Attendence System\Attendance",
-        f"Attendance_{date}.csv",
-    )
-    if os.path.isfile(file_path):
-        with open(file_path, "r") as csvfile:
-            reader = csv.reader(csvfile)
-            csv_records = list(reader)
-
-            # Skip header row if it exists
-            start_idx = 1 if len(csv_records) > 0 and csv_records[0][0] == "NAME" else 0
-
-            # Add CSV records (avoiding duplicates)
-            db_record_strings = (
-                [f"{r[0]}-{r[1]}-{r[2]}" for r in attendance_records[1:]]
-                if len(attendance_records) > 1
-                else []
-            )
-
-            for i in range(start_idx, len(csv_records)):
-                record = csv_records[i]
-                if len(record) >= 3:
-                    record_string = f"{record[0]}-{record[1]}-{record[2]}"
-                    if record_string not in db_record_strings:
-                        attendance_records.append(record)
-            print(f"Added {len(csv_records) - start_idx} unique records from CSV file")
-
-    # If we only have the header row, there are no records
-    has_records = len(attendance_records) > 1
+        import traceback
+        traceback.print_exc()
+        attendance_records = []
+        departments = []
+        total_records = 0
+        unique_users = 0
+        today_count = 0
+        dept_stats = {}
+    
+    has_records = len(attendance_records) > 0
+    
+    stats = {
+        'total_records': total_records,
+        'unique_users': unique_users,
+        'today_count': today_count,
+        'dept_stats': dept_stats
+    }
 
     return render_template(
-        "attendance.html", attendance_data=attendance_records, has_records=has_records
+        "attendance.html", 
+        attendance_data=attendance_records, 
+        has_records=has_records,
+        stats=stats,
+        departments=departments,
+        filter_date=filter_date_html,
+        filter_department=filter_department,
+        filter_name=filter_name,
+        current_date=datetime.now().strftime("%d-%m-%Y")
     )
 
 
 @app.route("/manage_users")
 def manage_users():
+    # Get all users from names.pkl
     users = get_all_users()
-    return render_template("manage_users.html", users=users)
+    
+    # Also get detailed user info from database
+    user_details = []
+    conn = get_db_connection()
+    for username in users:
+        user_info = conn.execute(
+            "SELECT name, email, user_id, department, role FROM users WHERE username = ?",
+            (username,)
+        ).fetchone()
+        if user_info:
+            user_details.append({
+                'username': username,
+                'name': user_info['name'] if user_info['name'] else username,
+                'email': user_info['email'],
+                'user_id': user_info['user_id'],
+                'department': user_info['department'],
+                'role': user_info['role']
+            })
+        else:
+            user_details.append({
+                'username': username,
+                'name': username,
+                'email': None,
+                'user_id': None,
+                'department': None,
+                'role': None
+            })
+    conn.close()
+    
+    return render_template("manage_users.html", users=users, user_details=user_details)
 
 
 @app.route("/delete_user/<username>")
 def delete_user_route(username):
     if delete_user(username):
+        flash(f"User '{username}' has been deleted successfully.", "success")
         return redirect(url_for("manage_users"))
-    return "Error deleting user", 400
+    flash(f"Error deleting user '{username}'.", "danger")
+    return redirect(url_for("manage_users"))
 
 
 @app.route("/settings", methods=["GET", "POST"])
@@ -1048,18 +1319,284 @@ def settings():
             ),
         }
         save_settings(new_settings)
+        flash("Settings saved successfully!", "success")
         return redirect(url_for("settings"))
 
     current_settings = load_settings()
     return render_template("settings.html", settings=current_settings)
 
 
-@app.route("/export_attendance")
+# API Routes for Real-time Face Recognition
+@app.route("/api/capture_frame", methods=["POST"])
+def capture_frame():
+    """Receive and process a captured frame from the client"""
+    try:
+        import base64
+        import numpy as np
+        from io import BytesIO
+        
+        data = request.get_json()
+        frame_data = data.get('frame')
+        
+        if not frame_data:
+            return jsonify({'success': False, 'message': 'No frame data received'})
+        
+        # Decode the base64 image
+        frame_bytes = base64.b64decode(frame_data.split(',')[1])
+        nparr = np.frombuffer(frame_bytes, np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        if frame is None:
+            return jsonify({'success': False, 'message': 'Failed to decode frame'})
+        
+        # Detect faces in the frame
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = cv2.equalizeHist(gray)
+        
+        faces = facedetect.detectMultiScale(
+            gray,
+            scaleFactor=1.05,
+            minNeighbors=3,
+            minSize=(20, 20)
+        )
+        
+        faces_detected = len(faces)
+        recognition_results = []
+        
+        if faces_detected > 0 and os.path.exists("data/names.pkl") and os.path.exists("data/faces_data.pkl"):
+            try:
+                # Load face data
+                with open("data/names.pkl", "rb") as f:
+                    names = pickle.load(f)
+                with open("data/faces_data.pkl", "rb") as f:
+                    faces_data = pickle.load(f)
+                
+                faces_data = faces_data.reshape(faces_data.shape[0], -1)
+                
+                # Train classifier
+                n_neighbors = min(3, faces_data.shape[0])
+                knn = KNeighborsClassifier(n_neighbors=n_neighbors)
+                knn.fit(faces_data, names)
+                
+                # Process each detected face
+                for (x, y, w, h) in faces:
+                    crop_img = frame[y:y+h, x:x+w]
+                    crop_img_resized = cv2.resize(crop_img, (50, 50))
+                    crop_img_resized_flat = crop_img_resized.reshape(1, -1)
+                    
+                    # Get prediction
+                    output = knn.predict(crop_img_resized_flat)
+                    confidence = knn.predict_proba(crop_img_resized_flat)
+                    confidence_score = max(confidence[0]) * 100
+                    
+                    recognition_results.append({
+                        'name': str(output[0]),
+                        'confidence': round(confidence_score, 2),
+                        'x': int(x),
+                        'y': int(y),
+                        'w': int(w),
+                        'h': int(h)
+                    })
+            except Exception as e:
+                print(f"Error in recognition: {str(e)}")
+        
+        return jsonify({
+            'success': True,
+            'faces_detected': faces_detected,
+            'results': recognition_results
+        })
+    
+    except Exception as e:
+        print(f"Error in capture_frame: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
+
+
+@app.route("/api/save_attendance", methods=["POST"])
+def save_attendance_api():
+    """Save recognized attendance to database and CSV - only once per student per day"""
+    try:
+        data = request.get_json()
+        name = data.get('name')
+        class_id = data.get('class_id')
+        teacher_id = data.get('teacher_id', 1)  # Default teacher_id if not provided
+        
+        if not name:
+            return jsonify({'success': False, 'message': 'No name provided'})
+        
+        conn = get_db_connection()
+        
+        # Save to database
+        now = datetime.now()
+        date_str = now.strftime("%d-%m-%Y")
+        time_str = now.strftime("%H:%M:%S")
+        
+        # Check if this student already has an attendance record for TODAY (entire day check)
+        try:
+            existing_record = conn.execute(
+                "SELECT * FROM attendance_records WHERE student_name = ? AND date = ?",
+                (name, date_str)
+            ).fetchone()
+            
+            if existing_record:
+                # Student already recorded today - don't record again
+                conn.close()
+                return jsonify({
+                    'success': False, 
+                    'message': f'✓ {name} already recorded for today at {existing_record["time"]}',
+                    'duplicate': True,
+                    'already_recorded': True
+                })
+        except Exception as e:
+            print(f"Error checking existing records: {str(e)}")
+        
+        # Record the attendance (first time for this student today)
+        try:
+            conn.execute(
+                "INSERT INTO attendance_records (student_name, date, time, status, class_id, teacher_id) VALUES (?, ?, ?, ?, ?, ?)",
+                (name, date_str, time_str, "Present", class_id if class_id else None, teacher_id)
+            )
+            conn.commit()
+            print(f"✓ Attendance recorded for {name} at {time_str}")
+        except sqlite3.IntegrityError as ie:
+            # Fallback: Attendance already recorded for this student today
+            conn.close()
+            return jsonify({
+                'success': False, 
+                'message': f'Attendance already recorded for {name} today',
+                'duplicate': True,
+                'already_recorded': True
+            })
+        
+        # Save to CSV
+        attendance_dir = r"C:\Users\MANISH SHARMA\OneDrive\Desktop\Smart Attendence System\Attendance"
+        os.makedirs(attendance_dir, exist_ok=True)
+        
+        csv_file = os.path.join(attendance_dir, f"Attendance_{date_str}.csv")
+        
+        file_exists = os.path.isfile(csv_file)
+        try:
+            with open(csv_file, 'a', newline='') as f:
+                writer = csv.writer(f)
+                if not file_exists:
+                    writer.writerow(["NAME", "DATE", "TIME"])
+                writer.writerow([name, date_str, time_str])
+            print(f"✓ Attendance saved to CSV for {name}")
+        except Exception as csv_error:
+            print(f"Error saving to CSV: {str(csv_error)}")
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'✓ Attendance recorded for {name}',
+            'data': {
+                'name': name,
+                'date': date_str,
+                'time': time_str
+            }
+        })
+    
+    except Exception as e:
+        print(f"Error in save_attendance_api: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
+
+
+@app.route("/api/get_recognized_users", methods=["GET"])
+def get_recognized_users():
+    """Get list of all registered users for dropdown"""
+    try:
+        if not os.path.exists("data/names.pkl"):
+            return jsonify({'success': False, 'users': []})
+        
+        with open("data/names.pkl", "rb") as f:
+            names = pickle.load(f)
+        
+        return jsonify({
+            'success': True,
+            'users': list(set(names))  # Remove duplicates
+        })
+    
+    except Exception as e:
+        print(f"Error in get_recognized_users: {str(e)}")
+        return jsonify({'success': False, 'users': []})
+
+
+@app.route("/export_attendance", methods=["GET", "POST"])
 def export_attendance():
-    filename = export_attendance_csv()
-    if filename:
-        return send_from_directory("data", filename, as_attachment=True)
-    return "No attendance data to export", 400
+    if request.method == "POST":
+        # Handle export request
+        format_type = request.form.get('format', 'csv')
+        start_date = request.form.get('start_date', '')
+        end_date = request.form.get('end_date', '')
+        include_headers = request.form.get('include_headers') == 'on'
+        include_stats = request.form.get('include_stats') == 'on'
+        
+        conn = get_db_connection()
+        
+        # Build query
+        query = "SELECT * FROM attendance_records WHERE 1=1"
+        params = []
+        
+        if start_date:
+            query += " AND date >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND date <= ?"
+            params.append(end_date)
+        
+        records = conn.execute(query, params).fetchall()
+        conn.close()
+        
+        if format_type == 'csv':
+            import io
+            output = io.StringIO()
+            
+            if include_headers:
+                output.write("Date,User ID,Status,Time\n")
+            
+            for record in records:
+                output.write(f"{record['date']},{record['user_id']},{record['status']},{record['time']}\n")
+            
+            if include_stats:
+                output.write("\n\nStatistics\n")
+                output.write(f"Total Records,{len(records)}\n")
+            
+            response = make_response(output.getvalue())
+            response.headers["Content-Disposition"] = f"attachment;filename=attendance_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            response.headers["Content-Type"] = "text/csv"
+            return response
+        
+        elif format_type == 'json':
+            import json
+            data = {
+                'records': [dict(record) for record in records]
+            }
+            if include_stats:
+                data['statistics'] = {
+                    'total_records': len(records),
+                    'export_date': datetime.now().isoformat()
+                }
+            
+            response = make_response(json.dumps(data, indent=2))
+            response.headers["Content-Disposition"] = f"attachment;filename=attendance_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            response.headers["Content-Type"] = "application/json"
+            return response
+        
+        # For other formats, just return CSV for now
+        flash("Export format not fully implemented yet. Using CSV.", "info")
+        return redirect(url_for("export_attendance"))
+    
+    # GET request - show the export form
+    conn = get_db_connection()
+    total_records = conn.execute("SELECT COUNT(*) as count FROM attendance_records").fetchone()['count']
+    conn.close()
+    
+    stats = {
+        'total_records': total_records,
+        'total_users': len(get_all_users())
+    }
+    
+    return render_template("export_attendance.html", stats=stats)
 
 
 # Teacher authentication routes
@@ -1142,21 +1679,76 @@ def teacher_dashboard():
         "SELECT * FROM classes WHERE teacher_id = ?", (teacher_id,)
     ).fetchall()
 
-    # Get recent attendance records
+    # Get total students count
+    students_count = conn.execute(
+        """SELECT COUNT(DISTINCT cs.student_name) as count
+           FROM class_students cs
+           JOIN classes c ON cs.class_id = c.id
+           WHERE c.teacher_id = ?""",
+        (teacher_id,)
+    ).fetchone()['count']
+
+    # Get recent attendance records (today's records)
+    today = datetime.now().strftime("%d-%m-%Y")
     recent_attendance = conn.execute(
         """SELECT ar.*, c.name as class_name 
            FROM attendance_records ar 
            LEFT JOIN classes c ON ar.class_id = c.id 
-           WHERE ar.teacher_id = ? 
-           ORDER BY ar.date DESC, ar.time DESC LIMIT 10""",
-        (teacher_id,),
+           WHERE ar.teacher_id = ? AND ar.date = ?
+           ORDER BY ar.time DESC LIMIT 10""",
+        (teacher_id, today),
     ).fetchall()
 
     conn.close()
 
     return render_template(
-        "teacher/dashboard.html", classes=classes, recent_attendance=recent_attendance
+        "teacher/dashboard.html", 
+        classes=classes, 
+        recent_attendance=recent_attendance,
+        students_count=students_count
     )
+
+
+# API endpoint to get student count
+@app.route("/api/teacher/stats")
+def teacher_stats():
+    if "teacher_id" not in session:
+        return jsonify({"success": False, "message": "Authentication required"}), 401
+
+    teacher_id = session["teacher_id"]
+    conn = get_db_connection()
+
+    # Get total students
+    students_count = conn.execute(
+        """SELECT COUNT(DISTINCT cs.student_name) as count
+           FROM class_students cs
+           JOIN classes c ON cs.class_id = c.id
+           WHERE c.teacher_id = ?""",
+        (teacher_id,)
+    ).fetchone()['count']
+
+    # Get today's attendance count
+    today = datetime.now().strftime("%d-%m-%Y")
+    today_attendance = conn.execute(
+        """SELECT COUNT(*) as count
+           FROM attendance_records
+           WHERE teacher_id = ? AND date = ?""",
+        (teacher_id, today)
+    ).fetchone()['count']
+
+    # Calculate attendance rate
+    attendance_rate = 0
+    if students_count > 0:
+        attendance_rate = round((today_attendance / students_count) * 100, 1)
+
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "students_count": students_count,
+        "today_attendance": today_attendance,
+        "attendance_rate": attendance_rate
+    })
 
 
 # Class management routes
@@ -1168,13 +1760,22 @@ def manage_classes():
 
     if request.method == "POST":
         name = request.form["name"]
-        description = request.form["description"]
+        description = request.form.get("description", "")
+        department = request.form.get("department", "")
         teacher_id = session["teacher_id"]
 
         conn = get_db_connection()
+        
+        # Check if department column exists, if not add it
+        try:
+            conn.execute("SELECT department FROM classes LIMIT 1")
+        except:
+            conn.execute("ALTER TABLE classes ADD COLUMN department TEXT")
+            conn.commit()
+        
         conn.execute(
-            "INSERT INTO classes (teacher_id, name, description) VALUES (?, ?, ?)",
-            (teacher_id, name, description),
+            "INSERT INTO classes (teacher_id, name, description, department) VALUES (?, ?, ?, ?)",
+            (teacher_id, name, description, department),
         )
         conn.commit()
         conn.close()
@@ -1183,12 +1784,34 @@ def manage_classes():
         return redirect(url_for("manage_classes"))
 
     conn = get_db_connection()
-    classes = conn.execute(
-        "SELECT * FROM classes WHERE teacher_id = ?", (session["teacher_id"],)
-    ).fetchall()
+    
+    # Ensure department column exists
+    try:
+        classes = conn.execute(
+            "SELECT * FROM classes WHERE teacher_id = ?", (session["teacher_id"],)
+        ).fetchall()
+    except:
+        conn.execute("ALTER TABLE classes ADD COLUMN department TEXT")
+        conn.commit()
+        classes = conn.execute(
+            "SELECT * FROM classes WHERE teacher_id = ?", (session["teacher_id"],)
+        ).fetchall()
+    
+    # Get student counts for each class
+    classes_with_counts = []
+    for class_row in classes:
+        student_count = conn.execute(
+            "SELECT COUNT(*) as count FROM class_students WHERE class_id = ?",
+            (class_row["id"],)
+        ).fetchone()["count"]
+        
+        class_dict = dict(class_row)
+        class_dict["student_count"] = student_count
+        classes_with_counts.append(class_dict)
+    
     conn.close()
 
-    return render_template("teacher/classes.html", classes=classes)
+    return render_template("teacher/classes.html", classes=classes_with_counts)
 
 
 @app.route("/teacher/class/<int:class_id>")
@@ -1208,13 +1831,24 @@ def view_class(class_id):
         flash("Class not found or access denied.", "danger")
         return redirect(url_for("manage_classes"))
 
+    # Get students in this class
+    students = conn.execute(
+        "SELECT student_name, added_at FROM class_students WHERE class_id = ? ORDER BY student_name",
+        (class_id,)
+    ).fetchall()
+
     # Get attendance records from attendance_records table
     attendance_records = conn.execute(
         """SELECT a.id, a.student_name, a.class_id, a.teacher_id, a.date, a.time, a.status
            FROM attendance_records a
            WHERE a.class_id = ? AND a.teacher_id = ?
-           ORDER BY a.date DESC, a.time DESC""",
+           ORDER BY a.date DESC, a.time DESC LIMIT 50""",
         (class_id, session["teacher_id"]),
+    ).fetchall()
+
+    # Get all registered users (for adding students to class)
+    all_students = conn.execute(
+        "SELECT DISTINCT student_name FROM class_students ORDER BY student_name"
     ).fetchall()
 
     conn.close()
@@ -1234,7 +1868,11 @@ def view_class(class_id):
     ]
 
     return render_template(
-        "teacher/class_detail.html", class_info=class_info, attendance=attendance
+        "teacher/class_detail.html", 
+        class_info=class_info, 
+        attendance=attendance,
+        students=students,
+        all_students=all_students
     )
 
 
@@ -1307,6 +1945,51 @@ def add_student_to_class(class_id):
         )
     except Exception as e:
         print(f"Error adding student: {str(e)}")
+        return jsonify({"success": False, "message": "Database error occurred"}), 500
+    finally:
+        conn.close()
+
+
+@app.route("/teacher/remove_student_from_class/<int:class_id>", methods=["POST"])
+def remove_student_from_class(class_id):
+    if "teacher_id" not in session:
+        return jsonify({"success": False, "message": "Authentication required"}), 401
+
+    student_name = request.form.get("student_name", "").strip()
+    if not student_name:
+        return jsonify({"success": False, "message": "Student name required"}), 400
+
+    conn = get_db_connection()
+    try:
+        # Verify class ownership
+        class_info = conn.execute(
+            "SELECT * FROM classes WHERE id = ? AND teacher_id = ?",
+            (class_id, session["teacher_id"]),
+        ).fetchone()
+
+        if not class_info:
+            return jsonify({"success": False, "message": "Class not found or access denied"}), 404
+
+        # Remove student from class
+        result = conn.execute(
+            "DELETE FROM class_students WHERE class_id = ? AND student_name = ?",
+            (class_id, student_name),
+        )
+        conn.commit()
+
+        if result.rowcount > 0:
+            return jsonify({
+                "success": True,
+                "message": f"{student_name} removed from class successfully"
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "message": f"{student_name} not found in this class"
+            }), 404
+
+    except Exception as e:
+        print(f"Error removing student: {str(e)}")
         return jsonify({"success": False, "message": "Database error occurred"}), 500
     finally:
         conn.close()
@@ -1581,9 +2264,16 @@ def filter_attendance():
     if "teacher_id" not in session:
         return jsonify({"success": False, "message": "Authentication required"}), 401
 
-    date_filter = request.form.get("date")
-    class_filter = request.form.get("class_id")
-    student_filter = request.form.get("student_name")
+    # Handle both form data and JSON
+    if request.is_json:
+        data = request.get_json()
+        date_filter = data.get("date")
+        class_filter = data.get("class_id")
+        student_filter = data.get("student_name")
+    else:
+        date_filter = request.form.get("date")
+        class_filter = request.form.get("class_id")
+        student_filter = request.form.get("student_name")
 
     query = "SELECT ar.*, c.name as class_name FROM attendance_records ar LEFT JOIN classes c ON ar.class_id = c.id WHERE ar.teacher_id = ?"
     params = [session["teacher_id"]]
@@ -1594,7 +2284,7 @@ def filter_attendance():
 
     if class_filter:
         query += " AND ar.class_id = ?"
-        params.append(class_filter)
+        params.append(int(class_filter))
 
     if student_filter:
         query += " AND ar.student_name = ?"
@@ -1662,12 +2352,18 @@ def export_today_attendance():
 @app.route("/teacher/export", methods=["POST"])
 def teacher_export_attendance():
     if "teacher_id" not in session:
-        flash("Please log in first.", "warning")
-        return redirect(url_for("teacher_login"))
+        return jsonify({"success": False, "message": "Authentication required"}), 401
 
-    date_filter = request.form.get("date")
-    class_filter = request.form.get("class_id")
-    student_filter = request.form.get("student_name")
+    # Handle both form data and JSON
+    if request.is_json:
+        data = request.get_json()
+        date_filter = data.get("date")
+        class_filter = data.get("class_id")
+        student_filter = data.get("student_name")
+    else:
+        date_filter = request.form.get("date")
+        class_filter = request.form.get("class_id")
+        student_filter = request.form.get("student_name")
 
     query = "SELECT ar.*, c.name as class_name FROM attendance_records ar LEFT JOIN classes c ON ar.class_id = c.id WHERE ar.teacher_id = ?"
     params = [session["teacher_id"]]
@@ -1678,7 +2374,7 @@ def teacher_export_attendance():
 
     if class_filter:
         query += " AND ar.class_id = ?"
-        params.append(class_filter)
+        params.append(int(class_filter))
 
     if student_filter:
         query += " AND ar.student_name = ?"
@@ -1691,30 +2387,62 @@ def teacher_export_attendance():
     conn.close()
 
     if not attendance:
-        flash("No attendance data to export.", "warning")
-        return redirect(url_for("teacher_attendance"))
+        return jsonify({"success": False, "message": "No attendance data to export"}), 404
 
-    # Create CSV file
-    filename = f'teacher_attendance_{datetime.now().strftime("%d-%m-%Y_%H-%M-%S")}.csv'
-    filepath = os.path.join("data", filename)
+    # Create CSV file in memory
+    from io import StringIO
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Student Name", "Class", "Date", "Time", "Status", "Notes"])
 
-    with open(filepath, "w", newline="") as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(["Student Name", "Class", "Date", "Time", "Status", "Notes"])
+    for record in attendance:
+        writer.writerow(
+            [
+                record["student_name"],
+                record["class_name"] or "No Class",
+                record["date"],
+                record["time"],
+                record["status"],
+                record.get("notes", "") or "",
+            ]
+        )
 
-        for record in attendance:
-            writer.writerow(
-                [
-                    record["student_name"],
-                    record["class_name"] or "No Class",
-                    record["date"],
-                    record["time"],
-                    record["status"],
-                    record["notes"] or "",
-                ]
-            )
+    # Create response
+    output.seek(0)
+    filename = f'attendance_{datetime.now().strftime("%d-%m-%Y_%H-%M-%S")}.csv'
+    
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment;filename={filename}"}
+    )
 
-    return send_from_directory("data", filename, as_attachment=True)
+
+# Delete attendance record endpoint
+@app.route("/teacher/delete_record/<int:record_id>", methods=["DELETE", "POST"])
+def delete_attendance_record(record_id):
+    if "teacher_id" not in session:
+        return jsonify({"success": False, "message": "Authentication required"}), 401
+
+    teacher_id = session["teacher_id"]
+    conn = get_db_connection()
+
+    # Verify the record belongs to this teacher
+    record = conn.execute(
+        "SELECT * FROM attendance_records WHERE id = ? AND teacher_id = ?",
+        (record_id, teacher_id)
+    ).fetchone()
+
+    if not record:
+        conn.close()
+        return jsonify({"success": False, "message": "Record not found or access denied"}), 404
+
+    # Delete the record
+    conn.execute("DELETE FROM attendance_records WHERE id = ?", (record_id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"success": True, "message": "Record deleted successfully"})
 
 
 # Store attendance in database when recognition happens

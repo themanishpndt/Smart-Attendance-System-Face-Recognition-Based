@@ -1,90 +1,332 @@
 {% extends "base.html" %}
 
-{% block title %}Capture Faces{% endblock %}
+{% block title %}Register New User - Face Capture{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/capture.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="fas fa-user-plus mr-2"></i>Register New User</h4>
-                </div>
-                <div class="card-body">
-                    <form action="{{ url_for('capture') }}" method="post" class="needs-validation" novalidate>
-                        <div class="form-group">
-                            <label for="name"><i class="fas fa-user mr-2"></i>Full Name</label>
-                            <input type="text" class="form-control" id="name" name="name" required 
-                                   placeholder="Enter full name (e.g., John Smith)"
-                                   pattern="[A-Za-z]+(\s[A-Za-z]+)*"
-                                   title="Please use only alphabets with optional spaces between names. Example: John Smith">
-                            <div class="invalid-feedback">
-                                Please provide a valid name using only alphabets and spaces between names.
-                            </div>
-                            <small class="form-text text-muted">
-                                <i class="fas fa-info-circle"></i> Name Requirements:
-                                <ul class="mt-2">
-                                    <li>Use only alphabetic characters (A-Z, a-z) and spaces</li>
-                                    <li>Spaces allowed between first name and last name</li>
-                                    <li>No numbers or special characters</li>
-                                    <li>Examples: John Smith, Mary Jane Wilson</li>
-                                </ul>
-                            </small>
-                        </div>
-                        
-                        <div class="alert alert-info" role="alert">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            <strong>Important:</strong> The system will capture 100 images of your face. Please:
-                            <ul class="mb-0 mt-2">
-                                <li>Ensure good lighting conditions</li>
-                                <li>Look directly at the camera</li>
-                                <li>Keep your face clearly visible</li>
-                                <li>Stay still during capture</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="text-center mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-camera mr-2"></i>Start Capture
-                            </button>
-                            <a href="{{ url_for('home') }}" class="btn btn-secondary btn-lg ml-2">
-                                <i class="fas fa-arrow-left mr-2"></i>Back
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} mt-4" role="alert">
-                            <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }} mr-2"></i>
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+<!-- Capture Page Container -->
+<div class="capture-page">
+  <div class="container">
+    <div class="capture-container">
+
+      <!-- Header Section -->
+      <div class="row mb-5">
+        <div class="col-md-12 text-center">
+          <h1 class="display-4 mb-3">
+            <i class="fas fa-camera text-primary"></i> Complete Face Registration
+          </h1>
+          <p class="lead text-secondary">
+            Fill in your details and capture 50 high-quality photos for accurate face recognition
+          </p>
+          <div class="alert alert-primary d-inline-block">
+            <i class="fas fa-shield-alt mr-2"></i>
+            <strong>Secure Registration:</strong> Your data is encrypted and stored securely
+          </div>
         </div>
+      </div>
+
+      <!-- Phase 1: Username Input Form -->
+      <div id="username-form" class="row mb-4">
+        <div class="col-md-8 mx-auto">
+          <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">
+                <i class="fas fa-user-plus mr-2"></i>Step 1: Registration Details
+              </h5>
+            </div>
+            <div class="card-body">
+              <form id="username-input-form" onsubmit="return false;">
+                
+                <!-- Full Name -->
+                <div class="form-group">
+                  <label for="capture-username" class="font-weight-bold">
+                    <i class="fas fa-user text-primary"></i> Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control form-control-lg"
+                    id="capture-username"
+                    placeholder="Enter your full name (e.g., John Smith)"
+                    pattern="[A-Za-z\s]+"
+                    required
+                  />
+                  <small class="form-text text-muted">
+                    <i class="fas fa-info-circle"></i> Letters and spaces only
+                  </small>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                  <label for="capture-email" class="font-weight-bold">
+                    <i class="fas fa-envelope text-primary"></i> Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    class="form-control form-control-lg"
+                    id="capture-email"
+                    placeholder="your.email@example.com"
+                    required
+                  />
+                  <small class="form-text text-muted">
+                    <i class="fas fa-info-circle"></i> Valid email required
+                  </small>
+                </div>
+
+                <!-- Row for ID and Department -->
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="capture-id" class="font-weight-bold">
+                        <i class="fas fa-id-card text-primary"></i> ID Number *
+                      </label>
+                      <input
+                        type="text"
+                        class="form-control form-control-lg"
+                        id="capture-id"
+                        placeholder="e.g., EMP001 or STU12345"
+                        required
+                      />
+                      <small class="form-text text-muted">
+                        Employee/Student ID
+                      </small>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="capture-department" class="font-weight-bold">
+                        <i class="fas fa-building text-primary"></i> Department *
+                      </label>
+                      <select class="form-control form-control-lg" id="capture-department" required>
+                        <option value="">Select Department</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Information Technology">Information Technology</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Mechanical">Mechanical</option>
+                        <option value="Civil">Civil</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="Administration">Administration</option>
+                        <option value="Management">Management</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Row for Phone and Role -->
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="capture-phone" class="font-weight-bold">
+                        <i class="fas fa-phone text-primary"></i> Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        class="form-control form-control-lg"
+                        id="capture-phone"
+                        placeholder="+1 234 567 8900"
+                        pattern="[0-9+\s()-]+"
+                      />
+                      <small class="form-text text-muted">
+                        Optional contact number
+                      </small>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="capture-role" class="font-weight-bold">
+                        <i class="fas fa-user-tag text-primary"></i> Role *
+                      </label>
+                      <select class="form-control form-control-lg" id="capture-role" required>
+                        <option value="">Select Role</option>
+                        <option value="Student">Student</option>
+                        <option value="Teacher">Teacher</option>
+                        <option value="Staff">Staff</option>
+                        <option value="Administrator">Administrator</option>
+                        <option value="Guest">Guest</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Additional Notes -->
+                <div class="form-group">
+                  <label for="capture-notes" class="font-weight-bold">
+                    <i class="fas fa-sticky-note text-primary"></i> Additional Notes
+                  </label>
+                  <textarea
+                    class="form-control"
+                    id="capture-notes"
+                    rows="2"
+                    placeholder="Any additional information (optional)"
+                  ></textarea>
+                </div>
+
+                <div class="alert alert-info">
+                  <h6 class="alert-heading">
+                    <i class="fas fa-lightbulb mr-2"></i>Tips for Best Results:
+                  </h6>
+                  <ul class="mb-0 small">
+                    <li>✓ Ensure good lighting from the front</li>
+                    <li>✓ Look directly at the camera</li>
+                    <li>✓ Keep your face centered in the frame</li>
+                    <li>✓ Remove sunglasses and hats</li>
+                    <li>✓ Keep natural expression</li>
+                  </ul>
+                </div>
+
+                <button type="button" class="btn btn-primary btn-lg btn-block" id="proceed-camera-btn">
+                  <i class="fas fa-arrow-right mr-2"></i>Proceed to Camera
+                </button>
+
+                <a href="{{ url_for('home') }}" class="btn btn-secondary btn-lg btn-block mt-2">
+                  <i class="fas fa-times mr-2"></i>Cancel
+                </a>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 2: Camera Capture Interface (Hidden by default) -->
+      <div id="capture-interface" class="capture-interface" style="display: none;">
+
+        <!-- Status Feedback -->
+        <div id="capture-status" class="alert alert-info mb-4">
+          <i class="fas fa-spinner fa-spin mr-2"></i>
+          <span id="status-text">Initializing camera...</span>
+        </div>
+
+        <!-- Camera Feed Section -->
+        <div class="card shadow-lg mb-4">
+          <div class="card-header bg-gradient-success text-white" style="background: linear-gradient(135deg, #06d6a0 0%, #00b894 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="fas fa-video mr-2"></i>Step 2: Live Camera Feed
+              </h5>
+              <span class="badge badge-light" style="font-size: 0.9rem;">
+                <i class="fas fa-circle text-danger blink-animation"></i> LIVE
+              </span>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="video-wrapper" id="video-container">
+              <video id="camera-feed" autoplay playsinline muted></video>
+              <canvas id="face-detection-overlay" width="1280" height="720"></canvas>
+              
+              <!-- Capture counter overlay -->
+              <div style="position: absolute; top: 15px; left: 15px; z-index: 10; background: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 8px; color: white; font-weight: bold;">
+                <i class="fas fa-camera mr-2"></i>
+                <span id="captured-count">0</span> / <span>50</span>
+              </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="p-3 bg-light border-top">
+              <div class="progress" style="height: 30px;">
+                <div
+                  id="capture-progress"
+                  class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                  style="width: 0%;"
+                  role="progressbar"
+                  aria-valuenow="0"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  <span id="progress-text" class="progress-text">0 / 50</span>
+                </div>
+              </div>
+
+              <div class="progress-info mt-3 d-flex justify-content-between align-items-center small text-muted">
+                <span>
+                  <i class="fas fa-bolt text-warning"></i>
+                  <strong>Fast Capture:</strong> 1 photo/second when face detected
+                </span>
+                <span id="timer-display" class="font-weight-bold text-success">Ready</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <div class="capture-controls">
+              <button
+                type="button"
+                class="btn btn-success btn-lg"
+                id="start-capture-btn"
+              >
+                <i class="fas fa-play mr-2"></i>Start Capture
+              </button>
+              <button
+                type="button"
+                class="btn btn-warning btn-lg"
+                id="stop-capture-btn"
+                disabled
+              >
+                <i class="fas fa-stop mr-2"></i>Stop Capture
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary btn-lg"
+                id="submit-capture-btn"
+                disabled
+              >
+                <i class="fas fa-upload mr-2"></i>Submit & Save
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="stat-card">
+              <div class="stat-value" id="captured-count">0</div>
+              <div class="stat-label">Images Captured</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="stat-card">
+              <div class="stat-value" id="remaining-count">100</div>
+              <div class="stat-label">Remaining</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Instructions Panel -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card bg-light border-0">
+              <div class="card-body">
+                <h6 class="mb-3">
+                  <i class="fas fa-tasks text-primary mr-2"></i>Capture Process:
+                </h6>
+                <ol class="mb-0 small">
+                  <li>Click <strong>"Start Capture"</strong> to begin recording</li>
+                  <li>Position your face in the camera frame center</li>
+                  <li>System auto-captures 100 images (moves head slightly for variety)</li>
+                  <li>Click <strong>"Stop Capture"</strong> when done</li>
+                  <li>Click <strong>"Submit & Save"</strong> to register and train model</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
     </div>
+  </div>
 </div>
 
-<script>
-// Form validation
-(function() {
-    'use strict';
-    window.addEventListener('load', function() {
-        var forms = document.getElementsByClassName('needs-validation');
-        var validation = Array.prototype.filter.call(forms, function(form) {
-            form.addEventListener('submit', function(event) {
-                if (form.checkValidity() === false) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, false);
-})();
-</script>
+<!-- Third-party Libraries (loaded here, not in base to keep capture.js modular) -->
+<script async defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
+
+<!-- Capture Application Script -->
+<script src="{{ url_for('static', filename='js/capture.js') }}"></script>
+
 {% endblock %}

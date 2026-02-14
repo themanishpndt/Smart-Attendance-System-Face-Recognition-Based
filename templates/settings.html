@@ -1,31 +1,244 @@
 {% extends "base.html" %}
+
+{% block head %}
+<style>
+body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
+.settings-container { max-width: 900px; margin: 2rem auto; padding: 0 15px; }
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(102,126,234,0.2);
+    margin-bottom: 2rem;
+    color: white;
+}
+.page-header h1 { margin: 0; font-weight: 700; }
+.settings-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    margin-bottom: 1.5rem;
+}
+.setting-section {
+    padding: 1.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+.setting-section:last-child { border-bottom: none; }
+.setting-section h3 {
+    color: #1a1a2e;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+.setting-section p {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+.form-label {
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+.form-control, .form-select {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s;
+    width: 100%;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+    outline: none;
+}
+.small-text {
+    color: #999;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+.btn-save {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102,126,234,0.3);
+}
+.setting-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 30px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+input:checked + .slider { background-color: #667eea; }
+input:checked + .slider:before { transform: translateX(30px); }
+</style>
+{% endblock %}
 {% block content %}
-<div class="container mt-4">
-    <h2>Settings</h2>
+<div class="settings-container">
+    <div class="page-header">
+        <h1><i class="fas fa-cog mr-3"></i>System Settings</h1>
+        <p class="mb-0 mt-2">Configure your attendance system preferences</p>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }} mr-2"></i>
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
     <form method="POST" action="{{ url_for('settings') }}">
-        <div class="mb-3">
-            <label for="camera_index" class="form-label">Camera Index</label>
-            <input type="number" class="form-control" id="camera_index" name="camera_index"
-                   value="{{ settings.camera_index }}" min="0">
-            <small class="text-muted">Select which camera to use (0 for default)</small>
+        <div class="settings-card">
+            <div class="setting-section">
+                <div class="setting-icon">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <h3>Camera Configuration</h3>
+                <p>Select and configure your camera device for face capture</p>
+                
+                <div class="mb-3">
+                    <label for="camera_index" class="form-label">Camera Index</label>
+                    <select class="form-select" id="camera_index" name="camera_index">
+                        <option value="0" {% if settings.camera_index == 0 %}selected{% endif %}>Camera 0 (Default)</option>
+                        <option value="1" {% if settings.camera_index == 1 %}selected{% endif %}>Camera 1</option>
+                        <option value="2" {% if settings.camera_index == 2 %}selected{% endif %}>Camera 2</option>
+                    </select>
+                    <small class="small-text">Select which camera device to use for capturing faces</small>
+                </div>
+            </div>
+            
+            <div class="setting-section">
+                <div class="setting-icon">
+                    <i class="fas fa-images"></i>
+                </div>
+                <h3>Face Capture Settings</h3>
+                <p>Configure the number of face samples to collect during registration</p>
+                
+                <div class="mb-3">
+                    <label for="required_samples" class="form-label">Required Face Samples</label>
+                    <input type="number" class="form-control" id="required_samples" name="required_samples"
+                           value="{{ settings.required_samples }}" min="20" max="100">
+                    <small class="small-text">Number of images to capture (20-100). More samples = better accuracy</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Image Quality</label>
+                    <input type="range" class="form-range" min="1" max="100" value="92" id="imageQuality">
+                    <small class="small-text">Current: <span id="qualityValue">92</span>%</small>
+                </div>
+            </div>
+            
+            <div class="setting-section">
+                <div class="setting-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3>Recognition Accuracy</h3>
+                <p>Adjust the face recognition confidence threshold</p>
+                
+                <div class="mb-3">
+                    <label for="attendance_threshold" class="form-label">Recognition Threshold</label>
+                    <input type="number" class="form-control" id="attendance_threshold" name="attendance_threshold"
+                           value="{{ settings.attendance_threshold }}" min="0.1" max="1.0" step="0.1">
+                    <small class="small-text">Higher values require more confidence (0.1-1.0)</small>
+                </div>
+            </div>
+            
+            <div class="setting-section">
+                <div class="setting-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <h3>Notifications</h3>
+                <p>Enable or disable system notifications</p>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <strong>Sound Notifications</strong>
+                        <br><small class="small-text">Play sound on face detection</small>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Email Alerts</strong>
+                        <br><small class="small-text">Send email on new registration</small>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
         </div>
         
-        <div class="mb-3">
-            <label for="required_samples" class="form-label">Required Face Samples</label>
-            <input type="number" class="form-control" id="required_samples" name="required_samples"
-                   value="{{ settings.required_samples }}" min="10" max="100">
-            <small class="text-muted">Number of face samples to collect during registration (10-100)</small>
+        <div class="d-flex gap-3">
+            <button type="submit" class="btn-save">
+                <i class="fas fa-save mr-2"></i>Save Settings
+            </button>
+            <a href="{{ url_for('home') }}" class="btn btn-secondary btn-lg">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Home
+            </a>
         </div>
-        
-        <div class="mb-3">
-            <label for="attendance_threshold" class="form-label">Recognition Threshold</label>
-            <input type="number" class="form-control" id="attendance_threshold" name="attendance_threshold"
-                   value="{{ settings.attendance_threshold }}" min="0.1" max="1.0" step="0.1">
-            <small class="text-muted">Face recognition confidence threshold (0.1-1.0)</small>
-        </div>
-        
-        <button type="submit" class="btn btn-primary">Save Settings</button>
-        <a href="{{ url_for('home') }}" class="btn btn-secondary">Back to Home</a>
     </form>
 </div>
+
+<script>
+document.getElementById('imageQuality').addEventListener('input', function() {
+    document.getElementById('qualityValue').textContent = this.value;
+});
+</script>
 {% endblock %}

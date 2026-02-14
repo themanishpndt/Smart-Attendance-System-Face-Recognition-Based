@@ -4,124 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Face Recognition Attendance System{% endblock %}</title>
+    
+    <!-- External Libraries -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
     <style>
-        :root[data-theme="light"] {
-            --bg-gradient: linear-gradient(135deg, #f0f8ff, #e6f7ff);
-            --navbar-bg: rgba(0, 123, 255, 0.1);
-            --text-color: #212529;
-            --card-bg: rgba(255, 255, 255, 0.9);
-            --border-color: rgba(255, 255, 255, 0.2);
-            --scrollbar-thumb: rgba(128, 128, 128, 0.3);
-            --scrollbar-track: transparent;
-        }
-
-        :root[data-theme="dark"] {
-            --bg-gradient: linear-gradient(135deg, #0f172a, #1e293b);
-            --navbar-bg: rgba(17, 24, 39, 0.95);
-            --text-color: #e2e8f0;
-            --card-bg: rgba(30, 41, 59, 0.95);
-            --border-color: rgba(148, 163, 184, 0.1);
-            --scrollbar-thumb: rgba(255, 255, 255, 0.2);
-            --scrollbar-track: transparent;
-            --hover-bg: rgba(51, 65, 85, 0.4);
-            --active-bg: rgba(71, 85, 105, 0.4);
-            --link-color: #60a5fa;
-            --link-hover-color: #93c5fd;
-            --shadow-color: rgba(0, 0, 0, 0.25);
-            --input-bg: rgba(30, 41, 59, 0.8);
-            --input-border: rgba(148, 163, 184, 0.2);
-            --input-focus-border: rgba(96, 165, 250, 0.5);
-            --btn-primary-bg: #3b82f6;
-            --btn-primary-hover: #2563eb;
-            --btn-text: #ffffff;
-            --card-header-bg: #1e40af;
-            --card-header-text: #ffffff;
-            --success-color: #10b981;
-            --info-color: #0ea5e9;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --primary-color: #3b82f6;
-            --secondary-color: #64748b;
-            --accent-color: #8b5cf6;
-            --glow-color: rgba(59, 130, 246, 0.5);
-        }
-
-        html {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            position: relative;
-            scrollbar-gutter: stable;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            height: 100vh;
-            background: var(--bg-gradient);
-            color: var(--text-color);
-            position: relative;
-            overflow-x: hidden;
-            overflow-y: auto;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        .container {
-            width: 100%;
-            margin: 0 auto;
-            padding: 1rem;
-            box-sizing: border-box;
-        }
-
-        .content-wrapper {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        /* Basic scrollbar styling */
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: #888 #f1f1f1;
-        }
-
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
-            border: 2px solid #f1f1f1;
-        }
-
-        /* Dark theme scrollbar */
-        [data-theme="dark"] * {
-            scrollbar-color: #4a5568 #1a202c;
-        }
-
-        [data-theme="dark"] ::-webkit-scrollbar-track {
-            background: #1a202c;
-        }
-
-        [data-theme="dark"] ::-webkit-scrollbar-thumb {
-            background: #4a5568;
-            border: 2px solid #1a202c;
-        }
-
+        /* Minimal inline styles for base layout */
         .vector-background {
             position: fixed;
             top: 0;
@@ -129,14 +24,9 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            pointer-events: none;
+            pointer-events: none !important;
             overflow: hidden;
             opacity: 0.5;
-        }
-
-        [data-theme="dark"] .vector-background {
-            opacity: 0.3;
-            filter: hue-rotate(45deg);
         }
 
         .vector-background canvas {
@@ -145,431 +35,126 @@
             left: 0;
             width: 100% !important;
             height: 100% !important;
+            pointer-events: none !important;
         }
 
-        .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            margin-bottom: 0.5rem;
-            color: var(--text-color);
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            pointer-events: none !important;
         }
 
-        .alert {
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-        }
-
-        [data-theme="dark"] .alert-success {
-            background-color: rgba(16, 185, 129, 0.2);
-            border-color: rgba(16, 185, 129, 0.3);
-            color: #d1fae5;
-        }
-
-        [data-theme="dark"] .alert-info {
-            background-color: rgba(14, 165, 233, 0.2);
-            border-color: rgba(14, 165, 233, 0.3);
-            color: #e0f2fe;
-        }
-
-        [data-theme="dark"] .alert-warning {
-            background-color: rgba(245, 158, 11, 0.2);
-            border-color: rgba(245, 158, 11, 0.3);
-            color: #fef3c7;
-        }
-
-        [data-theme="dark"] .alert-danger {
-            background-color: rgba(239, 68, 68, 0.2);
-            border-color: rgba(239, 68, 68, 0.3);
-            color: #fee2e2;
-        }
-
-        [data-theme="dark"] .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px var(--shadow-color);
-            border-radius: 10px;
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        [data-theme="dark"] .card {
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        [data-theme="dark"] .card:hover {
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), 0 0 10px var(--glow-color);
-            transform: translateY(-5px);
-        }
-
-        .card-header {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        [data-theme="dark"] .card-header.bg-primary {
-            background-color: var(--card-header-bg) !important;
-            color: var(--card-header-text);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        [data-theme="dark"] .card-header.bg-success {
-            background-color: var(--success-color) !important;
-            color: var(--card-header-text);
-        }
-
-        [data-theme="dark"] .card-header.bg-info {
-            background-color: var(--info-color) !important;
-            color: var(--card-header-text);
-        }
-
-        [data-theme="dark"] .card-header.bg-warning {
-            background-color: var(--warning-color) !important;
-            color: #1e293b;
-        }
-
-        [data-theme="dark"] .card-header.bg-danger {
-            background-color: var(--danger-color) !important;
-            color: var(--card-header-text);
-        }
-
-        .navbar {
-            background-color: var(--navbar-bg);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border-color);
-            padding: 0.5rem 1rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        [data-theme="dark"] .navbar {
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        /* Dark mode navbar visibility */
-        [data-theme="dark"] .navbar { 
-            background-color: var(--navbar-bg) !important;
-        }
-        [data-theme="dark"] .navbar .navbar-brand,
-        [data-theme="dark"] .navbar .nav-link {
-            color: var(--text-color) !important;
-        }
-        [data-theme="dark"] .navbar-toggler {
-            border-color: var(--border-color) !important;
-        }
-        [data-theme="dark"] .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml;charset=utf8,%3Csvg stroke='rgba(255,255,255,0.7)' width='30' height='30' viewBox='0 0 30 30'%3E%3Cpath stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E") !important;
-        }
-
-        .theme-toggle {
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.3s;
-            margin-left: 10px;
+        .content-wrapper {
             position: relative;
-            overflow: hidden;
-        }
-
-        [data-theme="dark"] .theme-toggle {
-            background-color: rgba(30, 41, 59, 0.8);
-            box-shadow: 0 0 10px var(--glow-color);
-        }
-
-        .theme-toggle:hover {
-            transform: rotate(15deg);
-        }
-
-        .theme-toggle:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        [data-theme="dark"] .theme-toggle .fa-sun {
-            display: inline-block;
-        }
-
-        [data-theme="dark"] .theme-toggle .fa-moon {
-            display: none;
-        }
-
-        [data-theme="light"] .theme-toggle .fa-sun {
-            display: none;
-        }
-
-        [data-theme="light"] .theme-toggle .fa-moon {
-            display: inline-block;
-        }
-
-        .nav-link {
-            color: var(--text-color) !important;
-        }
-
-        [data-theme="dark"] .nav-link {
-            color: var(--text-color);
-        }
-
-        [data-theme="dark"] .nav-link:hover {
-            color: var(--link-hover-color);
-            background-color: var(--hover-bg);
-        }
-
-        [data-theme="dark"] .nav-link.active {
-            background-color: var(--active-bg);
-            color: var(--link-hover-color);
-        }
-
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-            color: #ffffff;
-        }
-
-        [data-theme="dark"] .btn-primary {
-            background-color: var(--btn-primary-bg);
-            border-color: var(--btn-primary-bg);
-            color: var(--btn-text);
-            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
-        }
-
-        [data-theme="dark"] .btn-primary:hover {
-            background-color: var(--btn-primary-hover);
-            border-color: var(--btn-primary-hover);
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5);
-            transform: translateY(-2px);
-        }
-
-        [data-theme="dark"] .btn-success {
-            background-color: var(--success-color);
-            border-color: var(--success-color);
-            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
-        }
-
-        [data-theme="dark"] .btn-success:hover {
-            background-color: #059669;
-            border-color: #059669;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5);
-            transform: translateY(-2px);
-        }
-
-        [data-theme="dark"] .btn-danger {
-            background-color: var(--danger-color);
-            border-color: var(--danger-color);
-            box-shadow: 0 2px 10px rgba(239, 68, 68, 0.3);
-        }
-
-        [data-theme="dark"] .btn-danger:hover {
-            background-color: #dc2626;
-            border-color: #dc2626;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.5);
-            transform: translateY(-2px);
-        }
-
-        [data-theme="dark"] .btn {
-            transition: all 0.3s ease;
-        }
-
-        .form-control {
-            background-color: #ffffff;
-            border-color: #ced4da;
-            color: #495057;
-        }
-
-        [data-theme="dark"] .form-control {
-            background-color: var(--input-bg);
-            border: 1px solid var(--input-border);
-            color: var(--text-color);
-        }
-
-        [data-theme="dark"] .form-control {
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
-        }
-
-        [data-theme="dark"] .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
-        }
-
-        [data-theme="dark"] .dropdown-menu {
-            background-color: rgba(15, 23, 42, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(10px);
-        }
-
-        [data-theme="dark"] .dropdown-item {
-            color: var(--text-color);
-        }
-
-        [data-theme="dark"] .dropdown-item:hover {
-            background-color: rgba(59, 130, 246, 0.2);
-        }
-
-        [data-theme="dark"] .dropdown-divider {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .table {
-            color: #212529;
-        }
-
-        [data-theme="dark"] .table {
-            color: var(--text-color);
-        }
-
-        [data-theme="dark"] .table {
-            border-color: rgba(255, 255, 255, 0.1);
+            z-index: 10;
+            min-height: 70vh;
+            padding: 2rem 0;
+            pointer-events: auto;
         }
         
-        [data-theme="dark"] .table thead th {
-            border-bottom-color: rgba(255, 255, 255, 0.1);
-            background-color: rgba(30, 41, 59, 0.5);
+        .content {
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
         }
         
-        [data-theme="dark"] .table-hover tbody tr:hover {
-            background-color: rgba(59, 130, 246, 0.1);
+        .container {
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
         }
         
-        [data-theme="dark"] .table td, [data-theme="dark"] .table th {
-            border-top-color: rgba(255, 255, 255, 0.1);
+        /* Ensure all interactive elements are clickable */
+        a, button, input, textarea, select {
+            pointer-events: auto !important;
         }
         
-        [data-theme="dark"] .badge-success {
-            background-color: var(--success-color);
+        .navbar {
+            pointer-events: auto !important;
         }
         
-        [data-theme="dark"] .badge-info {
-            background-color: var(--info-color);
-        }
-        
-        [data-theme="dark"] .badge-warning {
-            background-color: var(--warning-color);
-            color: #1e293b;
-        }
-        
-        [data-theme="dark"] .badge-danger {
-            background-color: var(--danger-color);
-        }
-
-        .alert {
-            background-color: #f8f9fa;
-            border-color: #ced4da;
-        }
-
-        [data-theme="dark"] .alert {
-            background-color: var(--card-bg);
-            border-color: var(--border-color);
-        }
-
-        /* Dark mode override for light-background cards */
-        [data-theme="dark"] .card.bg-light {
-            background-color: var(--card-bg) !important;
-            border: 1px solid var(--border-color) !important;
-            color: var(--text-color) !important;
-        }
-        [data-theme="dark"] .card.bg-light .card-body {
-            background-color: transparent !important;
-        }
-
-        /* Logo glow animation */
-        @keyframes logo-glow {
-            0% { text-shadow: 0 0 5px var(--glow-color), 0 0 10px var(--accent-color); }
-            100% { text-shadow: 0 0 20px var(--glow-color), 0 0 30px var(--accent-color); }
-        }
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            transition: color 0.3s ease, text-shadow 0.3s ease;
-        }
-        [data-theme="dark"] .navbar-brand {
-            color: var(--accent-color) !important;
-            animation: logo-glow 2s infinite alternate;
-        }
-        [data-theme="dark"] .navbar-logo-icon {
-            color: var(--accent-color) !important;
-            animation: logo-glow 2s infinite alternate;
+        .btn, .nav-link {
+            pointer-events: auto !important;
+            cursor: pointer !important;
         }
     </style>
 </head>
 <body>
     <div class="vector-background"></div>
 
-    <nav class="navbar navbar-expand-lg navbar-light">
-        <a class="navbar-brand animated-text" href="{{ url_for('home') }}">
+    <nav class="navbar navbar-expand-lg navbar-light" style="position: relative; z-index: 100; pointer-events: auto;">
+        <a class="navbar-brand animated-text" href="{{ url_for('home') }}" style="pointer-events: auto;">
             <i class="fas fa-camera navbar-logo-icon"></i> Smart Attendance System
         </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" style="pointer-events: auto;">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('home') }}">
+        <div class="collapse navbar-collapse" id="navbarNav" style="pointer-events: auto;">
+            <ul class="navbar-nav ml-auto" style="pointer-events: auto;">
+                <li class="nav-item" style="pointer-events: auto;">
+                    <a class="nav-link" href="{{ url_for('home') }}" style="pointer-events: auto;">
                         <i class="fas fa-home"></i> Home
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('capture') }}">
+                <li class="nav-item" style="pointer-events: auto;">
+                    <a class="nav-link" href="{{ url_for('capture') }}" style="pointer-events: auto;">
                         <i class="fas fa-camera"></i> Capture
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('recognize') }}">
+                <li class="nav-item" style="pointer-events: auto;">
+                    <a class="nav-link" href="{{ url_for('recognize') }}" style="pointer-events: auto;">
                         <i class="fas fa-user-check"></i> Recognize
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('show_attendance') }}">
+                <li class="nav-item" style="pointer-events: auto;">
+                    <a class="nav-link" href="{{ url_for('show_attendance') }}" style="pointer-events: auto;">
                         <i class="fas fa-clock"></i> Attendance
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('manage_users') }}">
+                <li class="nav-item" style="pointer-events: auto;">
+                    <a class="nav-link" href="{{ url_for('manage_users') }}" style="pointer-events: auto;">
                         <i class="fas fa-users"></i> Manage Users
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('settings') }}">
+                <li class="nav-item" style="pointer-events: auto;">
+                    <a class="nav-link" href="{{ url_for('settings') }}" style="pointer-events: auto;">
                         <i class="fas fa-cog"></i> Settings
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('export_attendance') }}">
+                <li class="nav-item" style="pointer-events: auto;">
+                    <a class="nav-link" href="{{ url_for('export_attendance') }}" style="pointer-events: auto;">
                         <i class="fas fa-file-export"></i> Export
                     </a>
                 </li>
                 {% if session.get('teacher_id') %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="teacherDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <li class="nav-item dropdown" style="pointer-events: auto;">
+                    <a class="nav-link dropdown-toggle" href="#" id="teacherDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="pointer-events: auto;">
                         <i class="fas fa-chalkboard-teacher"></i> Teacher
                     </a>
-                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="teacherDropdown">
-                        <a class="dropdown-item" href="{{ url_for('teacher_dashboard') }}">
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="teacherDropdown" style="pointer-events: auto;">
+                        <a class="dropdown-item" href="{{ url_for('teacher_dashboard') }}" style="pointer-events: auto;">
                             <i class="fas fa-tachometer-alt"></i> Dashboard
                         </a>
-                        <a class="dropdown-item" href="{{ url_for('manage_classes') }}">
+                        <a class="dropdown-item" href="{{ url_for('manage_classes') }}" style="pointer-events: auto;">
                             <i class="fas fa-users"></i> Manage Classes
                         </a>
-                        <a class="dropdown-item" href="{{ url_for('teacher_attendance') }}">
+                        <a class="dropdown-item" href="{{ url_for('teacher_attendance') }}" style="pointer-events: auto;">
                             <i class="fas fa-clipboard-list"></i> Attendance Records
                         </a>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item text-danger" href="{{ url_for('teacher_logout') }}">
+                        <a class="dropdown-item text-danger" href="{{ url_for('teacher_logout') }}" style="pointer-events: auto;">
                             <i class="fas fa-sign-out-alt"></i> Sign Out
                         </a>
                     </div>
                 </li>
                 {% endif %}
-                <li class="nav-item">
-                    <div class="theme-toggle" onclick="toggleTheme()">
-                        <i class="fas fa-sun"></i>
+                <li class="nav-item" style="pointer-events: auto;">
+                    <div class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" style="pointer-events: auto;">
                         <i class="fas fa-moon"></i>
                     </div>
                 </li>
@@ -577,46 +162,46 @@
         </div>
     </nav>
 
-    <div class="container">
-        <div class="content-wrapper">
+    <div class="container" style="position: relative; z-index: 10; pointer-events: auto;">
+        <div class="content-wrapper" style="position: relative; z-index: 10; pointer-events: auto;">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}" role="alert">
+                        <div class="alert alert-{{ category }}" role="alert" style="pointer-events: auto;">
                             {{ message }}
                         </div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
             
-            <div class="content">
+            <div class="content" style="position: relative; z-index: 10; pointer-events: auto;">
                 {% block content %}{% endblock %}
             </div>
         </div>
     </div>
 
+    <!-- External Scripts -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
     <script>
+        // Theme toggle function for navbar button
         function toggleTheme() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
+            if (window.themeManager) {
+                window.themeManager.toggle();
+            }
         }
-
-        // Set initial theme from localStorage or default to light
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        });
 
         // Three.js background animation
         function initThree() {
+            const vectorBg = document.querySelector('.vector-background');
+            if (!vectorBg) return;
+            
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ 
@@ -626,7 +211,7 @@
             
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
-            document.querySelector('.vector-background').appendChild(renderer.domElement);
+            vectorBg.appendChild(renderer.domElement);
 
             const geometry = new THREE.BufferGeometry();
             const vertices = [];
@@ -660,7 +245,7 @@
             }
             animate();
 
-            // Cleanup function
+            // Cleanup and resize handlers
             window.addEventListener('beforeunload', () => {
                 cancelAnimationFrame(animationFrameId);
                 geometry.dispose();
@@ -668,14 +253,13 @@
                 renderer.dispose();
             });
 
-            // Handle window resize
             window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize(window.innerWidth, window.innerHeight);
             });
 
-            // Update particle color when theme changes
+            // Update particle color on theme change
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     if (mutation.attributeName === 'data-theme') {
@@ -691,13 +275,14 @@
             });
         }
 
-        initThree();
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        // Initialize Three.js after DOM is loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initThree);
+        } else {
+            initThree();
+        }
     </script>
+    
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>
