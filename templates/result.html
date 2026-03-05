@@ -1,17 +1,27 @@
 {% extends "base.html" %}
-
-{% block title %}Result{% endblock %}
-
+{% block title %}Result — Smart Attendance{% endblock %}
 {% block content %}
-    <div class="card">
-        <div class="card-header bg-success text-white">
-            <h3 class="card-title text-center">Result</h3>
-        </div>
-        <div class="card-body">
-            <p class="text-center">{{ result }}</p>
-        </div>
-        <div class="card-footer text-center">
-            <a href="{{ url_for('home') }}" class="btn btn-primary">Back to Home</a>
-        </div>
+<style>
+  .result-wrap { max-width: 540px; margin: 3rem auto; text-align: center; }
+  .result-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+    padding: 2.5rem 2rem; box-shadow: var(--shadow);
+  }
+  .result-icon { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 1.5rem;
+    display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #fff; }
+  .result-card h2 { font-weight: 700; font-size: 1.3rem; margin-bottom: .4rem; }
+  .result-card p { color: var(--text2); font-size: .95rem; margin-bottom: 1.5rem; }
+</style>
+<div class="result-wrap anim-scale">
+  <div class="result-card cbar-green">
+    <div class="result-icon" style="background: var(--g4);"><i class="fas fa-check"></i></div>
+    <h2>Operation Complete</h2>
+    <p>{{ result }}</p>
+    <div style="display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;">
+      <a href="{{ url_for('home') }}" class="btn-g btn-purple"><i class="fas fa-home"></i> Home</a>
+      <a href="{{ url_for('capture') }}" class="btn-g btn-outline"><i class="fas fa-camera"></i> Capture</a>
+      <a href="{{ url_for('show_attendance') }}" class="btn-g btn-outline"><i class="fas fa-calendar-check"></i> Attendance</a>
     </div>
+  </div>
+</div>
 {% endblock %}

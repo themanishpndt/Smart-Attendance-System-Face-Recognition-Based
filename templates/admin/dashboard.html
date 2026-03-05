@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — Smart Attendance{% endblock %}
+
+{% block content %}
+<style>
+  .admin-header { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 20px; padding: 2rem 2.5rem;
+    color:#fff; box-shadow: 0 10px 40px rgba(240,147,251,.25); position: relative; overflow: hidden; margin-bottom: 1.5rem; }
+  .admin-header::after { content:''; position:absolute; inset:0;
+    background: radial-gradient(circle at 80% 20%, rgba(255,255,255,.15) 0%, transparent 50%); }
+  .admin-header * { position:relative; z-index:1; }
+  .admin-header h1 { font-size:1.8rem; font-weight:800; margin-bottom:.3rem; }
+  .admin-header p { opacity:.9; font-size:.95rem; margin:0; }
+  .admin-header .badge-pill { display:inline-flex; align-items:center; gap:5px; padding:4px 14px;
+    border-radius:20px; background:rgba(255,255,255,.2); font-size:.78rem; font-weight:700;
+    backdrop-filter:blur(10px); margin-bottom:.8rem; }
+
+  .admin-stats { display:grid; grid-template-columns:repeat(6,1fr); gap:.8rem; margin-bottom:1.5rem; }
+  @media(max-width:992px){ .admin-stats{ grid-template-columns:repeat(3,1fr); } }
+  @media(max-width:576px){ .admin-stats{ grid-template-columns:repeat(2,1fr); } }
+
+  .tab-bar { display:flex; gap:4px; margin-bottom:1.2rem; border-bottom:2px solid var(--border); padding-bottom:0; }
+  .tab-btn { padding:.7rem 1.2rem; border:none; background:none; font-weight:600; font-size:.88rem;
+    color:var(--text2); cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px;
+    transition:all .25s; font-family:inherit; display:flex; align-items:center; gap:6px; }
+  .tab-btn:hover { color:var(--c1); }
+  .tab-btn.active { color:#f5576c; border-bottom-color:#f5576c; }
+  .tab-pane { display:none; } .tab-pane.show { display:block; }
+
+  .search-bar { display:flex; gap:.6rem; margin-bottom:1rem; flex-wrap:wrap; }
+  .search-bar .fi { max-width:280px; }
+
+  .role-badge { padding:3px 10px; border-radius:14px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
+  .role-student { background:rgba(102,126,234,.1); color:var(--c1); }
+  .role-teacher { background:rgba(6,214,160,.1); color:#00a47a; }
+  .role-staff   { background:rgba(240,147,251,.1); color:#c44bc2; }
+  .role-admin   { background:rgba(239,71,111,.1); color:var(--c6); }
+
+  .type-badge { padding:3px 10px; border-radius:14px; font-size:.72rem; font-weight:700; }
+  .type-gate  { background:rgba(240,147,251,.12); color:#c44bc2; }
+  .type-class { background:rgba(102,126,234,.12); color:var(--c1); }
+
+  .chart-wrap { max-height:320px; position:relative; }
+
+  .quick-actions { display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1rem; }
+</style>
+
+<!-- Header -->
+<div class="admin-header anim-down">
+  <div class="badge-pill"><i class="fas fa-shield-halved"></i> ADMIN PORTAL</div>
+  <h1><i class="fas fa-gauge-high"></i> Dashboard</h1>
+  <p>College gate attendance overview — {{ today }}</p>
+</div>
+
+<!-- Stats -->
+<div class="admin-stats anim-up delay-1">
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g1);"><i class="fas fa-users"></i></div>
+    <div><div class="s-val">{{ total_users }}</div><div class="s-lbl">Total Users</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g3);"><i class="fas fa-user-graduate"></i></div>
+    <div><div class="s-val">{{ total_students }}</div><div class="s-lbl">Students</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g4);"><i class="fas fa-chalkboard-teacher"></i></div>
+    <div><div class="s-val">{{ total_teachers }}</div><div class="s-lbl">Teachers</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g6);"><i class="fas fa-user-tie"></i></div>
+    <div><div class="s-val">{{ total_staff }}</div><div class="s-lbl">Staff</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g2);"><i class="fas fa-door-open"></i></div>
+    <div><div class="s-val">{{ gate_count }}</div><div class="s-lbl">Gate Today</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g5);"><i class="fas fa-book-open"></i></div>
+    <div><div class="s-val">{{ class_count }}</div><div class="s-lbl">Class Today</div></div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tab-bar anim-up delay-2">
+  <button class="tab-btn active" onclick="showTab('gate',this)"><i class="fas fa-door-open"></i> Gate Attendance</button>
+  <button class="tab-btn" onclick="showTab('class',this)"><i class="fas fa-book-open"></i> Class Attendance</button>
+  <button class="tab-btn" onclick="showTab('users',this)"><i class="fas fa-users"></i> All Users</button>
+  <button class="tab-btn" onclick="showTab('charts',this)"><i class="fas fa-chart-pie"></i> Analytics</button>
+</div>
+
+<!-- Gate Attendance Tab -->
+<div class="tab-pane show" id="tab-gate">
+  <div class="glass-card cbar-pink anim-up delay-3">
+    <div class="card-hdr" style="justify-content:space-between;">
+      <span><i class="fas fa-door-open" style="color:#f5576c;"></i> Today's Gate Entries</span>
+      <span class="badge-g badge-pink">{{ gate_count }} entries</span>
+    </div>
+    <div class="card-inner">
+      {% if gate_attendance %}
+      <div style="overflow-x:auto;">
+        <table class="modern-table">
+          <thead><tr>
+            <th>Name</th><th>User ID</th><th>Department</th><th>Role</th><th>Time</th><th>Status</th>
+          </tr></thead>
+          <tbody>
+            {% for rec in gate_attendance %}
+            <tr>
+              <td><strong>{{ rec.student_name }}</strong></td>
+              <td>{{ rec.user_id or '—' }}</td>
+              <td>{{ rec.department or '—' }}</td>
+              <td>
+                {% set role = rec.role or 'Student' %}
+                <span class="role-badge role-{{ role|lower }}">{{ role }}</span>
+              </td>
+              <td><i class="fas fa-clock" style="color:var(--c7);font-size:.75rem;"></i> {{ rec.time }}</td>
+              <td><span class="badge-g badge-green">{{ rec.status }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:2rem;color:var(--text2);">
+        <i class="fas fa-door-closed" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.6rem;"></i>
+        <p>No gate entries recorded today</p>
+        <a href="{{ url_for('recognize') }}" class="btn-g btn-pink" style="margin-top:.5rem;"><i class="fas fa-camera"></i> Start Gate Scan</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Class Attendance Tab -->
+<div class="tab-pane" id="tab-class">
+  <div class="glass-card cbar-purple anim-up">
+    <div class="card-hdr" style="justify-content:space-between;">
+      <span><i class="fas fa-book-open" style="color:var(--c1);"></i> Today's Class Entries</span>
+      <span class="badge-g badge-purple">{{ class_count }} entries</span>
+    </div>
+    <div class="card-inner">
+      {% if class_attendance %}
+      <div style="overflow-x:auto;">
+        <table class="modern-table">
+          <thead><tr>
+            <th>Student</th><th>Class</th><th>Teacher</th><th>Department</th><th>Time</th><th>Status</th>
+          </tr></thead>
+          <tbody>
+            {% for rec in class_attendance %}
+            <tr>
+              <td><strong>{{ rec.student_name }}</strong></td>
+              <td>{{ rec.class_name or '—' }}</td>
+              <td>{{ rec.teacher_name or '—' }}</td>
+              <td>{{ rec.department or '—' }}</td>
+              <td><i class="fas fa-clock" style="color:var(--c7);font-size:.75rem;"></i> {{ rec.time }}</td>
+              <td><span class="badge-g badge-green">{{ rec.status }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:2rem;color:var(--text2);">
+        <i class="fas fa-book" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.6rem;"></i>
+        <p>No class attendance recorded today</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- All Users Tab -->
+<div class="tab-pane" id="tab-users">
+  <div class="glass-card cbar-blue anim-up">
+    <div class="card-hdr" style="justify-content:space-between;">
+      <span><i class="fas fa-users" style="color:var(--c7);"></i> Registered Users</span>
+      <span class="badge-g badge-blue">{{ total_users }} users</span>
+    </div>
+    <div class="card-inner">
+      <div class="search-bar">
+        <input type="text" class="fi" id="userSearch" placeholder="Search by name, ID, department..." oninput="filterUsers()">
+        <select class="fi" id="roleFilter" onchange="filterUsers()" style="max-width:160px;">
+          <option value="">All Roles</option>
+          <option value="Student">Student</option>
+          <option value="Teacher">Teacher</option>
+          <option value="Staff">Staff</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </div>
+      {% if all_users %}
+      <div style="overflow-x:auto;">
+        <table class="modern-table" id="usersTable">
+          <thead><tr>
+            <th>Name</th><th>User ID</th><th>Department</th><th>Email</th><th>Role</th><th>Phone</th>
+          </tr></thead>
+          <tbody>
+            {% for u in all_users %}
+            <tr data-name="{{ u.name|lower }}" data-id="{{ (u.user_id or '')|lower }}" data-dept="{{ (u.department or '')|lower }}" data-role="{{ u.role or 'Student' }}">
+              <td><strong>{{ u.name }}</strong><br><small style="color:var(--text2);">@{{ u.username }}</small></td>
+              <td>{{ u.user_id or '—' }}</td>
+              <td>{{ u.department or '—' }}</td>
+              <td>{{ u.email or '—' }}</td>
+              <td>
+                {% set role = u.role or 'Student' %}
+                <span class="role-badge role-{{ role|lower }}">{{ role }}</span>
+              </td>
+              <td>{{ u.phone or '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:2rem;color:var(--text2);">
+        <i class="fas fa-user-slash" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.6rem;"></i>
+        <p>No registered users yet</p>
+        <a href="{{ url_for('capture') }}" class="btn-g btn-blue" style="margin-top:.5rem;"><i class="fas fa-camera"></i> Register First User</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Charts Tab -->
+<div class="tab-pane" id="tab-charts">
+  <div class="grid-2 anim-up">
+    <div class="glass-card cbar-pink">
+      <div class="card-hdr"><i class="fas fa-chart-pie" style="color:#f5576c;"></i> Department Breakdown (Gate)</div>
+      <div class="card-inner">
+        <div class="chart-wrap"><canvas id="deptChart"></canvas></div>
+      </div>
+    </div>
+    <div class="glass-card cbar-purple">
+      <div class="card-hdr"><i class="fas fa-chart-bar" style="color:var(--c1);"></i> Gate vs Class Today</div>
+      <div class="card-inner">
+        <div class="chart-wrap"><canvas id="compareChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions anim-up delay-4" style="margin-top:1.5rem;">
+  <a href="{{ url_for('recognize') }}" class="btn-g btn-pink"><i class="fas fa-camera"></i> Start Gate Scan</a>
+  <a href="{{ url_for('admin_attendance') }}" class="btn-g btn-purple"><i class="fas fa-history"></i> Full History</a>
+  <a href="{{ url_for('capture') }}" class="btn-g btn-blue"><i class="fas fa-user-plus"></i> Register User</a>
+  <a href="{{ url_for('manage_users') }}" class="btn-g btn-green"><i class="fas fa-users-cog"></i> Manage Users</a>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+/* Tabs */
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('show'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('show');
+  btn.classList.add('active');
+}
+
+/* User search */
+function filterUsers() {
+  var q = document.getElementById('userSearch').value.toLowerCase();
+  var role = document.getElementById('roleFilter').value;
+  document.querySelectorAll('#usersTable tbody tr').forEach(function(row) {
+    var name = row.getAttribute('data-name') || '';
+    var uid = row.getAttribute('data-id') || '';
+    var dept = row.getAttribute('data-dept') || '';
+    var r = row.getAttribute('data-role') || '';
+    var matchText = !q || name.includes(q) || uid.includes(q) || dept.includes(q);
+    var matchRole = !role || r === role;
+    row.style.display = (matchText && matchRole) ? '' : 'none';
+  });
+}
+
+/* Charts */
+document.addEventListener('DOMContentLoaded', function() {
+  // Department pie chart
+  var deptLabels = {{ dept_stats.keys()|list|tojson }};
+  var deptValues = {{ dept_stats.values()|list|tojson }};
+  var deptColors = ['#667eea','#f093fb','#06d6a0','#4cc9f0','#ffd166','#ef476f','#a18cd1','#fccb90','#f5576c','#43e97b'];
+
+  if (deptLabels.length > 0) {
+    new Chart(document.getElementById('deptChart'), {
+      type: 'doughnut',
+      data: {
+        labels: deptLabels,
+        datasets: [{ data: deptValues, backgroundColor: deptColors.slice(0, deptLabels.length), borderWidth: 0 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, font: { size: 12, family: 'Inter' } } } }
+      }
+    });
+  }
+
+  // Gate vs Class bar chart
+  new Chart(document.getElementById('compareChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Gate Entries', 'Class Entries'],
+      datasets: [{
+        data: [{{ gate_count }}, {{ class_count }}],
+        backgroundColor: ['rgba(240,147,251,.7)', 'rgba(102,126,234,.7)'],
+        borderRadius: 10, borderWidth: 0, barThickness: 50
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

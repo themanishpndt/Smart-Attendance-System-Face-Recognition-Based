@@ -7,7 +7,16 @@ import time
 import sqlite3
 import hashlib
 import secrets
-from datetime import datetime
+import smtplib
+import random
+import string
+import base64
+import cloudinary
+import cloudinary.uploader
+from functools import wraps
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime, timedelta
 from win32com.client import Dispatch
 from sklearn.neighbors import KNeighborsClassifier
 from flask import (
@@ -21,11 +30,207 @@ from flask import (
     flash,
     jsonify,
     make_response,
+    Response,
 )
 
 # Initialize Flask app
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)
+
+# Persistent secret key — survives server restarts so sessions stay valid
+_secret_key_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".flask_secret")
+if os.path.exists(_secret_key_file):
+    with open(_secret_key_file, "r") as _f:
+        app.secret_key = _f.read().strip()
+else:
+    app.secret_key = secrets.token_hex(32)
+    with open(_secret_key_file, "w") as _f:
+        _f.write(app.secret_key)
+
+app.permanent_session_lifetime = timedelta(days=30)  # "Remember me" sessions last 30 days
+
+
+# ═══════════════════════════════════════════
+# Cloudinary Configuration (persistent media storage)
+# ═══════════════════════════════════════════
+cloudinary.config(
+    cloud_name="dud3f00ay",
+    api_key="764652939378289",
+    api_secret="gu7Rwmz8jB4I0vsI3VYZNC3Ri0Q",
+    secure=True,
+)
+
+
+def upload_profile_image(file, folder="profile_images"):
+    """Upload an image to Cloudinary and return the secure URL."""
+    try:
+        result = cloudinary.uploader.upload(
+            file,
+            folder=folder,
+            transformation=[
+                {"width": 400, "height": 400, "crop": "fill", "gravity": "face"},
+                {"quality": "auto", "fetch_format": "auto"},
+            ],
+            overwrite=True,
+            resource_type="image",
+        )
+        return result.get("secure_url")
+    except Exception as e:
+        print(f"Cloudinary upload error: {e}")
+        return None
+
+
+# ═══════════════════════════════════════════
+# Auth Decorators & Context Processor
+# ═══════════════════════════════════════════
+def teacher_login_required(f):
+    """Decorator that redirects to login if teacher is not authenticated."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "teacher_id" not in session:
+            flash("Please log in first.", "warning")
+            return redirect(url_for("teacher_login"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def admin_login_required(f):
+    """Decorator that redirects to admin login if admin is not authenticated."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "admin_id" not in session:
+            flash("Admin login required.", "warning")
+            return redirect(url_for("admin_login"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def any_login_required(f):
+    """Decorator that requires either admin or teacher to be logged in."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "admin_id" not in session and "teacher_id" not in session:
+            flash("Please sign in first.", "warning")
+            return redirect(url_for("home"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+@app.context_processor
+def inject_auth_info():
+    """Make auth info available in ALL templates automatically."""
+    return {
+        "teacher_logged_in": "teacher_id" in session,
+        "current_teacher_name": session.get("teacher_name", ""),
+        "current_teacher_username": session.get("teacher_username", ""),
+        "current_teacher_image": session.get("teacher_profile_image", ""),
+        "admin_logged_in": "admin_id" in session,
+        "current_admin_name": session.get("admin_name", ""),
+        "current_admin_username": session.get("admin_username", ""),
+        "current_admin_image": session.get("admin_profile_image", ""),
+    }
+
+
+# ═══════════════════════════════════════════
+# SMTP Email Configuration
+# ═══════════════════════════════════════════
+SMTP_EMAIL = "mpandat0052@gmail.com"
+SMTP_PASSWORD = "delq fqbt nxgm kped"
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+APP_NAME = "Smart Attendance System"
+
+
+def send_email(to_email, subject, html_body):
+    """Send an email using Gmail SMTP."""
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["From"] = f"{APP_NAME} <{SMTP_EMAIL}>"
+        msg["To"] = to_email
+        msg["Subject"] = subject
+        msg.attach(MIMEText(html_body, "html"))
+
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_EMAIL, SMTP_PASSWORD)
+            server.sendmail(SMTP_EMAIL, to_email, msg.as_string())
+        print(f"Email sent to {to_email}: {subject}")
+        return True
+    except Exception as e:
+        print(f"Email sending failed: {str(e)}")
+        return False
+
+
+def generate_otp(length=6):
+    """Generate a random numeric OTP."""
+    return "".join(random.choices(string.digits, k=length))
+
+
+def generate_token():
+    """Generate a random URL-safe token."""
+    return secrets.token_urlsafe(32)
+
+
+def build_verification_email(full_name, otp_code):
+    """Build the HTML body for account verification email (Teacher - purple)."""
+    return f"""
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(102,126,234,.15);">
+      <div style="background:linear-gradient(135deg,#667eea,#764ba2);padding:2rem;text-align:center;color:#fff;">
+        <div style="width:56px;height:56px;background:rgba(255,255,255,.2);border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">&#128274;</div>
+        <h2 style="margin:0;font-size:1.4rem;">Verify Your Email</h2>
+        <p style="opacity:.85;margin:.3rem 0 0;">Smart Attendance System — Teacher Portal</p>
+      </div>
+      <div style="padding:2rem;text-align:center;">
+        <p style="color:#555;font-size:.95rem;">Hello <strong>{full_name}</strong>,</p>
+        <p style="color:#555;font-size:.95rem;">Use this verification code to complete your registration:</p>
+        <div style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:2rem;font-weight:800;letter-spacing:8px;padding:1rem 2rem;border-radius:12px;display:inline-block;margin:1rem 0;">{otp_code}</div>
+        <p style="color:#888;font-size:.82rem;">This code expires in <strong>10 minutes</strong>.</p>
+        <p style="color:#888;font-size:.82rem;">If you didn't request this, please ignore this email.</p>
+      </div>
+      <div style="background:#f8f8ff;padding:1rem;text-align:center;font-size:.75rem;color:#aaa;border-top:1px solid #eee;">Smart Attendance System &copy; 2025</div>
+    </div>
+    """
+
+
+def build_admin_verification_email(full_name, otp_code):
+    """Build the HTML body for account verification email (Admin - pink)."""
+    return f"""
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(240,147,251,.15);">
+      <div style="background:linear-gradient(135deg,#f093fb,#f5576c);padding:2rem;text-align:center;color:#fff;">
+        <div style="width:56px;height:56px;background:rgba(255,255,255,.2);border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">&#128737;</div>
+        <h2 style="margin:0;font-size:1.4rem;">Admin Email Verification</h2>
+        <p style="opacity:.85;margin:.3rem 0 0;">Smart Attendance System — Admin Portal</p>
+      </div>
+      <div style="padding:2rem;text-align:center;">
+        <p style="color:#555;font-size:.95rem;">Hello <strong>{full_name}</strong>,</p>
+        <p style="color:#555;font-size:.95rem;">Use this verification code to activate your admin account:</p>
+        <div style="background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;font-size:2rem;font-weight:800;letter-spacing:8px;padding:1rem 2rem;border-radius:12px;display:inline-block;margin:1rem 0;">{otp_code}</div>
+        <p style="color:#888;font-size:.82rem;">This code expires in <strong>10 minutes</strong>.</p>
+        <p style="color:#888;font-size:.82rem;">If you didn't request this, please ignore this email.</p>
+      </div>
+      <div style="background:#fff5f7;padding:1rem;text-align:center;font-size:.75rem;color:#aaa;border-top:1px solid #fce;">Smart Attendance System &copy; 2025</div>
+    </div>
+    """
+
+
+def build_reset_email(full_name, reset_link):
+    """Build the HTML body for password reset email."""
+    return f"""
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(240,147,251,.15);">
+      <div style="background:linear-gradient(135deg,#f093fb,#f5576c);padding:2rem;text-align:center;color:#fff;">
+        <div style="width:56px;height:56px;background:rgba(255,255,255,.2);border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">&#128272;</div>
+        <h2 style="margin:0;font-size:1.4rem;">Reset Your Password</h2>
+        <p style="opacity:.85;margin:.3rem 0 0;">Smart Attendance System</p>
+      </div>
+      <div style="padding:2rem;text-align:center;">
+        <p style="color:#555;font-size:.95rem;">Hello <strong>{full_name}</strong>,</p>
+        <p style="color:#555;font-size:.95rem;">We received a request to reset your password. Click the button below:</p>
+        <a href="{reset_link}" style="display:inline-block;background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;font-weight:700;padding:.8rem 2rem;border-radius:12px;text-decoration:none;font-size:1rem;margin:1rem 0;">Reset Password</a>
+        <p style="color:#888;font-size:.82rem;">This link expires in <strong>30 minutes</strong>.</p>
+        <p style="color:#888;font-size:.82rem;">If you didn't request this, your account is safe — just ignore this email.</p>
+      </div>
+      <div style="background:#fff5f7;padding:1rem;text-align:center;font-size:.75rem;color:#aaa;border-top:1px solid #fce;">Smart Attendance System &copy; 2025</div>
+    </div>
+    """
 
 
 # Database setup
@@ -40,12 +245,84 @@ def init_db():
     with open("schema.sql") as f:
         conn.executescript(f.read())
     conn.commit()
+    # Ensure new columns exist on existing DBs (migrations)
+    _migrations = [
+        ("classes", "department", "ALTER TABLE classes ADD COLUMN department TEXT"),
+        ("attendance_records", "attendance_type", "ALTER TABLE attendance_records ADD COLUMN attendance_type TEXT NOT NULL DEFAULT 'gate'"),
+        ("attendance_records", "admin_id", "ALTER TABLE attendance_records ADD COLUMN admin_id INTEGER"),
+        ("admins", "college_name", "ALTER TABLE admins ADD COLUMN college_name TEXT DEFAULT ''"),
+        ("admins", "phone", "ALTER TABLE admins ADD COLUMN phone TEXT DEFAULT ''"),
+        ("admins", "profile_image", "ALTER TABLE admins ADD COLUMN profile_image TEXT DEFAULT ''"),
+        ("admins", "bio", "ALTER TABLE admins ADD COLUMN bio TEXT DEFAULT ''"),
+        ("admins", "designation", "ALTER TABLE admins ADD COLUMN designation TEXT DEFAULT ''"),
+        ("teachers", "profile_image", "ALTER TABLE teachers ADD COLUMN profile_image TEXT DEFAULT ''"),
+        ("teachers", "phone", "ALTER TABLE teachers ADD COLUMN phone TEXT DEFAULT ''"),
+        ("teachers", "department", "ALTER TABLE teachers ADD COLUMN department TEXT DEFAULT ''"),
+        ("teachers", "bio", "ALTER TABLE teachers ADD COLUMN bio TEXT DEFAULT ''"),
+        ("teachers", "designation", "ALTER TABLE teachers ADD COLUMN designation TEXT DEFAULT ''"),
+    ]
+    for table, col, sql in _migrations:
+        try:
+            conn.execute(f"SELECT {col} FROM {table} LIMIT 1")
+        except sqlite3.OperationalError:
+            try:
+                conn.execute(sql)
+                conn.commit()
+            except sqlite3.OperationalError:
+                pass
+    # Make teacher_id nullable in existing attendance_records (for admin-only records)
     conn.close()
 
 
-# Initialize database if it doesn't exist
-if not os.path.exists("attendance.db"):
-    init_db()
+# Initialize database (always run to ensure all tables exist)
+init_db()
+
+
+# Create email verification & password reset tables
+def init_auth_tables():
+    conn = get_db_connection()
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS email_verifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            username TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            full_name TEXT NOT NULL,
+            otp_code TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP NOT NULL,
+            verified INTEGER DEFAULT 0,
+            user_type TEXT NOT NULL DEFAULT 'teacher',
+            college_name TEXT DEFAULT '',
+            phone TEXT DEFAULT ''
+        );
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            teacher_id INTEGER NOT NULL,
+            token TEXT UNIQUE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP NOT NULL,
+            used INTEGER DEFAULT 0,
+            FOREIGN KEY (teacher_id) REFERENCES teachers (id)
+        );
+    """)
+    # Safely add columns if they don't exist
+    for col, default in [("is_verified", "1")]:
+        try:
+            conn.execute(f"ALTER TABLE teachers ADD COLUMN {col} INTEGER DEFAULT {default}")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
+    for col in ["user_type", "college_name", "phone"]:
+        try:
+            conn.execute(f"ALTER TABLE email_verifications ADD COLUMN {col} TEXT DEFAULT ''")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
+    conn.close()
+
+
+init_auth_tables()
 
 
 def speak(message):
@@ -873,10 +1150,24 @@ def save_settings(settings_dict):
 
 
 def load_settings():
+    defaults = {
+        "camera_index": 0,
+        "required_samples": 50,
+        "attendance_threshold": 0.6,
+        "min_confidence": 50,
+        "auto_save_attendance": True,
+        "recognition_interval": 2000,
+        "departments": ["Computer Science", "IT", "Electronics", "Mechanical", "Civil", "Other"],
+        "roles": ["Student", "Teacher", "Staff", "Admin"],
+        "duplicate_check": True,
+        "notification_sound": True,
+    }
     if os.path.exists("data/settings.pkl"):
         with open("data/settings.pkl", "rb") as f:
-            return pickle.load(f)
-    return {"camera_index": 0, "required_samples": 50, "attendance_threshold": 0.6}
+            saved = pickle.load(f)
+        # Merge saved with defaults (so new keys get default values)
+        defaults.update(saved)
+    return defaults
 
 
 # Export functions
@@ -899,7 +1190,7 @@ def export_attendance_csv():
 # Routes
 @app.route("/")
 def home():
-    return render_template("index.html", teacher_logged_in="teacher_id" in session)
+    return render_template("index.html")
 
 
 @app.route("/instructions")
@@ -907,23 +1198,9 @@ def instructions():
     return render_template("instructions.html")
 
 
-@app.route("/capture", methods=["GET", "POST"])
+@app.route("/capture", methods=["GET"])
+@any_login_required
 def capture():
-    if request.method == "POST":
-        name = request.form["name"]
-        # Check if name contains only letters and spaces
-        if (
-            name
-            and all(c.isalpha() or c.isspace() for c in name)
-            and not name.isspace()
-        ):
-            result = capture_faces(name)
-            return render_template("result.html", result=result)
-        else:
-            return render_template(
-                "capture.html",
-                error="Please enter a valid name using only alphabets and spaces between names.",
-            )
     return render_template("capture.html")
 
 
@@ -935,193 +1212,175 @@ def upload_capture():
     """
     try:
         data = request.get_json()
-        username = data.get("username", "").strip()
-        email = data.get("email", "").strip()
-        user_id = data.get("userId", "").strip()
-        department = data.get("department", "").strip()
-        phone = data.get("phone", "").strip()
-        role = data.get("role", "").strip()
-        notes = data.get("notes", "").strip()
+        if not data:
+            return jsonify({"error": "No data received"}), 400
+
+        username = (data.get("username") or "").strip()
+        email = (data.get("email") or "").strip()
+        user_id = (data.get("userId") or "").strip()
+        department = (data.get("department") or "").strip()
+        phone = (data.get("phone") or "").strip()
+        role = (data.get("role") or "student").strip()
+        notes = (data.get("notes") or "").strip()
         images = data.get("images", [])
-        
-        # Validate input
-        if not username or not images:
-            return jsonify({"error": "Invalid input"}), 400
-        
+
+        # ── Validate required fields ──
+        if not username:
+            return jsonify({"error": "Name is required"}), 400
         if not all(c.isalpha() or c.isspace() for c in username):
-            return jsonify({"error": "Invalid username"}), 400
-        
-        if not email or '@' not in email:
-            return jsonify({"error": "Invalid email address"}), 400
-        
+            return jsonify({"error": "Name must contain only letters and spaces"}), 400
+        if not email or "@" not in email:
+            return jsonify({"error": "Valid email is required"}), 400
         if not user_id:
-            return jsonify({"error": "ID number is required"}), 400
-        
+            return jsonify({"error": "User ID is required"}), 400
         if not department:
             return jsonify({"error": "Department is required"}), 400
-        
-        if not role:
-            return jsonify({"error": "Role is required"}), 400
-        
-        # Require at least 20 images for good accuracy
-        if len(images) < 20:
-            return jsonify({"error": "At least 20 images required for accurate recognition"}), 400
-        
-        # Limit to prevent processing too many images
+        if not images or len(images) < 5:
+            return jsonify({"error": f"At least 5 images required (received {len(images)})"}), 400
+
+        # Cap at 100 images
         if len(images) > 100:
-            images = images[:100]  # Use first 100 if more provided
-        
+            images = images[:100]
+
         # Create data directory
-        if not os.path.exists("data"):
-            os.makedirs("data")
-        
-        # Process and save images
+        os.makedirs("data", exist_ok=True)
+
+        # ── Process images: detect & crop faces ──
         faces_data = []
-        
         for idx, image_data in enumerate(images):
             try:
-                # Remove data:image/jpeg;base64, prefix if present
                 if "," in image_data:
                     image_data = image_data.split(",")[1]
-                
-                # Decode base64
-                import base64
                 image_bytes = base64.b64decode(image_data)
                 nparr = np.frombuffer(image_bytes, np.uint8)
                 frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-                
                 if frame is None:
                     continue
-                
-                # Detect face
+
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                gray = cv2.equalizeHist(gray)
+
+                # Try multiple cascade parameters for robustness
                 faces = facedetect.detectMultiScale(gray, 1.3, 5)
-                
+                if len(faces) == 0:
+                    faces = facedetect.detectMultiScale(gray, 1.1, 3, minSize=(30, 30))
+
                 if len(faces) > 0:
-                    x, y, w, h = max(faces, key=lambda rect: rect[2] * rect[3])
-                    # Crop and resize
-                    crop_img = frame[y:y+h, x:x+w]
+                    x, y, w, h = max(faces, key=lambda r: r[2] * r[3])
+                    crop_img = frame[y : y + h, x : x + w]
                     resized_img = cv2.resize(crop_img, (50, 50))
                     faces_data.append(resized_img)
-            
+                else:
+                    # Fallback: use center-crop of the frame as a face
+                    h, w = frame.shape[:2]
+                    sz = min(h, w)
+                    y0, x0 = (h - sz) // 2, (w - sz) // 2
+                    crop = frame[y0 : y0 + sz, x0 : x0 + sz]
+                    resized_img = cv2.resize(crop, (50, 50))
+                    faces_data.append(resized_img)
             except Exception as e:
                 print(f"Error processing image {idx}: {e}")
                 continue
-        
-        if len(faces_data) < 10:
-            return jsonify({"error": "Could not detect faces in images"}), 400
-        
-        # Convert to numpy array
-        faces_data = np.array(faces_data)
-        
-        # Load existing data if present
+
+        if len(faces_data) < 5:
+            return jsonify({"error": f"Only {len(faces_data)} usable images. Please ensure good lighting and face visibility."}), 400
+
+        new_faces = np.array(faces_data)
+        new_count = len(new_faces)
+
+        # ── Merge with existing data ──
         try:
-            if os.path.exists("data/faces_data.pkl"):
+            if os.path.exists("data/faces_data.pkl") and os.path.exists("data/names.pkl"):
                 with open("data/faces_data.pkl", "rb") as f:
                     existing_faces = pickle.load(f)
-                faces_data = np.append(existing_faces, faces_data, axis=0)
-            
-            if os.path.exists("data/names.pkl"):
                 with open("data/names.pkl", "rb") as f:
                     existing_names = pickle.load(f)
-                new_names = [username] * len(faces_data)
-                names = existing_names + new_names[len(existing_names):]
+                all_faces = np.append(existing_faces, new_faces, axis=0)
+                all_names = list(existing_names) + [username] * new_count
             else:
-                names = [username] * len(faces_data)
-        
+                all_faces = new_faces
+                all_names = [username] * new_count
         except Exception as e:
-            print(f"Error loading existing data: {e}")
-            names = [username] * len(faces_data)
-        
-        # Save updated data
+            print(f"Error loading existing data, starting fresh: {e}")
+            all_faces = new_faces
+            all_names = [username] * new_count
+
+        # ── Save data ──
         with open("data/faces_data.pkl", "wb") as f:
-            pickle.dump(faces_data, f)
-        
+            pickle.dump(all_faces, f)
         with open("data/names.pkl", "wb") as f:
-            pickle.dump(names, f)
-        
-        # Train KNN model
-        knn = KNeighborsClassifier(n_neighbors=5)
-        knn.fit(faces_data.reshape(faces_data.shape[0], -1), names)
-        
+            pickle.dump(all_names, f)
+
+        # ── Train KNN model ──
+        n_neighbors = min(5, len(all_faces))
+        knn = KNeighborsClassifier(n_neighbors=n_neighbors)
+        knn.fit(all_faces.reshape(all_faces.shape[0], -1), all_names)
         with open("data/face_recognizer.pkl", "wb") as f:
             pickle.dump(knn, f)
-        
-        # Add user to database with all details
+
+        # ── Save user to database ──
         conn = get_db_connection()
         try:
-            # First create the users table if it doesn't exist with all fields
-            conn.execute('''
-                CREATE TABLE IF NOT EXISTS users (
+            conn.execute(
+                """CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT UNIQUE NOT NULL,
                     name TEXT NOT NULL,
-                    email TEXT UNIQUE NOT NULL,
+                    email TEXT NOT NULL,
                     user_id TEXT UNIQUE NOT NULL,
                     department TEXT NOT NULL,
                     phone TEXT,
                     role TEXT NOT NULL,
                     notes TEXT,
                     created_at TEXT NOT NULL
-                )
-            ''')
-            
-            # Insert or replace user data
+                )"""
+            )
             conn.execute(
-                '''INSERT OR REPLACE INTO users 
-                   (username, name, email, user_id, department, phone, role, notes, created_at) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                (username, username, email, user_id, department, phone, role, notes, datetime.now().isoformat())
+                """INSERT OR REPLACE INTO users
+                   (username, name, email, user_id, department, phone, role, notes, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (username, username, email, user_id, department, phone, role, notes, datetime.now().isoformat()),
             )
             conn.commit()
         except Exception as e:
             print(f"Database error: {e}")
         finally:
             conn.close()
-        
+
         return jsonify({
             "success": True,
-            "message": f"Successfully registered {username} with {len(faces_data)} face samples",
+            "message": f"Successfully registered {username} with {new_count} face samples",
+            "totalSamples": len(all_faces),
             "userData": {
                 "name": username,
                 "email": email,
                 "userId": user_id,
                 "department": department,
-                "role": role
-            }
+                "role": role,
+            },
         }), 200
-    
+
     except Exception as e:
         print(f"Upload error: {e}")
+        import traceback; traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/recognize", methods=["GET", "POST"])
+@app.route("/recognize", methods=["GET"])
+@any_login_required
 def recognize():
-    # Check if a teacher is logged in
-    teacher_logged_in = "teacher_id" in session
     classes = []
 
     # Get classes for the teacher if logged in
-    if teacher_logged_in:
+    if "teacher_id" in session:
         conn = get_db_connection()
         classes = conn.execute(
             "SELECT * FROM classes WHERE teacher_id = ?", (session["teacher_id"],)
         ).fetchall()
         conn.close()
 
-    if request.method == "POST":
-        # Get the selected class ID if provided
-        class_id = request.form.get("class_id")
-        if class_id:
-            class_id = int(class_id)
-
-        # Start recognition with the selected class
-        result = start_recognition(class_id)
-        return render_template("result.html", result=result)
-
     return render_template(
-        "recognize.html", teacher_logged_in=teacher_logged_in, classes=classes
+        "recognize.html", classes=classes
     )
 
 
@@ -1161,23 +1420,20 @@ def show_attendance():
         ).fetchall()
         departments = [d['department'] for d in all_depts]
         
-        # Build query with filters - use LIKE for better matching
+        # Build query — deduplicate: only the FIRST record per student per day
+        # Use MIN(time) + GROUP BY to get single entry per person per day
         query = """
             SELECT 
                 ar.student_name,
                 ar.date,
-                ar.time,
+                MIN(ar.time) as time,
                 ar.status,
                 u.user_id,
                 u.department,
                 u.email
             FROM attendance_records ar
-            LEFT JOIN users u ON (
-                u.name LIKE '%' || ar.student_name || '%' OR 
-                ar.student_name LIKE '%' || u.name || '%' OR
-                ar.student_name = u.username
-            )
-            WHERE ar.student_name != "Unknown" AND ar.student_name != "Error"
+            LEFT JOIN users u ON ar.student_name = u.username
+            WHERE ar.student_name != 'Unknown' AND ar.student_name != 'Error'
         """
         
         params = []
@@ -1198,14 +1454,16 @@ def show_attendance():
             params.append(f"%{filter_name}%")
             params.append(f"%{filter_name}%")
         
-        query += " ORDER BY ar.date DESC, ar.time DESC"
+        # GROUP BY to get only one record per student per day
+        query += " GROUP BY ar.student_name, ar.date"
+        query += " ORDER BY ar.time DESC"
         
         db_records = conn.execute(query, params).fetchall()
         
         # Convert database records to list format
         for record in db_records:
             attendance_records.append({
-                'name': record['student_name'],
+                'student_name': record['student_name'],
                 'date': record['date'],
                 'time': record['time'],
                 'status': record['status'] or 'Present',
@@ -1216,13 +1474,13 @@ def show_attendance():
         
         # Calculate statistics
         today = datetime.now().strftime("%d-%m-%Y")
-        total_records = len(db_records)
-        unique_users = len(set(r['student_name'] for r in db_records))
-        today_count = sum(1 for r in db_records if r['date'] == today)
+        total_records = len(attendance_records)
+        unique_users = len(set(r['student_name'] for r in attendance_records))
+        today_count = sum(1 for r in attendance_records if r['date'] == today)
         
         # Department-wise stats for filtered results
         dept_stats = {}
-        for record in db_records:
+        for record in attendance_records:
             dept = record['department'] or 'N/A'
             if dept not in dept_stats:
                 dept_stats[dept] = 0
@@ -1264,6 +1522,7 @@ def show_attendance():
 
 
 @app.route("/manage_users")
+@admin_login_required
 def manage_users():
     # Get all users from names.pkl
     users = get_all_users()
@@ -1299,7 +1558,7 @@ def manage_users():
     return render_template("manage_users.html", users=users, user_details=user_details)
 
 
-@app.route("/delete_user/<username>")
+@app.route("/delete_user/<username>", methods=["POST"])
 def delete_user_route(username):
     if delete_user(username):
         flash(f"User '{username}' has been deleted successfully.", "success")
@@ -1308,22 +1567,155 @@ def delete_user_route(username):
     return redirect(url_for("manage_users"))
 
 
+@app.route("/api/edit_user/<username>", methods=["POST"])
+def edit_user_route(username):
+    """Edit user details in the database."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        name = data.get("name", "").strip()
+        email = data.get("email", "").strip()
+        user_id = data.get("user_id", "").strip()
+        department = data.get("department", "").strip()
+        role = data.get("role", "").strip()
+
+        if not name:
+            return jsonify({"error": "Name is required"}), 400
+
+        conn = get_db_connection()
+        # Check if user exists
+        existing = conn.execute(
+            "SELECT id FROM users WHERE username = ?", (username,)
+        ).fetchone()
+
+        if not existing:
+            conn.close()
+            return jsonify({"error": "User not found"}), 404
+
+        conn.execute(
+            """UPDATE users SET name = ?, email = ?, user_id = ?, department = ?, role = ?
+               WHERE username = ?""",
+            (name, email, user_id, department, role, username),
+        )
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            "success": True,
+            "message": f"User '{name}' updated successfully",
+            "user": {
+                "username": username,
+                "name": name,
+                "email": email,
+                "user_id": user_id,
+                "department": department,
+                "role": role,
+            },
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/settings", methods=["GET", "POST"])
+@admin_login_required
 def settings():
     if request.method == "POST":
+        # Check if this is a JSON request (AJAX from settings page)
+        if request.is_json:
+            data = request.get_json()
+            action = data.get('action', '')
+            
+            current = load_settings()
+            
+            if action == 'add_department':
+                dept = (data.get('department') or '').strip()
+                if dept and dept not in current.get('departments', []):
+                    current.setdefault('departments', []).append(dept)
+                    save_settings(current)
+                    return jsonify({'success': True, 'departments': current['departments']})
+                return jsonify({'success': False, 'message': 'Department empty or already exists'})
+            
+            elif action == 'remove_department':
+                dept = data.get('department', '')
+                depts = current.get('departments', [])
+                if dept in depts:
+                    depts.remove(dept)
+                    current['departments'] = depts
+                    save_settings(current)
+                    return jsonify({'success': True, 'departments': current['departments']})
+                return jsonify({'success': False, 'message': 'Department not found'})
+            
+            elif action == 'add_role':
+                role = (data.get('role') or '').strip()
+                if role and role not in current.get('roles', []):
+                    current.setdefault('roles', []).append(role)
+                    save_settings(current)
+                    return jsonify({'success': True, 'roles': current['roles']})
+                return jsonify({'success': False, 'message': 'Role empty or already exists'})
+            
+            elif action == 'remove_role':
+                role = data.get('role', '')
+                roles = current.get('roles', [])
+                if role in roles:
+                    roles.remove(role)
+                    current['roles'] = roles
+                    save_settings(current)
+                    return jsonify({'success': True, 'roles': current['roles']})
+                return jsonify({'success': False, 'message': 'Role not found'})
+            
+            elif action == 'clear_attendance':
+                try:
+                    conn = get_db_connection()
+                    conn.execute("DELETE FROM attendance_records")
+                    conn.commit()
+                    conn.close()
+                    return jsonify({'success': True, 'message': 'All attendance records cleared'})
+                except Exception as e:
+                    return jsonify({'success': False, 'message': str(e)})
+            
+            elif action == 'reset_settings':
+                if os.path.exists("data/settings.pkl"):
+                    os.remove("data/settings.pkl")
+                return jsonify({'success': True, 'message': 'Settings reset to defaults'})
+            
+            return jsonify({'success': False, 'message': 'Unknown action'})
+        
+        # Form-based settings save
+        current = load_settings()
         new_settings = {
             "camera_index": int(request.form.get("camera_index", 0)),
             "required_samples": int(request.form.get("required_samples", 50)),
-            "attendance_threshold": float(
-                request.form.get("attendance_threshold", 0.6)
-            ),
+            "attendance_threshold": float(request.form.get("attendance_threshold", 0.6)),
+            "min_confidence": int(request.form.get("min_confidence", 50)),
+            "auto_save_attendance": request.form.get("auto_save_attendance") == "on",
+            "recognition_interval": int(request.form.get("recognition_interval", 2000)),
+            "duplicate_check": request.form.get("duplicate_check") == "on",
+            "notification_sound": request.form.get("notification_sound") == "on",
+            "departments": current.get('departments', []),
+            "roles": current.get('roles', []),
         }
         save_settings(new_settings)
         flash("Settings saved successfully!", "success")
         return redirect(url_for("settings"))
 
     current_settings = load_settings()
-    return render_template("settings.html", settings=current_settings)
+    
+    # Get system stats for the settings page
+    conn = get_db_connection()
+    total_records = conn.execute("SELECT COUNT(*) as c FROM attendance_records").fetchone()['c']
+    total_users = len(get_all_users())
+    conn.close()
+    
+    sys_stats = {
+        'total_records': total_records,
+        'total_users': total_users,
+        'model_exists': os.path.exists("data/face_recognizer.pkl"),
+        'faces_data_exists': os.path.exists("data/faces_data.pkl"),
+    }
+    
+    return render_template("settings.html", settings=current_settings, sys_stats=sys_stats)
 
 
 # API Routes for Real-time Face Recognition
@@ -1331,10 +1723,6 @@ def settings():
 def capture_frame():
     """Receive and process a captured frame from the client"""
     try:
-        import base64
-        import numpy as np
-        from io import BytesIO
-        
         data = request.get_json()
         frame_data = data.get('frame')
         
@@ -1413,89 +1801,115 @@ def capture_frame():
 
 @app.route("/api/save_attendance", methods=["POST"])
 def save_attendance_api():
-    """Save recognized attendance to database and CSV - only once per student per day"""
+    """Save recognized attendance — supports both gate (admin) and class (teacher) modes.
+    A student can be marked present TWICE per day: once at gate, once in class."""
     try:
         data = request.get_json()
-        name = data.get('name')
-        class_id = data.get('class_id')
-        teacher_id = data.get('teacher_id', 1)  # Default teacher_id if not provided
-        
-        if not name:
-            return jsonify({'success': False, 'message': 'No name provided'})
-        
+        name = (data.get('name') or '').strip()
+        class_id = data.get('class_id') or None
+        attendance_type = data.get('attendance_type', 'gate')  # 'gate' or 'class'
+
+        # Normalise empty string class_id to None
+        if class_id == '':
+            class_id = None
+
+        if not name or name in ('Unknown', 'Error'):
+            return jsonify({'success': False, 'message': 'No valid name provided'})
+
+        # Determine who is recording
+        teacher_id = None
+        admin_id = None
+        if attendance_type == 'class' and "teacher_id" in session:
+            teacher_id = session["teacher_id"]
+        elif attendance_type == 'gate' and "admin_id" in session:
+            admin_id = session["admin_id"]
+        else:
+            # Fallback: use provided teacher_id or default
+            teacher_id = data.get('teacher_id', 1)
+
         conn = get_db_connection()
-        
-        # Save to database
         now = datetime.now()
         date_str = now.strftime("%d-%m-%Y")
         time_str = now.strftime("%H:%M:%S")
-        
-        # Check if this student already has an attendance record for TODAY (entire day check)
+
+        # Check duplicate: same student + same date + same attendance_type
+        # (allows 1 gate + 1 class entry per day)
         try:
             existing_record = conn.execute(
-                "SELECT * FROM attendance_records WHERE student_name = ? AND date = ?",
-                (name, date_str)
+                "SELECT * FROM attendance_records WHERE student_name = ? AND date = ? AND attendance_type = ?",
+                (name, date_str, attendance_type)
             ).fetchone()
-            
+
             if existing_record:
-                # Student already recorded today - don't record again
                 conn.close()
+                type_label = "Gate Entry" if attendance_type == "gate" else "Class Entry"
                 return jsonify({
-                    'success': False, 
-                    'message': f'✓ {name} already recorded for today at {existing_record["time"]}',
+                    'success': False,
+                    'message': f'✓ {name} already has {type_label} for today at {existing_record["time"]}',
                     'duplicate': True,
                     'already_recorded': True
                 })
         except Exception as e:
             print(f"Error checking existing records: {str(e)}")
-        
-        # Record the attendance (first time for this student today)
+
+        # Record the attendance
         try:
             conn.execute(
-                "INSERT INTO attendance_records (student_name, date, time, status, class_id, teacher_id) VALUES (?, ?, ?, ?, ?, ?)",
-                (name, date_str, time_str, "Present", class_id if class_id else None, teacher_id)
+                "INSERT INTO attendance_records (student_name, date, time, status, class_id, teacher_id, admin_id, attendance_type) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (name, date_str, time_str, "Present", class_id, teacher_id, admin_id, attendance_type)
             )
             conn.commit()
-            print(f"✓ Attendance recorded for {name} at {time_str}")
-        except sqlite3.IntegrityError as ie:
-            # Fallback: Attendance already recorded for this student today
+            type_label = "Gate" if attendance_type == "gate" else "Class"
+            print(f"✓ {type_label} attendance recorded for {name} at {time_str}")
+        except sqlite3.IntegrityError:
             conn.close()
             return jsonify({
-                'success': False, 
+                'success': False,
                 'message': f'Attendance already recorded for {name} today',
                 'duplicate': True,
                 'already_recorded': True
             })
-        
+
         # Save to CSV
-        attendance_dir = r"C:\Users\MANISH SHARMA\OneDrive\Desktop\Smart Attendence System\Attendance"
+        attendance_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Attendance")
         os.makedirs(attendance_dir, exist_ok=True)
-        
+
         csv_file = os.path.join(attendance_dir, f"Attendance_{date_str}.csv")
-        
         file_exists = os.path.isfile(csv_file)
         try:
             with open(csv_file, 'a', newline='') as f:
                 writer = csv.writer(f)
                 if not file_exists:
-                    writer.writerow(["NAME", "DATE", "TIME"])
-                writer.writerow([name, date_str, time_str])
-            print(f"✓ Attendance saved to CSV for {name}")
+                    writer.writerow(["NAME", "DATE", "TIME", "TYPE"])
+                writer.writerow([name, date_str, time_str, attendance_type])
         except Exception as csv_error:
             print(f"Error saving to CSV: {str(csv_error)}")
-        
+
+        # Fetch user details for response
+        user_info = conn.execute(
+            "SELECT user_id, department, email, role FROM users WHERE username = ?",
+            (name,)
+        ).fetchone()
         conn.close()
-        
+
+        type_label = "Gate Entry" if attendance_type == "gate" else "Class Entry"
         return jsonify({
             'success': True,
-            'message': f'✓ Attendance recorded for {name}',
+            'message': f'✓ {type_label} recorded for {name}',
+            'attendance_type': attendance_type,
             'data': {
                 'name': name,
                 'date': date_str,
-                'time': time_str
+                'time': time_str,
+                'attendance_type': attendance_type,
+                'user_id': user_info['user_id'] if user_info else 'N/A',
+                'department': user_info['department'] if user_info else 'N/A',
+                'email': user_info['email'] if user_info else 'N/A',
+                'role': user_info['role'] if user_info else 'N/A'
             }
         })
-    
+
     except Exception as e:
         print(f"Error in save_attendance_api: {str(e)}")
         return jsonify({'success': False, 'message': str(e)})
@@ -1522,44 +1936,124 @@ def get_recognized_users():
 
 
 @app.route("/export_attendance", methods=["GET", "POST"])
+@admin_login_required
 def export_attendance():
     if request.method == "POST":
-        # Handle export request
+        import io, json as jsonlib
+        
         format_type = request.form.get('format', 'csv')
         start_date = request.form.get('start_date', '')
         end_date = request.form.get('end_date', '')
+        department_filter = request.form.get('department', '')
+        name_filter = request.form.get('name', '')
         include_headers = request.form.get('include_headers') == 'on'
         include_stats = request.form.get('include_stats') == 'on'
+        deduplicate = request.form.get('deduplicate') == 'on'
         
         conn = get_db_connection()
         
-        # Build query
-        query = "SELECT * FROM attendance_records WHERE 1=1"
+        # Build query with proper user details
+        if deduplicate:
+            query = """
+                SELECT ar.student_name, ar.date, MIN(ar.time) as time, ar.status,
+                       u.user_id, u.department, u.email, u.role, u.phone
+                FROM attendance_records ar
+                LEFT JOIN users u ON ar.student_name = u.username
+                WHERE ar.student_name != 'Unknown' AND ar.student_name != 'Error'
+            """
+        else:
+            query = """
+                SELECT ar.student_name, ar.date, ar.time, ar.status,
+                       u.user_id, u.department, u.email, u.role, u.phone
+                FROM attendance_records ar
+                LEFT JOIN users u ON ar.student_name = u.username
+                WHERE ar.student_name != 'Unknown' AND ar.student_name != 'Error'
+            """
         params = []
         
+        # Date range filtering — convert YYYY-MM-DD inputs to DD-MM-YYYY for DB
         if start_date:
-            query += " AND date >= ?"
-            params.append(start_date)
+            try:
+                start_obj = datetime.strptime(start_date, "%Y-%m-%d")
+                # Get all records and filter in Python for correct date comparison
+            except:
+                pass
         if end_date:
-            query += " AND date <= ?"
-            params.append(end_date)
+            try:
+                end_obj = datetime.strptime(end_date, "%Y-%m-%d")
+            except:
+                pass
         
-        records = conn.execute(query, params).fetchall()
+        if department_filter:
+            query += " AND u.department = ?"
+            params.append(department_filter)
+        
+        if name_filter:
+            query += " AND (ar.student_name LIKE ? OR u.user_id LIKE ?)"
+            params.append(f"%{name_filter}%")
+            params.append(f"%{name_filter}%")
+        
+        if deduplicate:
+            query += " GROUP BY ar.student_name, ar.date"
+        
+        query += " ORDER BY ar.date DESC, ar.time DESC"
+        
+        all_records = conn.execute(query, params).fetchall()
+        
+        # Filter by date range in Python (since DD-MM-YYYY string comparison doesn't work)
+        records = []
+        for r in all_records:
+            try:
+                rec_date = datetime.strptime(r['date'], "%d-%m-%Y")
+                if start_date:
+                    start_obj = datetime.strptime(start_date, "%Y-%m-%d")
+                    if rec_date < start_obj:
+                        continue
+                if end_date:
+                    end_obj = datetime.strptime(end_date, "%Y-%m-%d")
+                    if rec_date > end_obj:
+                        continue
+            except:
+                pass
+            records.append(r)
+        
         conn.close()
         
         if format_type == 'csv':
-            import io
             output = io.StringIO()
+            writer = csv.writer(output)
             
             if include_headers:
-                output.write("Date,User ID,Status,Time\n")
+                writer.writerow(["Name", "User ID", "Department", "Email", "Role", "Date", "Time", "Status"])
             
             for record in records:
-                output.write(f"{record['date']},{record['user_id']},{record['status']},{record['time']}\n")
+                writer.writerow([
+                    record['student_name'],
+                    record['user_id'] or '',
+                    record['department'] or '',
+                    record['email'] or '',
+                    record['role'] or '',
+                    record['date'],
+                    record['time'],
+                    record['status'] or 'Present'
+                ])
             
             if include_stats:
-                output.write("\n\nStatistics\n")
-                output.write(f"Total Records,{len(records)}\n")
+                writer.writerow([])
+                writer.writerow(["--- Statistics ---"])
+                writer.writerow(["Total Records", len(records)])
+                unique = len(set(r['student_name'] for r in records))
+                writer.writerow(["Unique Users", unique])
+                writer.writerow(["Export Date", datetime.now().strftime("%d-%m-%Y %H:%M:%S")])
+                # Dept breakdown
+                dept_counts = {}
+                for r in records:
+                    d = r['department'] or 'Unknown'
+                    dept_counts[d] = dept_counts.get(d, 0) + 1
+                writer.writerow([])
+                writer.writerow(["Department", "Count"])
+                for dept, count in sorted(dept_counts.items()):
+                    writer.writerow([dept, count])
             
             response = make_response(output.getvalue())
             response.headers["Content-Disposition"] = f"attachment;filename=attendance_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
@@ -1567,72 +2061,477 @@ def export_attendance():
             return response
         
         elif format_type == 'json':
-            import json
             data = {
-                'records': [dict(record) for record in records]
+                'records': [{
+                    'name': r['student_name'],
+                    'user_id': r['user_id'] or '',
+                    'department': r['department'] or '',
+                    'email': r['email'] or '',
+                    'role': r['role'] or '',
+                    'date': r['date'],
+                    'time': r['time'],
+                    'status': r['status'] or 'Present'
+                } for r in records]
             }
             if include_stats:
+                unique = len(set(r['student_name'] for r in records))
+                dept_counts = {}
+                for r in records:
+                    d = r['department'] or 'Unknown'
+                    dept_counts[d] = dept_counts.get(d, 0) + 1
                 data['statistics'] = {
                     'total_records': len(records),
+                    'unique_users': unique,
+                    'department_breakdown': dept_counts,
                     'export_date': datetime.now().isoformat()
                 }
             
-            response = make_response(json.dumps(data, indent=2))
+            response = make_response(jsonlib.dumps(data, indent=2))
             response.headers["Content-Disposition"] = f"attachment;filename=attendance_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
             response.headers["Content-Type"] = "application/json"
             return response
         
-        # For other formats, just return CSV for now
-        flash("Export format not fully implemented yet. Using CSV.", "info")
-        return redirect(url_for("export_attendance"))
+        else:
+            flash("Only CSV and JSON formats are supported.", "info")
+            return redirect(url_for("export_attendance"))
     
-    # GET request - show the export form
+    # GET — show the export form with stats and filter options
     conn = get_db_connection()
-    total_records = conn.execute("SELECT COUNT(*) as count FROM attendance_records").fetchone()['count']
+    total_records = conn.execute("SELECT COUNT(*) as count FROM attendance_records WHERE student_name != 'Unknown' AND student_name != 'Error'").fetchone()['count']
+    
+    # Get departments for filter
+    all_depts = conn.execute(
+        "SELECT DISTINCT department FROM users WHERE department IS NOT NULL AND department != ''"
+    ).fetchall()
+    departments = [d['department'] for d in all_depts]
+    
+    # Get date range
+    date_range = conn.execute(
+        "SELECT MIN(date) as earliest, MAX(date) as latest FROM attendance_records"
+    ).fetchone()
+    
+    # Get unique students count
+    unique_count = conn.execute(
+        "SELECT COUNT(DISTINCT student_name) as count FROM attendance_records WHERE student_name != 'Unknown' AND student_name != 'Error'"
+    ).fetchone()['count']
+    
+    # Get today's count
+    today = datetime.now().strftime("%d-%m-%Y")
+    today_count = conn.execute(
+        "SELECT COUNT(DISTINCT student_name) as count FROM attendance_records WHERE date = ? AND student_name != 'Unknown'", (today,)
+    ).fetchone()['count']
+    
     conn.close()
     
     stats = {
         'total_records': total_records,
-        'total_users': len(get_all_users())
+        'total_users': len(get_all_users()),
+        'unique_recorded': unique_count,
+        'today_count': today_count,
+        'earliest_date': date_range['earliest'] if date_range else None,
+        'latest_date': date_range['latest'] if date_range else None,
     }
     
-    return render_template("export_attendance.html", stats=stats)
+    return render_template("export_attendance.html", stats=stats, departments=departments)
+
+
+# API endpoint to get departments list (used by multiple pages)
+@app.route("/api/departments")
+def get_departments():
+    conn = get_db_connection()
+    depts = conn.execute(
+        "SELECT DISTINCT department FROM users WHERE department IS NOT NULL AND department != '' ORDER BY department"
+    ).fetchall()
+    conn.close()
+    return jsonify({'departments': [d['department'] for d in depts]})
+
+
+# Combined API for dropdown options — merges settings + database
+@app.route("/api/options")
+def get_options():
+    """Returns merged department and role lists from settings + database"""
+    s = load_settings()
+    setting_depts = s.get('departments', [])
+    setting_roles = s.get('roles', [])
+    
+    # Also get departments actually used in DB
+    conn = get_db_connection()
+    db_depts = conn.execute(
+        "SELECT DISTINCT department FROM users WHERE department IS NOT NULL AND department != '' ORDER BY department"
+    ).fetchall()
+    conn.close()
+    
+    # Merge (settings list + any DB-only depts)
+    all_depts = list(setting_depts)
+    for d in db_depts:
+        if d['department'] not in all_depts:
+            all_depts.append(d['department'])
+    
+    return jsonify({
+        'departments': all_depts,
+        'roles': setting_roles,
+        'settings': {
+            'min_confidence': s.get('min_confidence', 50),
+            'recognition_interval': s.get('recognition_interval', 2000),
+            'auto_save_attendance': s.get('auto_save_attendance', True),
+            'required_samples': s.get('required_samples', 50),
+        }
+    })
+
+
+# Export preview API
+@app.route("/api/export_preview")
+def export_preview():
+    """Return a preview of records matching the export filters (max 20 rows)"""
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
+    department_filter = request.args.get('department', '')
+    name_filter = request.args.get('name', '')
+    
+    conn = get_db_connection()
+    query = """
+        SELECT ar.student_name, ar.date, MIN(ar.time) as time, ar.status,
+               u.user_id, u.department, u.email
+        FROM attendance_records ar
+        LEFT JOIN users u ON ar.student_name = u.username
+        WHERE ar.student_name != 'Unknown' AND ar.student_name != 'Error'
+    """
+    params = []
+    
+    if department_filter:
+        query += " AND u.department = ?"
+        params.append(department_filter)
+    if name_filter:
+        query += " AND (ar.student_name LIKE ? OR u.user_id LIKE ?)"
+        params.append(f"%{name_filter}%")
+        params.append(f"%{name_filter}%")
+    
+    query += " GROUP BY ar.student_name, ar.date ORDER BY ar.date DESC, ar.time DESC"
+    
+    all_records = conn.execute(query, params).fetchall()
+    conn.close()
+    
+    # Filter by date range in Python
+    filtered = []
+    for r in all_records:
+        try:
+            rec_date = datetime.strptime(r['date'], "%d-%m-%Y")
+            if start_date:
+                if rec_date < datetime.strptime(start_date, "%Y-%m-%d"):
+                    continue
+            if end_date:
+                if rec_date > datetime.strptime(end_date, "%Y-%m-%d"):
+                    continue
+        except:
+            pass
+        filtered.append({
+            'name': r['student_name'],
+            'user_id': r['user_id'] or '',
+            'department': r['department'] or '',
+            'email': r['email'] or '',
+            'date': r['date'],
+            'time': r['time'],
+        })
+    
+    return jsonify({
+        'total': len(filtered),
+        'records': filtered[:20]  # Preview limited to 20
+    })
 
 
 # Teacher authentication routes
 @app.route("/auth/register", methods=["GET", "POST"])
 def teacher_register():
     if request.method == "POST":
-        username = request.form["username"]
+        username = request.form["username"].strip()
         password = request.form["password"]
-        email = request.form["email"]
-        full_name = request.form["full_name"]
+        email = request.form["email"].strip()
+        full_name = request.form["full_name"].strip()
+
+        if not username or not password or not email or not full_name:
+            flash("All fields are required.", "danger")
+            return render_template("auth/register.html")
+
+        if len(password) < 6:
+            flash("Password must be at least 6 characters.", "danger")
+            return render_template("auth/register.html")
+
+        # Check if username or email already exists
+        conn = get_db_connection()
+        existing = conn.execute(
+            "SELECT id FROM teachers WHERE username = ? OR email = ?",
+            (username, email),
+        ).fetchone()
+        if existing:
+            conn.close()
+            flash("Username or email already exists.", "danger")
+            return render_template("auth/register.html")
 
         # Hash the password
         password_hash = hashlib.sha256(password.encode()).hexdigest()
 
-        conn = get_db_connection()
-        try:
-            conn.execute(
-                "INSERT INTO teachers (username, password_hash, email, full_name) VALUES (?, ?, ?, ?)",
-                (username, password_hash, email, full_name),
+        # Generate OTP
+        otp_code = generate_otp()
+        expires_at = (datetime.now() + timedelta(minutes=10)).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+
+        # Delete any previous pending verifications for the same email
+        conn.execute("DELETE FROM email_verifications WHERE email = ?", (email,))
+
+        # Store pending registration
+        conn.execute(
+            """INSERT INTO email_verifications
+               (email, username, password_hash, full_name, otp_code, expires_at)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (email, username, password_hash, full_name, otp_code, expires_at),
+        )
+        conn.commit()
+        conn.close()
+
+        # Send verification email
+        email_body = build_verification_email(full_name, otp_code)
+        sent = send_email(email, f"Verify Your Email — {APP_NAME}", email_body)
+
+        if sent:
+            session["pending_verify_email"] = email
+            flash("A verification code has been sent to your email.", "info")
+            return redirect(url_for("verify_email"))
+        else:
+            flash(
+                "Failed to send verification email. Please try again.", "danger"
             )
-            conn.commit()
-            flash("Registration successful! Please log in.", "success")
-            return redirect(url_for("teacher_login"))
-        except sqlite3.IntegrityError:
-            flash("Username or email already exists.", "danger")
-        finally:
-            conn.close()
+            return render_template("auth/register.html")
 
     return render_template("auth/register.html")
 
 
+@app.route("/auth/verify", methods=["GET", "POST"])
+def verify_email():
+    email = session.get("pending_verify_email")
+    if not email:
+        flash("No pending verification. Please register first.", "warning")
+        return redirect(url_for("teacher_register"))
+
+    if request.method == "POST":
+        otp_input = request.form.get("otp", "").strip()
+
+        if not otp_input:
+            flash("Please enter the verification code.", "danger")
+            return render_template("auth/verify.html", email=email)
+
+        conn = get_db_connection()
+        record = conn.execute(
+            """SELECT * FROM email_verifications
+               WHERE email = ? AND otp_code = ? AND verified = 0
+               ORDER BY created_at DESC LIMIT 1""",
+            (email, otp_input),
+        ).fetchone()
+
+        if not record:
+            conn.close()
+            flash("Invalid verification code.", "danger")
+            return render_template("auth/verify.html", email=email)
+
+        # Check expiry
+        expires = datetime.strptime(record["expires_at"], "%Y-%m-%d %H:%M:%S")
+        if datetime.now() > expires:
+            conn.close()
+            flash("Verification code has expired. Please register again.", "danger")
+            return redirect(url_for("teacher_register"))
+
+        # OTP valid — create the teacher account
+        try:
+            conn.execute(
+                """INSERT INTO teachers (username, password_hash, email, full_name, is_verified)
+                   VALUES (?, ?, ?, ?, 1)""",
+                (
+                    record["username"],
+                    record["password_hash"],
+                    record["email"],
+                    record["full_name"],
+                ),
+            )
+            # Mark verification as used
+            conn.execute(
+                "UPDATE email_verifications SET verified = 1 WHERE id = ?",
+                (record["id"],),
+            )
+            conn.commit()
+            session.pop("pending_verify_email", None)
+            flash("Email verified! Your account is active. Please log in.", "success")
+            return redirect(url_for("teacher_login"))
+        except sqlite3.IntegrityError:
+            flash("Username or email already registered.", "danger")
+            return redirect(url_for("teacher_register"))
+        finally:
+            conn.close()
+
+    return render_template("auth/verify.html", email=email)
+
+
+@app.route("/auth/resend-otp", methods=["POST"])
+def resend_otp():
+    email = session.get("pending_verify_email")
+    if not email:
+        flash("No pending verification.", "warning")
+        return redirect(url_for("teacher_register"))
+
+    conn = get_db_connection()
+    record = conn.execute(
+        "SELECT * FROM email_verifications WHERE email = ? AND verified = 0 ORDER BY created_at DESC LIMIT 1",
+        (email,),
+    ).fetchone()
+
+    if not record:
+        conn.close()
+        flash("No pending registration found. Please register again.", "warning")
+        return redirect(url_for("teacher_register"))
+
+    # Generate new OTP and update
+    new_otp = generate_otp()
+    new_expires = (datetime.now() + timedelta(minutes=10)).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+    conn.execute(
+        "UPDATE email_verifications SET otp_code = ?, expires_at = ? WHERE id = ?",
+        (new_otp, new_expires, record["id"]),
+    )
+    conn.commit()
+    conn.close()
+
+    email_body = build_verification_email(record["full_name"], new_otp)
+    sent = send_email(email, f"New Verification Code — {APP_NAME}", email_body)
+
+    if sent:
+        flash("A new verification code has been sent.", "success")
+    else:
+        flash("Failed to resend code. Please try again.", "danger")
+
+    return redirect(url_for("verify_email"))
+
+
+@app.route("/auth/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        if not email:
+            flash("Please enter your email address.", "danger")
+            return render_template("auth/forgot_password.html")
+
+        conn = get_db_connection()
+        teacher = conn.execute(
+            "SELECT * FROM teachers WHERE email = ?", (email,)
+        ).fetchone()
+
+        if not teacher:
+            conn.close()
+            # Don't reveal if email exists or not — show same message
+            flash(
+                "If an account with that email exists, a reset link has been sent.",
+                "info",
+            )
+            return render_template("auth/forgot_password.html")
+
+        # Generate reset token
+        token = generate_token()
+        expires_at = (datetime.now() + timedelta(minutes=30)).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+
+        # Invalidate any previous tokens for this teacher
+        conn.execute(
+            "UPDATE password_resets SET used = 1 WHERE teacher_id = ? AND used = 0",
+            (teacher["id"],),
+        )
+
+        conn.execute(
+            "INSERT INTO password_resets (teacher_id, token, expires_at) VALUES (?, ?, ?)",
+            (teacher["id"], token, expires_at),
+        )
+        conn.commit()
+        conn.close()
+
+        # Build reset link
+        reset_link = request.host_url.rstrip("/") + url_for(
+            "reset_password", token=token
+        )
+        email_body = build_reset_email(teacher["full_name"], reset_link)
+        send_email(email, f"Password Reset — {APP_NAME}", email_body)
+
+        flash(
+            "If an account with that email exists, a reset link has been sent.",
+            "info",
+        )
+        return render_template("auth/forgot_password.html")
+
+    return render_template("auth/forgot_password.html")
+
+
+@app.route("/auth/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    conn = get_db_connection()
+    record = conn.execute(
+        "SELECT * FROM password_resets WHERE token = ? AND used = 0", (token,)
+    ).fetchone()
+
+    if not record:
+        conn.close()
+        flash("Invalid or expired reset link.", "danger")
+        return redirect(url_for("forgot_password"))
+
+    # Check expiry
+    expires = datetime.strptime(record["expires_at"], "%Y-%m-%d %H:%M:%S")
+    if datetime.now() > expires:
+        conn.close()
+        flash("This reset link has expired. Please request a new one.", "danger")
+        return redirect(url_for("forgot_password"))
+
+    if request.method == "POST":
+        new_password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if len(new_password) < 6:
+            flash("Password must be at least 6 characters.", "danger")
+            return render_template("auth/reset_password.html", token=token)
+
+        if new_password != confirm_password:
+            flash("Passwords do not match.", "danger")
+            return render_template("auth/reset_password.html", token=token)
+
+        # Update password
+        new_hash = hashlib.sha256(new_password.encode()).hexdigest()
+        conn.execute(
+            "UPDATE teachers SET password_hash = ? WHERE id = ?",
+            (new_hash, record["teacher_id"]),
+        )
+        conn.execute(
+            "UPDATE password_resets SET used = 1 WHERE id = ?", (record["id"],)
+        )
+        conn.commit()
+        conn.close()
+
+        flash("Password reset successfully! Please log in.", "success")
+        return redirect(url_for("teacher_login"))
+
+    conn.close()
+    return render_template("auth/reset_password.html", token=token)
+
+
 @app.route("/auth/login", methods=["GET", "POST"])
 def teacher_login():
+    # If already logged in, redirect to dashboard
+    if "teacher_id" in session:
+        return redirect(url_for("teacher_dashboard"))
+
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        remember = request.form.get("remember") == "1"
+
+        if not username or not password:
+            flash("Please enter both username and password.", "danger")
+            return render_template("auth/login.html")
 
         # Hash the password for comparison
         password_hash = hashlib.sha256(password.encode()).hexdigest()
@@ -1644,10 +2543,18 @@ def teacher_login():
         conn.close()
 
         if teacher and teacher["password_hash"] == password_hash:
+            # Check if email is verified (for new accounts)
+            is_verified = teacher["is_verified"] if "is_verified" in teacher.keys() else 1
+            if not is_verified:
+                flash("Please verify your email before logging in.", "warning")
+                return render_template("auth/login.html")
+
             # Create session
             session["teacher_id"] = teacher["id"]
             session["teacher_name"] = teacher["full_name"]
             session["teacher_username"] = teacher["username"]
+            session["teacher_profile_image"] = teacher["profile_image"] if "profile_image" in teacher.keys() else ""
+            session.permanent = remember  # Remember me: persistent session
 
             flash(f'Welcome back, {teacher["full_name"]}!', "success")
             return redirect(url_for("teacher_dashboard"))
@@ -1657,20 +2564,417 @@ def teacher_login():
     return render_template("auth/login.html")
 
 
-@app.route("/auth/logout")
+@app.route("/auth/logout", methods=["GET", "POST"])
 def teacher_logout():
-    session.clear()
-    flash("You have been logged out.", "info")
-    return redirect(url_for("home"))
+    session.pop("teacher_id", None)
+    session.pop("teacher_name", None)
+    session.pop("teacher_username", None)
+    session.pop("teacher_profile_image", None)
+    flash("You have been signed out successfully.", "info")
+    return redirect(url_for("teacher_login"))
+
+
+# ═══════════════════════════════════════════
+# Admin Auth Routes (College Gate Portal)
+# ═══════════════════════════════════════════
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    if "admin_id" in session:
+        return redirect(url_for("admin_dashboard"))
+
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        remember = request.form.get("remember") == "1"
+
+        if not username or not password:
+            flash("Please enter both username and password.", "danger")
+            return render_template("auth/admin_login.html")
+
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+
+        conn = get_db_connection()
+        admin = conn.execute(
+            "SELECT * FROM admins WHERE username = ?", (username,)
+        ).fetchone()
+        conn.close()
+
+        if admin and admin["password_hash"] == password_hash:
+            session["admin_id"] = admin["id"]
+            session["admin_name"] = admin["full_name"]
+            session["admin_username"] = admin["username"]
+            session["admin_profile_image"] = admin["profile_image"] if "profile_image" in admin.keys() else ""
+            session.permanent = remember
+
+            flash(f'Welcome, {admin["full_name"]}!', "success")
+            return redirect(url_for("admin_dashboard"))
+        else:
+            flash("Invalid username or password.", "danger")
+
+    return render_template("auth/admin_login.html")
+
+
+@app.route("/admin/register", methods=["GET", "POST"])
+def admin_register():
+    if "admin_id" in session:
+        return redirect(url_for("admin_dashboard"))
+
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        email = request.form.get("email", "").strip()
+        full_name = request.form.get("full_name", "").strip()
+        college_name = request.form.get("college_name", "").strip()
+        phone = request.form.get("phone", "").strip()
+
+        if not username or not password or not email or not full_name:
+            flash("All required fields must be filled.", "danger")
+            return render_template("auth/admin_register.html")
+
+        if len(password) < 6:
+            flash("Password must be at least 6 characters.", "danger")
+            return render_template("auth/admin_register.html")
+
+        conn = get_db_connection()
+        existing = conn.execute(
+            "SELECT id FROM admins WHERE username = ? OR email = ?",
+            (username, email),
+        ).fetchone()
+        if existing:
+            conn.close()
+            flash("Username or email already exists.", "danger")
+            return render_template("auth/admin_register.html")
+
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+
+        # Generate OTP
+        otp_code = generate_otp()
+        expires_at = (datetime.now() + timedelta(minutes=10)).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+
+        # Delete any previous pending verifications for the same email
+        conn.execute("DELETE FROM email_verifications WHERE email = ? AND user_type = 'admin'", (email,))
+
+        # Store pending registration
+        conn.execute(
+            """INSERT INTO email_verifications
+               (email, username, password_hash, full_name, otp_code, expires_at, user_type, college_name, phone)
+               VALUES (?, ?, ?, ?, ?, ?, 'admin', ?, ?)""",
+            (email, username, password_hash, full_name, otp_code, expires_at, college_name, phone),
+        )
+        conn.commit()
+        conn.close()
+
+        # Send verification email (admin pink theme)
+        email_body = build_admin_verification_email(full_name, otp_code)
+        sent = send_email(email, f"Admin Verification — {APP_NAME}", email_body)
+
+        if sent:
+            session["pending_admin_verify_email"] = email
+            flash("A verification code has been sent to your email.", "info")
+            return redirect(url_for("admin_verify_email"))
+        else:
+            flash(
+                "Failed to send verification email. Please try again.", "danger"
+            )
+            return render_template("auth/admin_register.html")
+
+    return render_template("auth/admin_register.html")
+
+
+@app.route("/admin/verify", methods=["GET", "POST"])
+def admin_verify_email():
+    email = session.get("pending_admin_verify_email")
+    if not email:
+        flash("No pending verification. Please register first.", "warning")
+        return redirect(url_for("admin_register"))
+
+    if request.method == "POST":
+        otp_input = request.form.get("otp", "").strip()
+
+        if not otp_input:
+            flash("Please enter the verification code.", "danger")
+            return render_template("auth/admin_verify.html", email=email)
+
+        conn = get_db_connection()
+        record = conn.execute(
+            """SELECT * FROM email_verifications
+               WHERE email = ? AND otp_code = ? AND verified = 0 AND user_type = 'admin'
+               ORDER BY created_at DESC LIMIT 1""",
+            (email, otp_input),
+        ).fetchone()
+
+        if not record:
+            conn.close()
+            flash("Invalid verification code.", "danger")
+            return render_template("auth/admin_verify.html", email=email)
+
+        # Check expiry
+        expires = datetime.strptime(record["expires_at"], "%Y-%m-%d %H:%M:%S")
+        if datetime.now() > expires:
+            conn.close()
+            flash("Verification code has expired. Please register again.", "danger")
+            return redirect(url_for("admin_register"))
+
+        # OTP valid — create the admin account
+        try:
+            conn.execute(
+                """INSERT INTO admins (username, password_hash, email, full_name, college_name, phone)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (
+                    record["username"],
+                    record["password_hash"],
+                    record["email"],
+                    record["full_name"],
+                    record["college_name"] or "",
+                    record["phone"] or "",
+                ),
+            )
+            conn.execute(
+                "UPDATE email_verifications SET verified = 1 WHERE id = ?",
+                (record["id"],),
+            )
+            conn.commit()
+            session.pop("pending_admin_verify_email", None)
+            flash("Email verified! Your admin account is active. Please sign in.", "success")
+            return redirect(url_for("admin_login"))
+        except sqlite3.IntegrityError:
+            flash("Username or email already registered.", "danger")
+            return redirect(url_for("admin_register"))
+        finally:
+            conn.close()
+
+    return render_template("auth/admin_verify.html", email=email)
+
+
+@app.route("/admin/resend-otp", methods=["POST"])
+def admin_resend_otp():
+    email = session.get("pending_admin_verify_email")
+    if not email:
+        flash("No pending verification.", "warning")
+        return redirect(url_for("admin_register"))
+
+    conn = get_db_connection()
+    record = conn.execute(
+        "SELECT * FROM email_verifications WHERE email = ? AND verified = 0 AND user_type = 'admin' ORDER BY created_at DESC LIMIT 1",
+        (email,),
+    ).fetchone()
+
+    if not record:
+        conn.close()
+        flash("No pending registration found. Please register again.", "warning")
+        return redirect(url_for("admin_register"))
+
+    # Generate new OTP and update
+    new_otp = generate_otp()
+    new_expires = (datetime.now() + timedelta(minutes=10)).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+    conn.execute(
+        "UPDATE email_verifications SET otp_code = ?, expires_at = ? WHERE id = ?",
+        (new_otp, new_expires, record["id"]),
+    )
+    conn.commit()
+    conn.close()
+
+    email_body = build_admin_verification_email(record["full_name"], new_otp)
+    sent = send_email(email, f"New Admin Verification Code — {APP_NAME}", email_body)
+
+    if sent:
+        flash("A new verification code has been sent.", "success")
+    else:
+        flash("Failed to resend code. Please try again.", "danger")
+
+    return redirect(url_for("admin_verify_email"))
+
+
+@app.route("/admin/logout", methods=["GET", "POST"])
+def admin_logout():
+    session.pop("admin_id", None)
+    session.pop("admin_name", None)
+    session.pop("admin_username", None)
+    session.pop("admin_profile_image", None)
+    flash("Admin signed out successfully.", "info")
+    return redirect(url_for("admin_login"))
+
+
+# ═══════════════════════════════════════════
+# Admin Dashboard Routes (College Gate Portal)
+# ═══════════════════════════════════════════
+@app.route("/admin/dashboard")
+@admin_login_required
+def admin_dashboard():
+    admin_id = session["admin_id"]
+    conn = get_db_connection()
+    today = datetime.now().strftime("%d-%m-%Y")
+
+    # All registered users (students, teachers, staff)
+    all_users = conn.execute("SELECT * FROM users ORDER BY name").fetchall()
+
+    # Today's gate attendance
+    gate_attendance = conn.execute(
+        "SELECT ar.*, u.user_id, u.department, u.email, u.role, u.phone "
+        "FROM attendance_records ar "
+        "LEFT JOIN users u ON ar.student_name = u.username "
+        "WHERE ar.date = ? AND ar.attendance_type = 'gate' "
+        "ORDER BY ar.time DESC",
+        (today,)
+    ).fetchall()
+
+    # Today's class attendance (from all teachers)
+    class_attendance = conn.execute(
+        "SELECT ar.*, u.user_id, u.department, u.email, u.role, c.name as class_name, t.full_name as teacher_name "
+        "FROM attendance_records ar "
+        "LEFT JOIN users u ON ar.student_name = u.username "
+        "LEFT JOIN classes c ON ar.class_id = c.id "
+        "LEFT JOIN teachers t ON ar.teacher_id = t.id "
+        "WHERE ar.date = ? AND ar.attendance_type = 'class' "
+        "ORDER BY ar.time DESC",
+        (today,)
+    ).fetchall()
+
+    # Stats
+    total_users = len(all_users)
+    total_students = len([u for u in all_users if u["role"] == "Student"])
+    total_teachers_count = conn.execute("SELECT COUNT(*) FROM teachers").fetchone()[0]
+    total_staff = len([u for u in all_users if u["role"] in ("Staff", "Admin")])
+    gate_count = len(gate_attendance)
+    class_count = len(class_attendance)
+
+    # Department-wise gate attendance
+    dept_stats = {}
+    for rec in gate_attendance:
+        dept = rec["department"] or "Unknown"
+        dept_stats[dept] = dept_stats.get(dept, 0) + 1
+
+    conn.close()
+
+    return render_template(
+        "admin/dashboard.html",
+        all_users=all_users,
+        gate_attendance=gate_attendance,
+        class_attendance=class_attendance,
+        total_users=total_users,
+        total_students=total_students,
+        total_teachers=total_teachers_count,
+        total_staff=total_staff,
+        gate_count=gate_count,
+        class_count=class_count,
+        dept_stats=dept_stats,
+        today=today,
+    )
+
+
+@app.route("/api/admin/stats")
+@admin_login_required
+def admin_stats_api():
+    conn = get_db_connection()
+    today = datetime.now().strftime("%d-%m-%Y")
+
+    total_users = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    gate_today = conn.execute(
+        "SELECT COUNT(*) FROM attendance_records WHERE date = ? AND attendance_type = 'gate'", (today,)
+    ).fetchone()[0]
+    class_today = conn.execute(
+        "SELECT COUNT(*) FROM attendance_records WHERE date = ? AND attendance_type = 'class'", (today,)
+    ).fetchone()[0]
+    total_teachers = conn.execute("SELECT COUNT(*) FROM teachers").fetchone()[0]
+
+    conn.close()
+    return jsonify({
+        "total_users": total_users,
+        "gate_today": gate_today,
+        "class_today": class_today,
+        "total_teachers": total_teachers,
+    })
+
+
+@app.route("/admin/attendance")
+@admin_login_required
+def admin_attendance():
+    conn = get_db_connection()
+    today = datetime.now().strftime("%d-%m-%Y")
+
+    records = conn.execute(
+        "SELECT ar.*, u.user_id, u.department, u.email, u.role, u.phone, "
+        "c.name as class_name, t.full_name as teacher_name "
+        "FROM attendance_records ar "
+        "LEFT JOIN users u ON ar.student_name = u.username "
+        "LEFT JOIN classes c ON ar.class_id = c.id "
+        "LEFT JOIN teachers t ON ar.teacher_id = t.id "
+        "ORDER BY ar.date DESC, ar.time DESC "
+        "LIMIT 500"
+    ).fetchall()
+
+    conn.close()
+    return render_template("admin/attendance.html", records=records, today=today)
+
+
+@app.route("/admin/attendance/filter", methods=["POST"])
+@admin_login_required
+def admin_filter_attendance():
+    data = request.get_json() or {}
+    date_filter = data.get("date", "")
+    att_type = data.get("type", "")
+    dept_filter = data.get("department", "")
+    role_filter = data.get("role", "")
+
+    query = (
+        "SELECT ar.*, u.user_id, u.department, u.email, u.role, u.phone, "
+        "c.name as class_name, t.full_name as teacher_name "
+        "FROM attendance_records ar "
+        "LEFT JOIN users u ON ar.student_name = u.username "
+        "LEFT JOIN classes c ON ar.class_id = c.id "
+        "LEFT JOIN teachers t ON ar.teacher_id = t.id WHERE 1=1"
+    )
+    params = []
+
+    if date_filter:
+        query += " AND ar.date = ?"
+        params.append(date_filter)
+    if att_type:
+        query += " AND ar.attendance_type = ?"
+        params.append(att_type)
+    if dept_filter:
+        query += " AND u.department = ?"
+        params.append(dept_filter)
+    if role_filter:
+        query += " AND u.role = ?"
+        params.append(role_filter)
+
+    query += " ORDER BY ar.date DESC, ar.time DESC LIMIT 500"
+
+    conn = get_db_connection()
+    records = conn.execute(query, params).fetchall()
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "attendance": [
+            {
+                "id": r["id"],
+                "student_name": r["student_name"],
+                "date": r["date"],
+                "time": r["time"],
+                "status": r["status"],
+                "attendance_type": r["attendance_type"] if "attendance_type" in r.keys() else "gate",
+                "user_id": r["user_id"] or "",
+                "department": r["department"] or "",
+                "email": r["email"] or "",
+                "role": r["role"] or "",
+                "class_name": r["class_name"] or "",
+                "teacher_name": r["teacher_name"] or "",
+            }
+            for r in records
+        ],
+    })
 
 
 # Teacher dashboard routes
 @app.route("/teacher/dashboard")
+@teacher_login_required
 def teacher_dashboard():
-    if "teacher_id" not in session:
-        flash("Please log in first.", "warning")
-        return redirect(url_for("teacher_login"))
-
     teacher_id = session["teacher_id"]
     conn = get_db_connection()
 
@@ -1688,16 +2992,23 @@ def teacher_dashboard():
         (teacher_id,)
     ).fetchone()['count']
 
-    # Get recent attendance records (today's records)
+    # Get recent attendance records (today's records) with student details
     today = datetime.now().strftime("%d-%m-%Y")
     recent_attendance = conn.execute(
-        """SELECT ar.*, c.name as class_name 
+        """SELECT ar.*, c.name as class_name,
+                  u.user_id as student_user_id, u.department as student_department,
+                  u.email as student_email, u.role as student_role, u.phone as student_phone
            FROM attendance_records ar 
            LEFT JOIN classes c ON ar.class_id = c.id 
+           LEFT JOIN users u ON ar.student_name = u.username
            WHERE ar.teacher_id = ? AND ar.date = ?
            ORDER BY ar.time DESC LIMIT 10""",
         (teacher_id, today),
     ).fetchall()
+
+    # Get today's attendance rate
+    today_attendance_count = len(recent_attendance)
+    attendance_rate = round((today_attendance_count / students_count) * 100, 1) if students_count > 0 else 0
 
     conn.close()
 
@@ -1705,16 +3016,167 @@ def teacher_dashboard():
         "teacher/dashboard.html", 
         classes=classes, 
         recent_attendance=recent_attendance,
-        students_count=students_count
+        students_count=students_count,
+        attendance_rate=attendance_rate
     )
+
+
+# ═══════════════════════════════════════════
+# Teacher Profile Routes
+# ═══════════════════════════════════════════
+@app.route("/teacher/profile", methods=["GET", "POST"])
+@teacher_login_required
+def teacher_profile():
+    teacher_id = session["teacher_id"]
+    conn = get_db_connection()
+
+    if request.method == "POST":
+        full_name = request.form.get("full_name", "").strip()
+        email = request.form.get("email", "").strip()
+        phone = request.form.get("phone", "").strip()
+        department = request.form.get("department", "").strip()
+        designation = request.form.get("designation", "").strip()
+        bio = request.form.get("bio", "").strip()
+
+        if not full_name or not email:
+            flash("Name and email are required.", "danger")
+            teacher = conn.execute("SELECT * FROM teachers WHERE id = ?", (teacher_id,)).fetchone()
+            conn.close()
+            return render_template("teacher/profile.html", teacher=teacher)
+
+        # Check email uniqueness (exclude self)
+        existing = conn.execute(
+            "SELECT id FROM teachers WHERE email = ? AND id != ?", (email, teacher_id)
+        ).fetchone()
+        if existing:
+            flash("This email is already used by another account.", "danger")
+            teacher = conn.execute("SELECT * FROM teachers WHERE id = ?", (teacher_id,)).fetchone()
+            conn.close()
+            return render_template("teacher/profile.html", teacher=teacher)
+
+        # Handle profile image upload
+        profile_image_url = None
+        if "profile_image" in request.files:
+            file = request.files["profile_image"]
+            if file and file.filename:
+                profile_image_url = upload_profile_image(file, folder="smart_attendance/teachers")
+                if profile_image_url:
+                    conn.execute("UPDATE teachers SET profile_image = ? WHERE id = ?", (profile_image_url, teacher_id))
+
+        conn.execute(
+            """UPDATE teachers SET full_name = ?, email = ?, phone = ?, department = ?,
+               designation = ?, bio = ? WHERE id = ?""",
+            (full_name, email, phone, department, designation, bio, teacher_id),
+        )
+        conn.commit()
+
+        # Update session
+        session["teacher_name"] = full_name
+        if profile_image_url:
+            session["teacher_profile_image"] = profile_image_url
+
+        flash("Profile updated successfully!", "success")
+        conn.close()
+        return redirect(url_for("teacher_profile"))
+
+    teacher = conn.execute("SELECT * FROM teachers WHERE id = ?", (teacher_id,)).fetchone()
+    conn.close()
+    return render_template("teacher/profile.html", teacher=teacher)
+
+
+@app.route("/teacher/profile/remove-image", methods=["POST"])
+@teacher_login_required
+def teacher_remove_image():
+    teacher_id = session["teacher_id"]
+    conn = get_db_connection()
+    conn.execute("UPDATE teachers SET profile_image = '' WHERE id = ?", (teacher_id,))
+    conn.commit()
+    conn.close()
+    session["teacher_profile_image"] = ""
+    flash("Profile image removed.", "info")
+    return redirect(url_for("teacher_profile"))
+
+
+# ═══════════════════════════════════════════
+# Admin Profile Routes
+# ═══════════════════════════════════════════
+@app.route("/admin/profile", methods=["GET", "POST"])
+@admin_login_required
+def admin_profile():
+    admin_id = session["admin_id"]
+    conn = get_db_connection()
+
+    if request.method == "POST":
+        full_name = request.form.get("full_name", "").strip()
+        email = request.form.get("email", "").strip()
+        phone = request.form.get("phone", "").strip()
+        college_name = request.form.get("college_name", "").strip()
+        designation = request.form.get("designation", "").strip()
+        bio = request.form.get("bio", "").strip()
+
+        if not full_name or not email:
+            flash("Name and email are required.", "danger")
+            admin = conn.execute("SELECT * FROM admins WHERE id = ?", (admin_id,)).fetchone()
+            conn.close()
+            return render_template("admin/profile.html", admin=admin)
+
+        # Check email uniqueness (exclude self)
+        existing = conn.execute(
+            "SELECT id FROM admins WHERE email = ? AND id != ?", (email, admin_id)
+        ).fetchone()
+        if existing:
+            flash("This email is already used by another account.", "danger")
+            admin = conn.execute("SELECT * FROM admins WHERE id = ?", (admin_id,)).fetchone()
+            conn.close()
+            return render_template("admin/profile.html", admin=admin)
+
+        # Handle profile image upload
+        profile_image_url = None
+        if "profile_image" in request.files:
+            file = request.files["profile_image"]
+            if file and file.filename:
+                profile_image_url = upload_profile_image(file, folder="smart_attendance/admins")
+                if profile_image_url:
+                    conn.execute("UPDATE admins SET profile_image = ? WHERE id = ?", (profile_image_url, admin_id))
+
+        conn.execute(
+            """UPDATE admins SET full_name = ?, email = ?, phone = ?, college_name = ?,
+               designation = ?, bio = ? WHERE id = ?""",
+            (full_name, email, phone, college_name, designation, bio, admin_id),
+        )
+        conn.commit()
+
+        # Update session
+        session["admin_name"] = full_name
+        if profile_image_url:
+            session["admin_profile_image"] = profile_image_url
+
+        flash("Profile updated successfully!", "success")
+        conn.close()
+        return redirect(url_for("admin_profile"))
+
+    admin = conn.execute("SELECT * FROM admins WHERE id = ?", (admin_id,)).fetchone()
+    conn.close()
+    return render_template("admin/profile.html", admin=admin)
+
+
+@app.route("/admin/profile/remove-image", methods=["POST"])
+@admin_login_required
+def admin_remove_image():
+    admin_id = session["admin_id"]
+    conn = get_db_connection()
+    conn.execute("UPDATE admins SET profile_image = '' WHERE id = ?", (admin_id,))
+    conn.commit()
+    conn.close()
+    session["admin_profile_image"] = ""
+    flash("Profile image removed.", "info")
+    return redirect(url_for("admin_profile"))
 
 
 # API endpoint to get student count
 @app.route("/api/teacher/stats")
+@teacher_login_required
 def teacher_stats():
-    if "teacher_id" not in session:
-        return jsonify({"success": False, "message": "Authentication required"}), 401
-
     teacher_id = session["teacher_id"]
     conn = get_db_connection()
 
@@ -1753,11 +3215,8 @@ def teacher_stats():
 
 # Class management routes
 @app.route("/teacher/classes", methods=["GET", "POST"])
+@teacher_login_required
 def manage_classes():
-    if "teacher_id" not in session:
-        flash("Please log in first.", "warning")
-        return redirect(url_for("teacher_login"))
-
     if request.method == "POST":
         name = request.form["name"]
         description = request.form.get("description", "")
@@ -1787,17 +3246,17 @@ def manage_classes():
     
     # Ensure department column exists
     try:
-        classes = conn.execute(
-            "SELECT * FROM classes WHERE teacher_id = ?", (session["teacher_id"],)
-        ).fetchall()
+        conn.execute("SELECT department FROM classes LIMIT 1")
     except:
         conn.execute("ALTER TABLE classes ADD COLUMN department TEXT")
         conn.commit()
-        classes = conn.execute(
-            "SELECT * FROM classes WHERE teacher_id = ?", (session["teacher_id"],)
-        ).fetchall()
     
-    # Get student counts for each class
+    classes = conn.execute(
+        "SELECT * FROM classes WHERE teacher_id = ?", (session["teacher_id"],)
+    ).fetchall()
+    
+    # Get student counts and today's attendance for each class
+    today = datetime.now().strftime("%d-%m-%Y")
     classes_with_counts = []
     for class_row in classes:
         student_count = conn.execute(
@@ -1805,8 +3264,14 @@ def manage_classes():
             (class_row["id"],)
         ).fetchone()["count"]
         
+        today_att = conn.execute(
+            "SELECT COUNT(*) as count FROM attendance_records WHERE class_id = ? AND date = ?",
+            (class_row["id"], today)
+        ).fetchone()["count"]
+        
         class_dict = dict(class_row)
         class_dict["student_count"] = student_count
+        class_dict["today_attendance"] = today_att
         classes_with_counts.append(class_dict)
     
     conn.close()
@@ -1814,12 +3279,46 @@ def manage_classes():
     return render_template("teacher/classes.html", classes=classes_with_counts)
 
 
-@app.route("/teacher/class/<int:class_id>")
-def view_class(class_id):
-    if "teacher_id" not in session:
-        flash("Please log in first.", "warning")
-        return redirect(url_for("teacher_login"))
+@app.route("/teacher/edit_class/<int:class_id>", methods=["POST"])
+@teacher_login_required
+def edit_class(class_id):
+    """Edit class name, department, description via AJAX."""
+    conn = get_db_connection()
+    class_info = conn.execute(
+        "SELECT * FROM classes WHERE id = ? AND teacher_id = ?",
+        (class_id, session["teacher_id"]),
+    ).fetchone()
 
+    if not class_info:
+        conn.close()
+        return jsonify({"success": False, "message": "Class not found or access denied"}), 404
+
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    name = data.get("name", "").strip()
+    department = data.get("department", "").strip()
+    description = data.get("description", "").strip()
+
+    if not name:
+        conn.close()
+        return jsonify({"success": False, "message": "Class name is required"}), 400
+
+    conn.execute(
+        "UPDATE classes SET name = ?, department = ?, description = ? WHERE id = ? AND teacher_id = ?",
+        (name, department, description, class_id, session["teacher_id"]),
+    )
+    conn.commit()
+    conn.close()
+
+    return jsonify({"success": True, "message": "Class updated successfully"})
+
+
+@app.route("/teacher/class/<int:class_id>")
+@teacher_login_required
+def view_class(class_id):
     conn = get_db_connection()
     class_info = conn.execute(
         "SELECT * FROM classes WHERE id = ? AND teacher_id = ?",
@@ -1831,24 +3330,30 @@ def view_class(class_id):
         flash("Class not found or access denied.", "danger")
         return redirect(url_for("manage_classes"))
 
-    # Get students in this class
+    # Get students in this class with user details
     students = conn.execute(
-        "SELECT student_name, added_at FROM class_students WHERE class_id = ? ORDER BY student_name",
+        """SELECT cs.student_name, cs.added_at,
+                  u.user_id, u.department, u.email, u.role, u.phone, u.name as full_name
+           FROM class_students cs
+           LEFT JOIN users u ON cs.student_name = u.username
+           WHERE cs.class_id = ? ORDER BY cs.student_name""",
         (class_id,)
     ).fetchall()
 
-    # Get attendance records from attendance_records table
+    # Get attendance records with user details
     attendance_records = conn.execute(
-        """SELECT a.id, a.student_name, a.class_id, a.teacher_id, a.date, a.time, a.status
+        """SELECT a.id, a.student_name, a.class_id, a.teacher_id, a.date, a.time, a.status,
+                  u.user_id as student_user_id, u.department as student_department, u.email as student_email
            FROM attendance_records a
+           LEFT JOIN users u ON a.student_name = u.username
            WHERE a.class_id = ? AND a.teacher_id = ?
            ORDER BY a.date DESC, a.time DESC LIMIT 50""",
         (class_id, session["teacher_id"]),
     ).fetchall()
 
-    # Get all registered users (for adding students to class)
-    all_students = conn.execute(
-        "SELECT DISTINCT student_name FROM class_students ORDER BY student_name"
+    # Get all registered users (for adding students dropdown)
+    all_registered = conn.execute(
+        "SELECT username FROM users ORDER BY username"
     ).fetchall()
 
     conn.close()
@@ -1863,6 +3368,9 @@ def view_class(class_id):
             "date": str(record["date"]),
             "time": str(record["time"]),
             "status": record["status"],
+            "student_user_id": record["student_user_id"] or "",
+            "student_department": record["student_department"] or "",
+            "student_email": record["student_email"] or "",
         }
         for record in attendance_records
     ]
@@ -1872,15 +3380,13 @@ def view_class(class_id):
         class_info=class_info, 
         attendance=attendance,
         students=students,
-        all_students=all_students
+        all_registered=all_registered
     )
 
 
 @app.route("/teacher/add_student_to_class/<int:class_id>", methods=["POST"])
+@teacher_login_required
 def add_student_to_class(class_id):
-    if "teacher_id" not in session:
-        return jsonify({"success": False, "message": "Authentication required"}), 401
-
     student_name = request.form.get("student_name", "").strip()
     if not student_name:
         return (
@@ -1951,10 +3457,8 @@ def add_student_to_class(class_id):
 
 
 @app.route("/teacher/remove_student_from_class/<int:class_id>", methods=["POST"])
+@teacher_login_required
 def remove_student_from_class(class_id):
-    if "teacher_id" not in session:
-        return jsonify({"success": False, "message": "Authentication required"}), 401
-
     student_name = request.form.get("student_name", "").strip()
     if not student_name:
         return jsonify({"success": False, "message": "Student name required"}), 400
@@ -1995,12 +3499,9 @@ def remove_student_from_class(class_id):
         conn.close()
 
 
-@app.route("/teacher/delete_class/<int:class_id>")
+@app.route("/teacher/delete_class/<int:class_id>", methods=["POST"])
+@teacher_login_required
 def delete_class(class_id):
-    if "teacher_id" not in session:
-        flash("Please log in first.", "warning")
-        return redirect(url_for("teacher_login"))
-
     conn = get_db_connection()
     # Verify class belongs to teacher
     class_info = conn.execute(
@@ -2026,11 +3527,8 @@ def delete_class(class_id):
 
 # Enhanced attendance views
 @app.route("/teacher/attendance")
+@teacher_login_required
 def teacher_attendance():
-    if "teacher_id" not in session:
-        flash("Please log in first.", "warning")
-        return redirect(url_for("teacher_login"))
-
     teacher_id = session["teacher_id"]
     conn = get_db_connection()
 
@@ -2048,14 +3546,16 @@ def teacher_attendance():
     """
     students = conn.execute(students_query, (teacher_id,)).fetchall()
 
-    # Default to showing today's attendance
+    # Default to showing today's attendance with user details
     today = datetime.now().strftime("%d-%m-%Y")
 
-    # Get attendance for today
     attendance_query = """
-    SELECT ar.*, c.name as class_name 
+    SELECT ar.*, c.name as class_name,
+           u.user_id as student_user_id, u.department as student_department,
+           u.email as student_email, u.role as student_role, u.phone as student_phone
     FROM attendance_records ar
     LEFT JOIN classes c ON ar.class_id = c.id
+    LEFT JOIN users u ON ar.student_name = u.username
     WHERE ar.teacher_id = ? AND ar.date = ?
     ORDER BY ar.time DESC
     """
@@ -2068,16 +3568,13 @@ def teacher_attendance():
         classes=classes,
         students=students,
         attendance=attendance,
-        selected_date=today,
+        selected_date=datetime.now().strftime("%Y-%m-%d"),
     )
 
 
 @app.route("/teacher/class/<int:class_id>/student_attendance")
+@teacher_login_required
 def class_student_attendance(class_id):
-    if "teacher_id" not in session:
-        flash("Please log in first.", "warning")
-        return redirect(url_for("teacher_login"))
-
     teacher_id = session["teacher_id"]
     conn = get_db_connection()
 
@@ -2091,25 +3588,24 @@ def class_student_attendance(class_id):
         flash("Class not found or access denied.", "danger")
         return redirect(url_for("manage_classes"))
 
-    # Get all students in this class
+    # Get all students in this class with user details
     students = conn.execute(
-        "SELECT * FROM class_students WHERE class_id = ?", (class_id,)
+        """SELECT cs.student_name, cs.added_at,
+                  u.user_id, u.department, u.email, u.role, u.phone
+           FROM class_students cs
+           LEFT JOIN users u ON cs.student_name = u.username
+           WHERE cs.class_id = ?""",
+        (class_id,)
     ).fetchall()
 
     # Get student names
     student_names = [student["student_name"] for student in students]
-
-    # Default to showing current month's attendance
-    today = datetime.now()
-    start_of_month = today.replace(day=1).strftime("%d-%m-%Y")
-    end_of_month = today.strftime("%d-%m-%Y")
 
     # Get attendance records for all students in this class
     attendance_records = {}
     attendance_dates = set()
 
     for student_name in student_names:
-        # Get attendance records for this student
         query = """
         SELECT * FROM attendance_records 
         WHERE class_id = ? AND teacher_id = ? AND student_name = ?
@@ -2119,7 +3615,6 @@ def class_student_attendance(class_id):
             query, (class_id, teacher_id, student_name)
         ).fetchall()
 
-        # Convert to dict for easier access
         attendance_records[student_name] = {}
         for record in student_records:
             date = record["date"]
@@ -2129,19 +3624,25 @@ def class_student_attendance(class_id):
     # Sort dates
     sorted_dates = sorted(list(attendance_dates))
 
-    # Generate attendance summary
+    # Generate attendance summary with user details
     attendance_summary = []
-    for student_name in student_names:
+    for s in students:
+        student_name = s["student_name"]
         present_count = sum(
-            1 for date in sorted_dates if date in attendance_records[student_name]
+            1 for date in sorted_dates if date in attendance_records.get(student_name, {})
         )
-        attendance_rate = present_count / len(sorted_dates) * 100 if sorted_dates else 0
+        attendance_rate = round(present_count / len(sorted_dates) * 100, 1) if sorted_dates else 0
 
         student_summary = {
             "name": student_name,
+            "user_id": s["user_id"] or "",
+            "department": s["department"] or "",
+            "email": s["email"] or "",
+            "role": s["role"] or "",
+            "phone": s["phone"] or "",
             "present_count": present_count,
             "total_days": len(sorted_dates),
-            "attendance_rate": round(attendance_rate, 1),
+            "attendance_rate": attendance_rate,
         }
         attendance_summary.append(student_summary)
 
@@ -2158,10 +3659,8 @@ def class_student_attendance(class_id):
 
 
 @app.route("/teacher/class/<int:class_id>/student_attendance/filter", methods=["POST"])
+@teacher_login_required
 def filter_class_student_attendance(class_id):
-    if "teacher_id" not in session:
-        return jsonify({"success": False, "message": "Authentication required"}), 401
-
     start_date = request.form.get("start_date")
     end_date = request.form.get("end_date")
     student_name = request.form.get("student_name")
@@ -2260,10 +3759,8 @@ def filter_class_student_attendance(class_id):
 
 
 @app.route("/teacher/attendance/filter", methods=["POST"])
+@teacher_login_required
 def filter_attendance():
-    if "teacher_id" not in session:
-        return jsonify({"success": False, "message": "Authentication required"}), 401
-
     # Handle both form data and JSON
     if request.is_json:
         data = request.get_json()
@@ -2275,20 +3772,39 @@ def filter_attendance():
         class_filter = request.form.get("class_id")
         student_filter = request.form.get("student_name")
 
-    query = "SELECT ar.*, c.name as class_name FROM attendance_records ar LEFT JOIN classes c ON ar.class_id = c.id WHERE ar.teacher_id = ?"
+    query = """SELECT ar.*, c.name as class_name,
+                      u.user_id as student_user_id, u.department as student_department,
+                      u.email as student_email, u.role as student_role, u.phone as student_phone
+               FROM attendance_records ar 
+               LEFT JOIN classes c ON ar.class_id = c.id 
+               LEFT JOIN users u ON ar.student_name = u.username
+               WHERE ar.teacher_id = ?"""
     params = [session["teacher_id"]]
 
     if date_filter:
+        # Convert YYYY-MM-DD from HTML input to DD-MM-YYYY for database
+        try:
+            date_obj = datetime.strptime(date_filter, "%Y-%m-%d")
+            date_filter = date_obj.strftime("%d-%m-%Y")
+        except:
+            pass  # Already in DD-MM-YYYY or other format
         query += " AND ar.date = ?"
         params.append(date_filter)
 
     if class_filter:
-        query += " AND ar.class_id = ?"
-        params.append(int(class_filter))
+        # Accept both class ID (int) and class name (string)
+        try:
+            class_id_int = int(class_filter)
+            query += " AND ar.class_id = ?"
+            params.append(class_id_int)
+        except (ValueError, TypeError):
+            # It's a class name, look up the ID
+            query += " AND c.name = ?"
+            params.append(class_filter)
 
     if student_filter:
-        query += " AND ar.student_name = ?"
-        params.append(student_filter)
+        query += " AND ar.student_name LIKE ?"
+        params.append(f"%{student_filter}%")
 
     query += " ORDER BY ar.date DESC, ar.time DESC"
 
@@ -2297,16 +3813,22 @@ def filter_attendance():
     conn.close()
 
     # Convert to list of dicts for JSON response
-    result = [dict(row) for row in attendance]
+    result = []
+    for row in attendance:
+        d = dict(row)
+        d['class_name'] = d.get('class_name') or '—'
+        d['student_user_id'] = d.get('student_user_id') or ''
+        d['student_department'] = d.get('student_department') or ''
+        d['student_email'] = d.get('student_email') or ''
+        d['student_role'] = d.get('student_role') or ''
+        d['student_phone'] = d.get('student_phone') or ''
+        result.append(d)
     return jsonify({"success": True, "attendance": result})
 
 
 @app.route("/teacher/export_today")
+@teacher_login_required
 def export_today_attendance():
-    if "teacher_id" not in session:
-        flash("Please log in first.", "warning")
-        return redirect(url_for("teacher_login"))
-
     # Get today's date
     today = datetime.now().strftime("%d-%m-%Y")
 
@@ -2350,10 +3872,8 @@ def export_today_attendance():
 
 
 @app.route("/teacher/export", methods=["POST"])
+@teacher_login_required
 def teacher_export_attendance():
-    if "teacher_id" not in session:
-        return jsonify({"success": False, "message": "Authentication required"}), 401
-
     # Handle both form data and JSON
     if request.is_json:
         data = request.get_json()
@@ -2365,7 +3885,12 @@ def teacher_export_attendance():
         class_filter = request.form.get("class_id")
         student_filter = request.form.get("student_name")
 
-    query = "SELECT ar.*, c.name as class_name FROM attendance_records ar LEFT JOIN classes c ON ar.class_id = c.id WHERE ar.teacher_id = ?"
+    query = """SELECT ar.*, c.name as class_name,
+                      u.user_id as student_user_id, u.department as student_department, u.email as student_email
+               FROM attendance_records ar 
+               LEFT JOIN classes c ON ar.class_id = c.id 
+               LEFT JOIN users u ON ar.student_name = u.username
+               WHERE ar.teacher_id = ?"""
     params = [session["teacher_id"]]
 
     if date_filter:
@@ -2393,12 +3918,15 @@ def teacher_export_attendance():
     from io import StringIO
     output = StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Student Name", "Class", "Date", "Time", "Status", "Notes"])
+    writer.writerow(["Student Name", "User ID", "Department", "Email", "Class", "Date", "Time", "Status", "Notes"])
 
     for record in attendance:
         writer.writerow(
             [
                 record["student_name"],
+                record.get("student_user_id") or "",
+                record.get("student_department") or "",
+                record.get("student_email") or "",
                 record["class_name"] or "No Class",
                 record["date"],
                 record["time"],
@@ -2420,10 +3948,8 @@ def teacher_export_attendance():
 
 # Delete attendance record endpoint
 @app.route("/teacher/delete_record/<int:record_id>", methods=["DELETE", "POST"])
+@teacher_login_required
 def delete_attendance_record(record_id):
-    if "teacher_id" not in session:
-        return jsonify({"success": False, "message": "Authentication required"}), 401
-
     teacher_id = session["teacher_id"]
     conn = get_db_connection()
 

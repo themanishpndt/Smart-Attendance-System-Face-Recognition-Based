@@ -1,705 +1,257 @@
 {% extends "base.html" %}
-
-{% block title %}Export Attendance{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    min-height: 100vh;
-}
-
-.export-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-
-/* Animations */
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Header */
-.page-header {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    padding: 3rem 2.5rem;
-    border-radius: 0;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    margin-bottom: 0;
-    color: white;
-    animation: slideDown 0.5s ease-out;
-    position: relative;
-    overflow: hidden;
-}
-
-.page-header::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 400px;
-    height: 100%;
-    background: radial-gradient(circle at 100% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-.page-header h1 {
-    font-size: 2.8rem;
-    font-weight: 800;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    position: relative;
-    z-index: 1;
-}
-
-.page-header h1 i {
-    color: #43e97b;
-}
-
-.page-header p {
-    font-size: 1.1rem;
-    opacity: 0.95;
-    position: relative;
-    z-index: 1;
-}
-
-/* Main Content */
-.main-content {
-    background: white;
-    padding: 3rem 2.5rem;
-    border-radius: 0;
-}
-
-/* Stats Grid - Horizontal */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.2rem;
-    margin-bottom: 2.5rem;
-    animation: fadeInUp 0.6s ease-out 0.1s both;
-}
-
-.stat-card {
-    background: linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%);
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid rgba(102, 126, 234, 0.1);
-}
-
-.stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #667eea, #764ba2);
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.15);
-}
-
-.stat-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-}
-
-.stat-icon {
-    width: 45px;
-    height: 45px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    color: white;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    box-shadow: 0 3px 12px rgba(102, 126, 234, 0.3);
-}
-
-.stat-value {
-    font-size: 2.2rem;
-    font-weight: 900;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 0.25rem;
-    line-height: 1;
-}
-
-.stat-label {
-    color: #666;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* Format Selection Section */
-.format-section {
-    background: linear-gradient(135deg, #f8fafc 0%, #f0f3f8 100%);
-    padding: 2.5rem;
-    border-radius: 12px;
-    margin-bottom: 2.5rem;
-    border: 1px solid rgba(102, 126, 234, 0.1);
-    animation: fadeInUp 0.6s ease-out 0.2s both;
-}
-
-.section-title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #1a1a2e;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 1.5rem;
-}
-
-.section-title i {
-    color: #667eea;
-    font-size: 1.6rem;
-}
-
-.format-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.format-option {
-    background: white;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 1.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    position: relative;
-}
-
-.format-option:hover {
-    border-color: #667eea;
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
-    transform: translateY(-4px);
-}
-
-.format-option input[type="radio"] {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-}
-
-.format-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    color: white;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.format-csv {
-    background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);
-}
-
-.format-excel {
-    background: linear-gradient(135deg, #20c997 0%, #0ca678 100%);
-}
-
-.format-pdf {
-    background: linear-gradient(135deg, #ff8c42 0%, #ff6b6b 100%);
-}
-
-.format-json {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.format-name {
-    font-weight: 700;
-    color: #1a1a2e;
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
-}
-
-.format-desc {
-    font-size: 0.8rem;
-    color: #666;
-}
-
-/* Controls Section */
-.controls-section {
-    background: linear-gradient(135deg, #f8fafc 0%, #f0f3f8 100%);
-    padding: 2.5rem;
-    border-radius: 12px;
-    margin-bottom: 2rem;
-    border: 1px solid rgba(102, 126, 234, 0.1);
-    animation: fadeInUp 0.6s ease-out 0.3s both;
-}
-
-.control-group {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.control-item {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.control-label {
-    font-weight: 700;
-    color: #333;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.control-label i {
-    color: #667eea;
-    font-size: 1rem;
-}
-
-.control-input,
-.control-select {
-    padding: 10px 14px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    transition: all 0.3s;
-    background: white;
-    font-family: inherit;
-}
-
-.control-input:focus,
-.control-select:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    background: #f8f9ff;
-}
-
-/* Options */
-.options-row {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-}
-
-.option-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.option-checkbox {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: #667eea;
-}
-
-.option-label {
-    color: #333;
-    font-weight: 600;
-    font-size: 0.95rem;
-    cursor: pointer;
-}
-
-/* Action Buttons */
-.action-buttons {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-    margin-top: 1.5rem;
-}
-
-.btn {
-    padding: 12px 32px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-    font-family: inherit;
-    min-width: 140px;
-    justify-content: center;
-}
-
-.btn-export {
-    background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(81, 207, 102, 0.3);
-}
-
-.btn-export:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(81, 207, 102, 0.4);
-}
-
-.btn-secondary {
-    background: white;
-    color: #667eea;
-    border: 2px solid #667eea;
-    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.1);
-}
-
-.btn-secondary:hover {
-    background: #f8f9ff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-}
-
-/* Back Link */
-.back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    color: white;
-    font-weight: 600;
-    padding: 12px 24px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    margin-top: 2rem;
-    transition: all 0.3s ease;
-}
-
-.back-link:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateX(-4px);
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-    .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .format-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .control-group {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .export-container {
-        padding: 1rem;
-    }
-
-    .page-header {
-        padding: 2rem 1.5rem;
-    }
-
-    .page-header h1 {
-        font-size: 2rem;
-    }
-
-    .main-content {
-        padding: 1.5rem;
-    }
-
-    .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.8rem;
-    }
-
-    .stat-card {
-        padding: 1rem;
-    }
-
-    .stat-value {
-        font-size: 1.8rem;
-    }
-
-    .format-section,
-    .controls-section {
-        padding: 1.5rem;
-    }
-
-    .format-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .control-group {
-        grid-template-columns: 1fr;
-    }
-
-    .action-buttons {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .btn {
-        width: 100%;
-    }
-}
-
-@media (max-width: 480px) {
-    .page-header h1 {
-        font-size: 1.6rem;
-    }
-
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .section-title {
-        font-size: 1.2rem;
-    }
-}
-
-@media print {
-    .page-header p,
-    .controls-section,
-    .back-link,
-    .action-buttons {
-        display: none !important;
-    }
-}
-</style>
-{% endblock %}
+{% block title %}Export Attendance — Smart Attendance{% endblock %}
 
 {% block content %}
-<div class="export-container">
-    <!-- Header -->
-    <div class="page-header">
-        <h1>
-            <i class="fas fa-file-export"></i>
-            Export Attendance
-        </h1>
-        <p>Download attendance records in your preferred format</p>
-    </div>
+<style>
+  .fmt-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:.8rem;margin-bottom:1rem}
+  .fmt-card{background:var(--card);border:2px solid var(--border);border-radius:14px;
+    padding:1.1rem;text-align:center;cursor:pointer;transition:all .3s}
+  .fmt-card:hover{border-color:var(--c1)}
+  .fmt-card.sel{border-color:var(--c1);background:rgba(102,126,234,.05);box-shadow:0 0 0 3px rgba(102,126,234,.1)}
+  .fmt-card i{font-size:1.8rem;display:block;margin-bottom:.4rem}
+  .fmt-card h4{font-weight:700;font-size:.88rem;margin-bottom:.1rem}
+  .fmt-card p{font-size:.7rem;color:var(--text2);margin:0}
+  .preview-table{max-height:300px;overflow:auto;border:1px solid var(--border);border-radius:12px;margin-top:1rem}
+  .preview-table table{font-size:.8rem;margin:0}
+  .preview-count{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:8px;
+    background:rgba(102,126,234,.08);color:var(--c1);font-size:.78rem;font-weight:600}
+  .export-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+  @media(max-width:768px){.export-form-grid{grid-template-columns:1fr}}
+  .chk-row{display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:.5rem}
+  .chk-row input[type="checkbox"]{accent-color:var(--c1);width:18px;height:18px}
+</style>
 
-    <div class="main-content">
-        <!-- Statistics -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon">
-                        <i class="fas fa-list"></i>
-                    </div>
-                </div>
-                <div class="stat-value">{{ stats.total_records if stats else '0' }}</div>
-                <div class="stat-label">Total Records</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                </div>
-                <div class="stat-value">{{ stats.total_users if stats else '0' }}</div>
-                <div class="stat-label">Total Users</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon">
-                        <i class="fas fa-database"></i>
-                    </div>
-                </div>
-                <div class="stat-value">{{ ((stats.total_records * 0.8) / 1024)|int if stats else '0' }}KB</div>
-                <div class="stat-label">Est. Size</div>
-            </div>
-        </div>
-
-        <!-- Format Selection -->
-        <div class="format-section">
-            <div class="section-title">
-                <i class="fas fa-file-alt"></i>
-                Select Export Format
-            </div>
-
-            <form method="POST" action="{{ url_for('export_attendance') }}" id="exportForm">
-                <div class="format-grid">
-                    <label class="format-option">
-                        <input type="radio" name="format" value="csv" checked>
-                        <div class="format-icon format-csv">
-                            <i class="fas fa-file-csv"></i>
-                        </div>
-                        <div class="format-name">CSV</div>
-                        <div class="format-desc">Excel Compatible</div>
-                    </label>
-
-                    <label class="format-option">
-                        <input type="radio" name="format" value="excel">
-                        <div class="format-icon format-excel">
-                            <i class="fas fa-file-excel"></i>
-                        </div>
-                        <div class="format-name">Excel</div>
-                        <div class="format-desc">XLSX Format</div>
-                    </label>
-
-                    <label class="format-option">
-                        <input type="radio" name="format" value="pdf">
-                        <div class="format-icon format-pdf">
-                            <i class="fas fa-file-pdf"></i>
-                        </div>
-                        <div class="format-name">PDF</div>
-                        <div class="format-desc">Printable</div>
-                    </label>
-
-                    <label class="format-option">
-                        <input type="radio" name="format" value="json">
-                        <div class="format-icon format-json">
-                            <i class="fas fa-code"></i>
-                        </div>
-                        <div class="format-name">JSON</div>
-                        <div class="format-desc">For APIs</div>
-                    </label>
-                </div>
-
-                <!-- Controls -->
-                <div class="controls-section">
-                    <div class="section-title">
-                        <i class="fas fa-sliders-h"></i>
-                        Filter & Options
-                    </div>
-
-                    <div class="control-group">
-                        <div class="control-item">
-                            <label class="control-label">
-                                <i class="fas fa-calendar"></i>
-                                Start Date
-                            </label>
-                            <input type="date" name="start_date" class="control-input">
-                        </div>
-
-                        <div class="control-item">
-                            <label class="control-label">
-                                <i class="fas fa-calendar"></i>
-                                End Date
-                            </label>
-                            <input type="date" name="end_date" class="control-input">
-                        </div>
-
-                        <div class="control-item">
-                            <label class="control-label">
-                                <i class="fas fa-filter"></i>
-                                Filter By
-                            </label>
-                            <select name="filter_by" class="control-select">
-                                <option value="">All Records</option>
-                                <option value="department">Department</option>
-                                <option value="user">User</option>
-                                <option value="date">Date</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="options-row">
-                        <div class="option-item">
-                            <input type="checkbox" name="include_headers" class="option-checkbox" id="includeHeaders" checked>
-                            <label for="includeHeaders" class="option-label">Include Column Headers</label>
-                        </div>
-
-                        <div class="option-item">
-                            <input type="checkbox" name="include_stats" class="option-checkbox" id="includeStats" checked>
-                            <label for="includeStats" class="option-label">Include Statistics</label>
-                        </div>
-                    </div>
-
-                    <div class="action-buttons">
-                        <a href="{{ url_for('show_attendance') }}" class="btn btn-secondary">
-                            <i class="fas fa-table"></i> View Data
-                        </a>
-                        <button type="submit" class="btn btn-export">
-                            <i class="fas fa-download"></i> Export Now
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+<div class="pg-header anim-down">
+  <div class="pg-icon"><i class="fas fa-file-export"></i></div>
+  <h1>Export Attendance</h1>
+  <p>Download attendance data with filters in CSV or JSON</p>
 </div>
 
-<a href="{{ url_for('home') }}" class="back-link" style="margin-left: 2rem;">
-    <i class="fas fa-arrow-left"></i> Back to Home
-</a>
+<!-- Stats -->
+<div class="grid-4 anim-up delay-1" style="margin-bottom:1.5rem;">
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g1);"><i class="fas fa-database"></i></div>
+    <div><div class="s-val">{{ stats.total_records }}</div><div class="s-lbl">Total Records</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g4);"><i class="fas fa-users"></i></div>
+    <div><div class="s-val">{{ stats.total_users }}</div><div class="s-lbl">Registered</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g3);"><i class="fas fa-user-check"></i></div>
+    <div><div class="s-val">{{ stats.unique_recorded }}</div><div class="s-lbl">Recorded Users</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g2);"><i class="fas fa-calendar-day"></i></div>
+    <div><div class="s-val">{{ stats.today_count }}</div><div class="s-lbl">Today</div></div>
+  </div>
+</div>
 
+<form method="POST" action="{{ url_for('export_attendance') }}" id="exportForm">
+<div class="export-form-grid anim-up delay-2">
+  <!-- Left Column: Filters -->
+  <div>
+    <!-- Format -->
+    <div class="glass-card cbar-purple" style="margin-bottom:1.2rem;">
+      <div class="card-hdr"><i class="fas fa-file-alt" style="color:var(--c1);"></i> Export Format</div>
+      <div class="card-inner">
+        <div class="fmt-cards">
+          <div class="fmt-card sel" onclick="pickFmt(this,'csv')">
+            <i class="fas fa-file-csv" style="color:var(--c4);"></i><h4>CSV</h4><p>Spreadsheet-ready</p>
+          </div>
+          <div class="fmt-card" onclick="pickFmt(this,'json')">
+            <i class="fas fa-file-code" style="color:var(--c7);"></i><h4>JSON</h4><p>Structured data</p>
+          </div>
+        </div>
+        <input type="hidden" name="format" id="fmtInput" value="csv">
+      </div>
+    </div>
+
+    <!-- Date Range -->
+    <div class="glass-card cbar-green" style="margin-bottom:1.2rem;">
+      <div class="card-hdr"><i class="fas fa-calendar-alt" style="color:var(--c4);"></i> Date Range</div>
+      <div class="card-inner">
+        <div class="grid-2" style="gap:.7rem;">
+          <div>
+            <label style="font-weight:600;font-size:.82rem;display:block;margin-bottom:3px;">From</label>
+            <input type="date" class="fi" name="start_date" id="startDate">
+          </div>
+          <div>
+            <label style="font-weight:600;font-size:.82rem;display:block;margin-bottom:3px;">To</label>
+            <input type="date" class="fi" name="end_date" id="endDate">
+          </div>
+        </div>
+        <div style="margin-top:.6rem;display:flex;gap:.4rem;flex-wrap:wrap;">
+          <button type="button" class="btn-g btn-outline" style="padding:3px 10px;font-size:.72rem;" onclick="setDateRange('today')">Today</button>
+          <button type="button" class="btn-g btn-outline" style="padding:3px 10px;font-size:.72rem;" onclick="setDateRange('week')">This Week</button>
+          <button type="button" class="btn-g btn-outline" style="padding:3px 10px;font-size:.72rem;" onclick="setDateRange('month')">This Month</button>
+          <button type="button" class="btn-g btn-outline" style="padding:3px 10px;font-size:.72rem;" onclick="setDateRange('all')">All Time</button>
+        </div>
+        {% if stats.earliest_date %}
+        <div style="font-size:.72rem;color:var(--text2);margin-top:.5rem;">
+          <i class="fas fa-info-circle"></i> Records from {{ stats.earliest_date }} to {{ stats.latest_date }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="glass-card cbar-blue" style="margin-bottom:1.2rem;">
+      <div class="card-hdr"><i class="fas fa-filter" style="color:var(--c7);"></i> Filters</div>
+      <div class="card-inner">
+        <div style="margin-bottom:.8rem;">
+          <label style="font-weight:600;font-size:.82rem;display:block;margin-bottom:3px;">Department</label>
+          <select class="fi" name="department" id="deptFilter">
+            <option value="">All Departments</option>
+            {% for d in departments %}
+              <option value="{{ d }}">{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="font-weight:600;font-size:.82rem;display:block;margin-bottom:3px;">Name / User ID</label>
+          <input type="text" class="fi" name="name" id="nameFilter" placeholder="Search by name or ID...">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Options + Preview -->
+  <div>
+    <!-- Options -->
+    <div class="glass-card cbar-pink" style="margin-bottom:1.2rem;">
+      <div class="card-hdr"><i class="fas fa-cog" style="color:var(--c3);"></i> Options</div>
+      <div class="card-inner">
+        <label class="chk-row">
+          <input type="checkbox" name="include_headers" checked>
+          <span style="font-weight:500;font-size:.88rem;">Include column headers</span>
+        </label>
+        <label class="chk-row">
+          <input type="checkbox" name="include_stats">
+          <span style="font-weight:500;font-size:.88rem;">Include statistics summary</span>
+        </label>
+        <label class="chk-row">
+          <input type="checkbox" name="deduplicate" checked>
+          <span style="font-weight:500;font-size:.88rem;">Deduplicate (one entry per person per day)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Export Columns Info -->
+    <div class="glass-card cbar-yellow" style="margin-bottom:1.2rem;">
+      <div class="card-hdr"><i class="fas fa-columns" style="color:var(--c5);"></i> Exported Columns</div>
+      <div class="card-inner">
+        <div style="display:flex;flex-wrap:wrap;gap:.4rem;">
+          <span class="badge-g badge-purple" style="font-size:.72rem;">Name</span>
+          <span class="badge-g badge-blue" style="font-size:.72rem;">User ID</span>
+          <span class="badge-g badge-green" style="font-size:.72rem;">Department</span>
+          <span class="badge-g badge-pink" style="font-size:.72rem;">Email</span>
+          <span class="badge-g badge-orange" style="font-size:.72rem;">Role</span>
+          <span class="badge-g badge-yellow" style="font-size:.72rem;">Date</span>
+          <span class="badge-g badge-blue" style="font-size:.72rem;">Time</span>
+          <span class="badge-g badge-green" style="font-size:.72rem;">Status</span>
+        </div>
+        <p style="font-size:.75rem;color:var(--text2);margin:.6rem 0 0;">All user details from the database will be included in the export.</p>
+      </div>
+    </div>
+
+    <!-- Preview button -->
+    <div class="glass-card cbar-green">
+      <div class="card-hdr" style="justify-content:space-between;">
+        <span><i class="fas fa-eye" style="color:var(--c4);"></i> Preview</span>
+        <button type="button" class="btn-g btn-outline" style="padding:3px 10px;font-size:.72rem;" onclick="loadPreview()">
+          <i class="fas fa-sync-alt"></i> Load Preview
+        </button>
+      </div>
+      <div class="card-inner" id="previewArea">
+        <div style="text-align:center;padding:1.5rem;color:var(--text2);font-size:.85rem;">
+          <i class="fas fa-search" style="font-size:1.5rem;opacity:.3;display:block;margin-bottom:.5rem;"></i>
+          Click "Load Preview" to see data before exporting
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export Button -->
+<div style="margin-top:1.5rem;display:flex;gap:.7rem;justify-content:center;" class="anim-up delay-3">
+  <a href="{{ url_for('show_attendance') }}" class="btn-g btn-outline"><i class="fas fa-arrow-left"></i> Attendance</a>
+  <button type="submit" class="btn-g btn-purple lg" id="exportBtn"><i class="fas fa-download"></i> Export Data</button>
+</div>
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
-    // Format selection visual feedback
-    document.querySelectorAll('input[name="format"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            document.querySelectorAll('.format-option').forEach(opt => {
-                opt.style.borderColor = '#e0e0e0';
-                opt.style.background = 'white';
-            });
-            this.closest('.format-option').style.borderColor = '#667eea';
-            this.closest('.format-option').style.background = 'rgba(102, 126, 234, 0.05)';
-        });
-    });
+function pickFmt(el, fmt) {
+  document.querySelectorAll('.fmt-card').forEach(function(c){ c.classList.remove('sel'); });
+  el.classList.add('sel');
+  document.getElementById('fmtInput').value = fmt;
+}
 
-    // Set initial state
-    if (document.querySelector('input[name="format"]:checked')) {
-        const checked = document.querySelector('input[name="format"]:checked').closest('.format-option');
-        checked.style.borderColor = '#667eea';
-        checked.style.background = 'rgba(102, 126, 234, 0.05)';
+function setDateRange(range) {
+  var today = new Date();
+  var startEl = document.getElementById('startDate');
+  var endEl = document.getElementById('endDate');
+  endEl.value = today.toISOString().split('T')[0];
+  
+  if (range === 'today') {
+    startEl.value = endEl.value;
+  } else if (range === 'week') {
+    var d = new Date(today);
+    d.setDate(d.getDate() - 7);
+    startEl.value = d.toISOString().split('T')[0];
+  } else if (range === 'month') {
+    var d = new Date(today);
+    d.setMonth(d.getMonth() - 1);
+    startEl.value = d.toISOString().split('T')[0];
+  } else {
+    startEl.value = '';
+    endEl.value = '';
+  }
+}
+
+async function loadPreview() {
+  var area = document.getElementById('previewArea');
+  area.innerHTML = '<div style="text-align:center;padding:1.5rem;"><i class="fas fa-spinner fa-spin" style="font-size:1.2rem;color:var(--c1);"></i><br><small>Loading preview...</small></div>';
+  
+  // Build query string from form
+  var params = new URLSearchParams();
+  var startDate = document.getElementById('startDate').value;
+  var endDate = document.getElementById('endDate').value;
+  var dept = document.getElementById('deptFilter').value;
+  var name = document.getElementById('nameFilter').value;
+  if (startDate) params.set('start_date', startDate);
+  if (endDate) params.set('end_date', endDate);
+  if (dept) params.set('department', dept);
+  if (name) params.set('name', name);
+  
+  try {
+    // Use attendance page's data as preview (load the attendance API)
+    var resp = await fetch('/attendance?' + params.toString());
+    var html = await resp.text();
+    // Parse and extract record count from the response
+    // Just show a mini table preview from our API
+    var previewResp = await fetch('/api/export_preview?' + params.toString());
+    var data = await previewResp.json();
+    
+    if (data.records && data.records.length > 0) {
+      var tbl = '<div class="preview-count" style="margin-bottom:.5rem;"><i class="fas fa-table"></i> ' + data.total + ' records found</div>';
+      tbl += '<div class="preview-table"><table class="modern-table" style="font-size:.78rem;"><thead><tr><th>Name</th><th>ID</th><th>Dept</th><th>Date</th><th>Time</th></tr></thead><tbody>';
+      data.records.forEach(function(r) {
+        tbl += '<tr><td style="font-weight:600;">' + r.name + '</td><td>' + (r.user_id||'—') + '</td><td><span class="badge-g badge-blue" style="font-size:.68rem;">' + (r.department||'—') + '</span></td><td>' + r.date + '</td><td style="font-family:monospace;font-size:.75rem;">' + r.time + '</td></tr>';
+      });
+      if (data.total > data.records.length) {
+        tbl += '<tr><td colspan="5" style="text-align:center;color:var(--text2);font-size:.75rem;">... and ' + (data.total - data.records.length) + ' more records</td></tr>';
+      }
+      tbl += '</tbody></table></div>';
+      area.innerHTML = tbl;
+    } else {
+      area.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text2);"><i class="fas fa-inbox" style="font-size:1.5rem;opacity:.3;display:block;margin-bottom:.5rem;"></i>No records found with current filters</div>';
     }
+  } catch(e) {
+    area.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--c6);">Error loading preview: ' + e.message + '</div>';
+  }
+}
 </script>
 {% endblock %}

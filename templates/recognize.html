@@ -1,1086 +1,386 @@
-{% extends 'base.html' %}
-
-{% block title %}Smart Face Recognition{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-<style>
-:root {
-    --primary: #667eea;
-    --secondary: #764ba2;
-    --success: #51cf66;
-    --danger: #fa5252;
-    --dark: #1a1a2e;
-    --light: #f8f9fa;
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    font-family: 'Inter', sans-serif;
-    min-height: 100vh;
-    color: #333;
-}
-
-.page-wrapper {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-/* HEADER */
-.premium-header {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    padding: 3rem 2rem;
-    color: white;
-    text-align: center;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-}
-
-.header-content {
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.header-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.15);
-    padding: 10px 18px;
-    border-radius: 50px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #51cf66;
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-}
-
-.header-title {
-    font-size: 2.5rem;
-    font-weight: 800;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-}
-
-.header-title i {
-    color: #51cf66;
-    font-size: 2.2rem;
-}
-
-.header-subtitle {
-    font-size: 1.05rem;
-    opacity: 0.9;
-    margin-top: 0.5rem;
-}
-
-/* MAIN */
-.main-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 3rem 2rem;
-    width: 100%;
-    flex: 1;
-}
-
-/* WELCOME CARD */
-.welcome-card {
-    background: white;
-    border-radius: 16px;
-    padding: 2.5rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-}
-
-.welcome-text h2 {
-    font-size: 1.8rem;
-    color: var(--dark);
-    margin-bottom: 1rem;
-    font-weight: 700;
-}
-
-.welcome-text p {
-    font-size: 1rem;
-    color: #666;
-    line-height: 1.7;
-}
-
-/* FEATURE GRID */
-.feature-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
-    margin-bottom: 3rem;
-}
-
-.feature-card {
-    background: white;
-    border-radius: 14px;
-    padding: 2.5rem 2rem;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    border-top: 5px solid var(--primary);
-}
-
-.feature-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2);
-}
-
-.feature-icon {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    color: white;
-    margin-bottom: 1.5rem;
-}
-
-.feature-card h3 {
-    font-size: 1.2rem;
-    color: var(--dark);
-    margin-bottom: 0.8rem;
-    font-weight: 700;
-}
-
-.feature-card p {
-    font-size: 0.9rem;
-    color: #666;
-    line-height: 1.6;
-}
-
-/* CAPTURE SECTION */
-.capture-section {
-    background: white;
-    border-radius: 16px;
-    padding: 2.5rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    margin-bottom: 2rem;
-}
-
-.section-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 2rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 2px solid #f0f0f0;
-}
-
-.section-header i {
-    font-size: 1.8rem;
-    color: var(--primary);
-}
-
-.section-header h2 {
-    font-size: 1.5rem;
-    color: var(--dark);
-    font-weight: 700;
-    margin: 0;
-}
-
-/* CONTROLS */
-.capture-controls {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.control-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-}
-
-.control-label {
-    font-weight: 600;
-    color: #333;
-    font-size: 0.95rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.control-label i {
-    color: var(--primary);
-    font-size: 1.1rem;
-}
-
-.control-select {
-    padding: 12px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-family: 'Inter', sans-serif;
-    transition: all 0.3s ease;
-    background: white;
-}
-
-.control-select:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-}
-
-/* BUTTONS */
-.button-group {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-top: 2rem;
-}
-
-.btn {
-    padding: 14px 28px;
-    border: none;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    font-family: 'Inter', sans-serif;
-    width: 100%;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    color: white;
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-}
-
-.btn-primary:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
-}
-
-.btn-success {
-    background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);
-    color: white;
-    box-shadow: 0 8px 20px rgba(81, 207, 102, 0.3);
-}
-
-.btn-success:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(81, 207, 102, 0.4);
-}
-
-.btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none !important;
-}
-
-/* MODAL */
-.modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
-    z-index: 3000;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    overflow-y: auto;
-}
-
-.modal-overlay.active {
-    display: flex;
-}
-
-.glass-modal {
-    background: white;
-    border-radius: 18px;
-    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
-    width: 100%;
-    max-width: 900px;
-    max-height: 95vh;
-    overflow-y: auto;
-    animation: slideUp 0.4s ease;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(40px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.modal-header {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    padding: 2rem;
-    border-radius: 18px 18px 0 0;
-    color: white;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.modal-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 1.5rem;
-    font-weight: 700;
-}
-
-.modal-title i {
-    color: #51cf66;
-    font-size: 1.8rem;
-}
-
-.close-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    font-size: 1.3rem;
-    cursor: pointer;
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.close-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: rotate(90deg);
-}
-
-.modal-body {
-    padding: 2rem;
-}
-
-/* VIDEO */
-.video-container {
-    position: relative;
-    background: #000;
-    border-radius: 14px;
-    overflow: hidden;
-    margin-bottom: 2rem;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-}
-
-#cameraVideo {
-    width: 100%;
-    height: auto;
-    display: block;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-    background: #000;
-}
-
-.camera-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-}
-
-.face-guide {
-    width: 180px;
-    height: 220px;
-    border: 3px dashed rgba(255, 255, 255, 0.5);
-    border-radius: 50%;
-    animation: facePulse 2.5s ease-in-out infinite;
-}
-
-@keyframes facePulse {
-    0%, 100% {
-        transform: scale(1);
-        border-color: rgba(255, 255, 255, 0.4);
-    }
-    50% {
-        transform: scale(1.1);
-        border-color: #51cf66;
-    }
-}
-
-.camera-status {
-    position: absolute;
-    bottom: 15px;
-    left: 15px;
-    background: rgba(0, 0, 0, 0.75);
-    color: white;
-    padding: 10px 16px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.status-indicator {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #51cf66;
-    animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-/* ANALYTICS */
-.analytics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.analytics-card {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-    border: 2px solid rgba(102, 126, 234, 0.2);
-    border-radius: 12px;
-    padding: 1.5rem;
-    text-align: center;
-    transition: all 0.3s ease;
-}
-
-.analytics-card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(102, 126, 234, 0.4);
-}
-
-.metric-icon {
-    font-size: 2rem;
-    color: var(--primary);
-    margin-bottom: 0.8rem;
-}
-
-.metric-value {
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: var(--dark);
-    margin-bottom: 0.4rem;
-}
-
-.metric-label {
-    font-size: 0.8rem;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 600;
-}
-
-/* LOG */
-.log-container {
-    background: #f8f9fa;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 1.5rem;
-    max-height: 350px;
-    overflow-y: auto;
-    margin-bottom: 2rem;
-}
-
-.log-title {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--dark);
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.log-title i {
-    color: var(--primary);
-}
-
-.log-item {
-    background: white;
-    padding: 12px 14px;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    font-size: 0.9rem;
-    border-left: 4px solid transparent;
-}
-
-.log-item.success {
-    border-left-color: var(--success);
-    background: rgba(81, 207, 102, 0.05);
-}
-
-.log-item.error {
-    border-left-color: var(--danger);
-    background: rgba(250, 82, 82, 0.05);
-}
-
-.log-item.info {
-    border-left-color: var(--primary);
-    background: rgba(102, 126, 234, 0.05);
-}
-
-.log-item.pending {
-    border-left-color: #ffa94d;
-    background: rgba(255, 169, 77, 0.05);
-}
-
-.log-icon {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.65rem;
-    flex-shrink: 0;
-    margin-top: 2px;
-}
-
-.log-item.success .log-icon {
-    background: rgba(81, 207, 102, 0.2);
-    color: var(--success);
-}
-
-.log-item.error .log-icon {
-    background: rgba(250, 82, 82, 0.2);
-    color: var(--danger);
-}
-
-.log-item.info .log-icon {
-    background: rgba(102, 126, 234, 0.2);
-    color: var(--primary);
-}
-
-.log-item.pending .log-icon {
-    background: rgba(255, 169, 77, 0.2);
-    color: #ffa94d;
-}
-
-.log-text {
-    flex: 1;
-    color: #333;
-}
-
-.log-time {
-    font-size: 0.75rem;
-    color: #999;
-    margin-left: auto;
-    flex-shrink: 0;
-}
-
-/* TIPS */
-.tips-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
-}
-
-.tip-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    border-top: 4px solid var(--primary);
-}
-
-.tip-card h4 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--dark);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 1rem;
-}
-
-.tip-card h4 i {
-    color: var(--primary);
-}
-
-.tip-card ul {
-    list-style: none;
-}
-
-.tip-card li {
-    padding: 0.6rem 0;
-    color: #666;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.tip-card li:last-child {
-    border-bottom: none;
-}
-
-.tip-card li::before {
-    content: '✓';
-    color: var(--success);
-    font-weight: bold;
-}
-
-/* SCROLLBAR */
-.modal-body::-webkit-scrollbar,
-.log-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.modal-body::-webkit-scrollbar-track,
-.log-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.modal-body::-webkit-scrollbar-thumb,
-.log-container::-webkit-scrollbar-thumb {
-    background: rgba(102, 126, 234, 0.4);
-    border-radius: 3px;
-}
-
-.modal-body::-webkit-scrollbar-thumb:hover,
-.log-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(102, 126, 234, 0.6);
-}
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-    .header-title {
-        font-size: 1.8rem;
-    }
-    
-    .premium-header {
-        padding: 2rem 1rem;
-    }
-    
-    .main-container {
-        padding: 2rem 1rem;
-    }
-    
-    .button-group,
-    .feature-grid,
-    .capture-controls,
-    .analytics-grid,
-    .tips-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .modal-body {
-        padding: 1.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .header-title {
-        font-size: 1.4rem;
-    }
-    
-    .header-title i {
-        font-size: 1.5rem;
-    }
-    
-    .btn {
-        padding: 12px 20px;
-        font-size: 0.9rem;
-    }
-}
-</style>
-{% endblock %}
+{% extends "base.html" %}
+{% block title %}Smart Recognition — Smart Attendance{% endblock %}
 
 {% block content %}
-<div class="page-wrapper">
-    <!-- HEADER -->
-    <div class="premium-header">
-        <div class="header-content">
-            <div class="header-badge">
-                <i class="fas fa-check-circle"></i>
-                Smart Recognition
-            </div>
-            <h1 class="header-title">
-                <i class="fas fa-face-smile"></i>
-                Face Recognition System
-            </h1>
-            <p class="header-subtitle">Real-time face detection and attendance management</p>
-        </div>
-    </div>
+<style>
+  .rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.5rem}
+  @media(max-width:768px){.rec-grid{grid-template-columns:1fr}}
+  .mode-cards{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+  .mode-card{flex:1;min-width:200px;background:var(--card);border:2px solid var(--border);border-radius:16px;
+    padding:1.2rem;cursor:pointer;text-align:center;transition:all .3s}
+  .mode-card:hover{border-color:var(--c1)}
+  .mode-card.sel{border-color:var(--c1);background:rgba(102,126,234,.06);box-shadow:0 0 0 3px rgba(102,126,234,.12)}
+  .mode-card i{font-size:1.8rem;margin-bottom:.6rem;display:block}
+  .mode-card h4{font-weight:700;font-size:.95rem;margin-bottom:.2rem}
+  .mode-card p{font-size:.78rem;color:var(--text2);margin:0}
 
-    <!-- MAIN CONTENT -->
-    <div class="main-container">
-        <!-- WELCOME CARD -->
-        <div class="welcome-card">
-            <div class="welcome-text">
-                <h2>Welcome to Smart Face Recognition</h2>
-                <p>Advanced facial recognition technology for seamless attendance management. Simply select your class, launch the recognition session, and let our AI-powered system handle the rest.</p>
-            </div>
-        </div>
+  .rec-cam{position:relative;border-radius:16px;overflow:hidden;background:#000}
+  .rec-cam video{width:100%;display:block;border-radius:16px}
+  .rec-cam canvas{position:absolute;inset:0;width:100%;height:100%}
+  .rec-cam .ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;background:rgba(0,0,0,.7);color:#fff;z-index:2;border-radius:16px}
+  .rec-cam .ov.hidden{display:none}
 
-        <!-- FEATURES -->
-        <div class="feature-grid">
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-bolt"></i></div>
-                <h3>Real-time Detection</h3>
-                <p>Instant face detection with 5-second capture intervals</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
-                <h3>Highly Accurate</h3>
-                <p>Advanced neural networks with 70%+ confidence threshold</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
-                <h3>Live Analytics</h3>
-                <p>Real-time statistics and recognition timeline</p>
-            </div>
-        </div>
+  .rec-controls{display:flex;gap:.7rem;justify-content:center;margin-top:1rem;flex-wrap:wrap}
 
-        <!-- CAPTURE SECTION -->
-        <div class="capture-section">
-            <div class="section-header">
-                <i class="fas fa-play-circle"></i>
-                <h2>Start Recognition Session</h2>
-            </div>
+  /* Log */
+  .log-list{max-height:440px;overflow-y:auto}
+  .log-item{display:flex;align-items:flex-start;gap:.8rem;padding:.8rem;border-bottom:1px solid var(--border);animation:fadeUp .3s ease both}
+  .log-item:last-child{border-bottom:none}
+  .log-av{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0}
+  .log-info{flex:1;min-width:0}
+  .log-info .name{font-weight:700;font-size:.9rem;margin-bottom:2px}
+  .log-info .details{font-size:.75rem;color:var(--text2);display:flex;flex-wrap:wrap;gap:.5rem}
+  .log-info .details span{display:inline-flex;align-items:center;gap:3px}
+  .log-right{text-align:right;flex-shrink:0}
+  .log-right .time{font-size:.75rem;color:var(--text2);font-family:'JetBrains Mono',monospace;font-weight:600}
+  .log-right .conf{font-size:.72rem;font-weight:700;margin-top:2px}
+  .empty-log{text-align:center;padding:2rem;color:var(--text2)}
+  .empty-log i{font-size:2rem;opacity:.4;display:block;margin-bottom:.6rem}
 
-            <div class="capture-controls">
-                <div class="control-group">
-                    <label class="control-label"><i class="fas fa-chalkboard-user"></i> Select Class</label>
-                    <select id="classSelect" class="control-select">
-                        <option value="">-- General Attendance --</option>
-                        {% for class in classes %}<option value="{{ class.id }}">{{ class.name }}</option>{% endfor %}
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label class="control-label"><i class="fas fa-computer"></i> Launch Mode</label>
-                    <select id="modeSelect" class="control-select">
-                        <option value="inapp">In-App Camera (Recommended)</option>
-                        <option value="desktop">Full Screen Mode</option>
-                    </select>
-                </div>
-            </div>
+  .conf-bar{width:50px;height:5px;border-radius:5px;background:var(--border);display:inline-block;vertical-align:middle;margin-left:4px}
+  .conf-fill{height:100%;border-radius:5px}
 
-            <div class="button-group">
-                <button class="btn btn-success" onclick="launchRecognition()">
-                    <i class="fas fa-camera"></i> Open Camera Session
-                </button>
-                <form method="POST" style="width: 100%;">
-                    <input type="hidden" name="class_id" id="classIdForm" value="">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-desktop"></i> Desktop Mode
-                    </button>
-                </form>
-            </div>
-        </div>
+  /* Stat mini */
+  .cap-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.7rem .8rem;text-align:center}
+  .cap-stat .val{font-size:1.3rem;font-weight:800;line-height:1.2}
+  .cap-stat .lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.4px;color:var(--text2);font-weight:600}
 
-        <!-- TIPS -->
-        <div class="tips-grid">
-            <div class="tip-card">
-                <h4><i class="fas fa-lightbulb"></i> Best Practices</h4>
-                <ul>
-                    <li>Position face directly in front of camera</li>
-                    <li>Ensure bright, even lighting</li>
-                    <li>Remove sunglasses or face coverings</li>
-                    <li>Keep face in the guide frame</li>
-                    <li>Maintain natural facial expression</li>
-                </ul>
-            </div>
-            <div class="tip-card">
-                <h4><i class="fas fa-tools"></i> Troubleshooting</h4>
-                <ul>
-                    <li>Poor lighting → Increase brightness</li>
-                    <li>Face not detected → Adjust camera angle</li>
-                    <li>Multiple faces → Ensure one face only</li>
-                    <li>Camera denied → Check camera permissions</li>
-                    <li>No recognition → Register face first</li>
-                </ul>
-            </div>
-        </div>
-    </div>
+  /* Toast */
+  .rec-toast{position:fixed;bottom:20px;right:20px;z-index:9999;padding:.8rem 1.2rem;border-radius:12px;
+    font-size:.88rem;font-weight:600;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.2);
+    animation:toastIn .4s ease both;max-width:360px}
+  .rec-toast.success{background:linear-gradient(135deg,#06d6a0,#38f9d7);color:#1e1e2f}
+  .rec-toast.warning{background:linear-gradient(135deg,#ffd166,#f0c040);color:#1e1e2f}
+  .rec-toast.error{background:linear-gradient(135deg,#ef476f,#f5576c)}
+  @keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(20px)}}
+
+  .date-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;
+    background:rgba(102,126,234,.08);color:var(--c1);font-size:.78rem;font-weight:600;margin-bottom:.8rem}
+</style>
+
+<div class="pg-header anim-down" {% if admin_logged_in %}style="background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);"{% endif %}>
+  <div class="pg-icon">
+    <i class="fas {% if admin_logged_in %}fa-door-open{% else %}fa-user-check{% endif %}"></i>
+  </div>
+  <h1>{% if admin_logged_in %}Gate Recognition{% else %}Face Recognition{% endif %}</h1>
+  <p>{% if admin_logged_in %}Scan faces at college gate — marks gate entry attendance{% else %}Identify faces and automatically record attendance{% endif %}</p>
+  {% if admin_logged_in %}
+  <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:20px;background:rgba(255,255,255,.2);font-size:.78rem;font-weight:700;margin-top:.6rem;"><i class="fas fa-shield-halved"></i> ADMIN — GATE MODE</span>
+  {% elif teacher_logged_in %}
+  <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:20px;background:rgba(255,255,255,.2);font-size:.78rem;font-weight:700;margin-top:.6rem;"><i class="fas fa-chalkboard-teacher"></i> TEACHER — CLASS MODE</span>
+  {% endif %}
 </div>
 
-<!-- RECOGNITION MODAL -->
-<div class="modal-overlay" id="recognitionModal">
-    <div class="glass-modal">
-        <!-- Modal Header -->
-        <div class="modal-header">
-            <div class="modal-title">
-                <i class="fas fa-video"></i>
-                Live Recognition
-            </div>
-            <button class="close-btn" onclick="closeRecognitionModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-
-        <!-- Modal Body -->
-        <div class="modal-body">
-            <!-- Video -->
-            <div class="video-container">
-                <video id="cameraVideo" autoplay playsinline muted></video>
-                <div class="camera-overlay">
-                    <div class="face-guide"></div>
-                    <div class="camera-status">
-                        <div class="status-indicator"></div>
-                        <span id="statusText">Camera Ready</span>
-                        <span style="margin-left: 10px; font-size: 0.8rem; opacity: 0.8;">Next: <span id="countdownTimer">5s</span></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Analytics -->
-            <div class="analytics-grid">
-                <div class="analytics-card">
-                    <div class="metric-icon"><i class="fas fa-face-smile"></i></div>
-                    <div class="metric-value" id="facesDetected">0</div>
-                    <div class="metric-label">Faces Detected</div>
-                </div>
-                <div class="analytics-card">
-                    <div class="metric-icon"><i class="fas fa-check-double"></i></div>
-                    <div class="metric-value" id="usersRecognized">0</div>
-                    <div class="metric-label">Recognized</div>
-                </div>
-                <div class="analytics-card">
-                    <div class="metric-icon"><i class="fas fa-percentage"></i></div>
-                    <div class="metric-value" id="confidenceLevel">0%</div>
-                    <div class="metric-label">Avg Confidence</div>
-                </div>
-            </div>
-
-            <!-- Log -->
-            <div class="log-container">
-                <div class="log-title">
-                    <i class="fas fa-list-check"></i>
-                    Recognition Timeline
-                </div>
-                <div id="recognitionLog"></div>
-            </div>
-
-            <!-- Actions -->
-            <div class="button-group">
-                <button class="btn btn-success" onclick="captureFrame()">
-                    <i class="fas fa-camera"></i> Manual Capture
-                </button>
-                <button class="btn btn-primary" onclick="closeRecognitionModal()">
-                    <i class="fas fa-times"></i> Close Session
-                </button>
-            </div>
-        </div>
-    </div>
+<!-- Mode Selection -->
+<div class="mode-cards anim-up delay-1">
+  <div class="mode-card sel" onclick="setMode('auto')">
+    <i class="fas fa-bolt" style="color:var(--c5);"></i>
+    <h4>Automatic</h4>
+    <p>Continuously detect & log attendance</p>
+  </div>
+  <div class="mode-card" onclick="setMode('manual')">
+    <i class="fas fa-hand-pointer" style="color:var(--c1);"></i>
+    <h4>Manual</h4>
+    <p>Click to capture each recognition</p>
+  </div>
 </div>
 
+{% if admin_logged_in %}
+<div class="glass-card cbar-pink anim-up delay-1" style="margin-bottom:1.2rem;">
+  <div class="card-inner" style="padding:.8rem 1.2rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem;">
+      <div style="display:flex;align-items:center;gap:.6rem;">
+        <span style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#f093fb,#f5576c);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.9rem;"><i class="fas fa-door-open"></i></span>
+        <div>
+          <div style="font-weight:700;font-size:.9rem;">Gate Entry Mode</div>
+          <div style="font-size:.75rem;color:var(--text2);">Scanning all students, teachers & staff at college gate</div>
+        </div>
+      </div>
+      <a href="{{ url_for('admin_dashboard') }}" class="btn-g btn-pink" style="padding:.5rem 1rem;font-size:.8rem;">
+        <i class="fas fa-gauge-high"></i> Dashboard
+      </a>
+    </div>
+  </div>
+</div>
+{% elif teacher_logged_in and classes %}
+<div class="glass-card cbar-purple anim-up delay-1" style="margin-bottom:1.2rem;">
+  <div class="card-inner" style="padding:.8rem 1.2rem;">
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+      <label style="font-weight:600;font-size:.88rem;white-space:nowrap;">
+        <i class="fas fa-chalkboard" style="color:var(--c1);"></i> Class:
+      </label>
+      <select class="fi" id="classSelect" style="max-width:300px;">
+        <option value="">All Classes</option>
+        {% for c in classes %}
+          <option value="{{ c.id }}">{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="rec-grid anim-up delay-2">
+  <!-- Camera -->
+  <div>
+    <div class="glass-card cbar-green">
+      <div class="card-hdr"><i class="fas fa-video" style="color:var(--c4);"></i> Live Feed</div>
+      <div class="card-inner">
+        <div class="rec-cam">
+          <video id="recVideo" autoplay playsinline muted></video>
+          <canvas id="recCanvas"></canvas>
+          <div class="ov" id="recOverlay">
+            <i class="fas fa-video" style="font-size:2.5rem;margin-bottom:1rem;opacity:.6;"></i>
+            <p>Click <strong>Start</strong> to begin recognition</p>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap;">
+          <div class="cap-stat" style="flex:1;min-width:80px;">
+            <div class="val" id="rFaces" style="color:var(--c7);">0</div><div class="lbl">Faces</div>
+          </div>
+          <div class="cap-stat" style="flex:1;min-width:80px;">
+            <div class="val" id="rRecog" style="color:var(--c4);">0</div><div class="lbl">Recognized</div>
+          </div>
+          <div class="cap-stat" style="flex:1;min-width:80px;">
+            <div class="val" id="rSaved" style="color:var(--c1);">0</div><div class="lbl">Saved</div>
+          </div>
+        </div>
+
+        <div class="rec-controls">
+          <button class="btn-g btn-green" id="recStartBtn" onclick="startRec()"><i class="fas fa-play"></i> Start</button>
+          <button class="btn-g btn-orange" id="recStopBtn" onclick="stopRec()" style="display:none;"><i class="fas fa-stop"></i> Stop</button>
+          <button class="btn-g btn-purple" id="recSnapBtn" onclick="snapRec()" style="display:none;"><i class="fas fa-camera"></i> Snap</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recognition Log -->
+  <div>
+    <div class="glass-card cbar-blue" style="height:100%;display:flex;flex-direction:column;">
+      <div class="card-hdr" style="justify-content:space-between;">
+        <span><i class="fas fa-list-check" style="color:var(--c7);"></i> Recognition Log</span>
+        <span class="badge-g badge-purple" id="logCount">0 entries</span>
+      </div>
+      <div class="card-inner" style="flex:1;padding-top:.5rem;">
+        <div class="date-badge" id="todayBadge">
+          <i class="fas fa-calendar-day"></i> <span id="todayDate"></span>
+        </div>
+        <div class="log-list" id="logList">
+          <div class="empty-log" id="emptyLog">
+            <i class="fas fa-ghost"></i>
+            <p>No recognitions yet<br><small>Start the camera to begin</small></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
-let camera_stream = null, video_element = null, is_capturing = false;
-let lastDetections = {};
-const CAPTURE_INTERVAL = 5000;
-const DETECTION_COOLDOWN = 6000;
+(function(){
+  var stream = null, running = false, mode = 'auto', logEntries = 0, savedCount = 0;
+  var savedNames = {};  // { name: { time, date, ... } } — track saved per session
+  var video = document.getElementById('recVideo');
+  var canvas = document.getElementById('recCanvas');
+  var overlay = document.getElementById('recOverlay');
 
-function launchRecognition() {
-    const mode = document.getElementById('modeSelect').value;
-    const classId = document.getElementById('classSelect').value;
-    document.getElementById('classIdForm').value = classId;
-    mode === 'inapp' ? openRecognitionModal() : document.querySelector('form').submit();
-}
+  // Show today's date
+  var now = new Date();
+  var dd = String(now.getDate()).padStart(2,'0');
+  var mm = String(now.getMonth()+1).padStart(2,'0');
+  var yyyy = now.getFullYear();
+  document.getElementById('todayDate').textContent = dd + '-' + mm + '-' + yyyy;
 
-async function openRecognitionModal() {
-    document.getElementById('recognitionModal').classList.add('active');
-    video_element = document.getElementById('cameraVideo');
+  window.setMode = function(m) {
+    mode = m;
+    document.querySelectorAll('.mode-card').forEach(function(c){ c.classList.remove('sel'); });
+    event.currentTarget.classList.add('sel');
+    document.getElementById('recSnapBtn').style.display = (m === 'manual' && stream) ? '' : 'none';
+  };
+
+  window.startRec = async function() {
     try {
-        const constraints = { 
-            video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }, 
-            audio: false 
-        };
-        camera_stream = await navigator.mediaDevices.getUserMedia(constraints);
-        video_element.srcObject = camera_stream;
-        video_element.onloadedmetadata = () => {
-            video_element.play();
-            updateStatus('Camera Ready - Detecting Faces');
-            startContinuousCapture();
-        };
-    } catch (error) {
-        console.error('Camera error:', error);
-        updateStatus('❌ Camera Access Denied');
-        addLogItem('Error: ' + error.message, 'error');
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+      });
+      video.srcObject = stream;
+      await video.play();
+      overlay.classList.add('hidden');
+      running = true;
+      document.getElementById('recStartBtn').style.display = 'none';
+      document.getElementById('recStopBtn').style.display = '';
+      if (mode === 'manual') document.getElementById('recSnapBtn').style.display = '';
+      if (mode === 'auto') autoLoop();
+    } catch(e) {
+      var msg = e.name === 'NotAllowedError' ? 'Camera permission denied. Allow access in browser.'
+              : e.name === 'NotFoundError' ? 'No camera found.'
+              : 'Camera error: ' + e.message;
+      showToast(msg, 'error');
     }
-}
+  };
 
-function closeRecognitionModal() {
-    document.getElementById('recognitionModal').classList.remove('active');
-    is_capturing = false;
-    if (camera_stream) camera_stream.getTracks().forEach(track => track.stop());
-    resetAnalytics();
-}
+  window.stopRec = function() {
+    running = false;
+    if (stream) { stream.getTracks().forEach(function(t){ t.stop(); }); stream = null; }
+    overlay.classList.remove('hidden');
+    document.getElementById('recStartBtn').style.display = '';
+    document.getElementById('recStopBtn').style.display = 'none';
+    document.getElementById('recSnapBtn').style.display = 'none';
+    // Clear canvas
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
 
-function updateStatus(text) {
-    document.getElementById('statusText').textContent = text;
-}
+  window.snapRec = function() { captureAndRecognize(); };
 
-function startCountdownTimer() {
-    let timeLeft = CAPTURE_INTERVAL / 1000;
-    const timerElement = document.getElementById('countdownTimer');
-    
-    const interval = setInterval(() => {
-        timeLeft--;
-        timerElement.textContent = timeLeft + 's';
-        if (timeLeft <= 0) clearInterval(interval);
-    }, 1000);
-}
+  async function autoLoop() {
+    if (!running) return;
+    await captureAndRecognize();
+    setTimeout(autoLoop, 2000);
+  }
 
-function startContinuousCapture() {
-    is_capturing = true;
-    continuousFrameCapture();
-}
-
-async function continuousFrameCapture() {
-    if (!is_capturing || !video_element) return;
-    
+  async function captureAndRecognize() {
+    if (!stream || !video.videoWidth) return;
+    var tmpC = document.createElement('canvas');
+    tmpC.width = video.videoWidth; tmpC.height = video.videoHeight;
+    tmpC.getContext('2d').drawImage(video, 0, 0);
+    var frameData = tmpC.toDataURL('image/jpeg', 0.8);
     try {
-        const canvas = document.createElement('canvas');
-        canvas.width = video_element.videoWidth;
-        canvas.height = video_element.videoHeight;
-        canvas.getContext('2d').drawImage(video_element, 0, 0);
-        const frame_data = canvas.toDataURL('image/jpeg', 0.75);
-        
-        const response = await fetch('/api/capture_frame', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ frame: frame_data })
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            if (result.results && result.results.length > 0) {
-                updateAnalytics(result);
-                addLogItem(`Captured: ${result.results.length} face(s) detected`, 'pending');
-                
-                result.results.forEach(r => {
-                    if (r.confidence >= 70) {
-                        const now = Date.now();
-                        const lastDetectionTime = lastDetections[r.name] || 0;
-                        
-                        if (now - lastDetectionTime > DETECTION_COOLDOWN) {
-                            addLogItem(`✓ ${r.name} (${r.confidence.toFixed(0)}% confidence)`, 'success');
-                            saveAttendance(r.name);
-                            lastDetections[r.name] = now;
-                        } else {
-                            const remaining = Math.ceil((DETECTION_COOLDOWN - (now - lastDetectionTime)) / 1000);
-                            addLogItem(`${r.name} already recorded (cooldown: ${remaining}s)`, 'info');
-                        }
-                    }
-                });
-            }
+      var resp = await fetch('/api/capture_frame', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ frame: frameData })
+      });
+      var data = await resp.json();
+      if (data.success) {
+        document.getElementById('rFaces').textContent = data.faces_detected;
+        drawBoxes(data.results);
+        var recCount = 0;
+        for (var i = 0; i < (data.results || []).length; i++) {
+          var r = data.results[i];
+          if (r.name === 'Unknown' || r.name === 'Error') continue;
+          recCount++;
+          if (r.confidence > 50 && !savedNames[r.name]) {
+            saveAttendance(r);
+          }
         }
-    } catch (error) {
-        console.error('Processing error:', error);
-    }
-    
-    startCountdownTimer();
-    setTimeout(continuousFrameCapture, CAPTURE_INTERVAL);
-}
+        document.getElementById('rRecog').textContent = recCount;
+      }
+    } catch(e) { console.error('Recognition error:', e); }
+  }
 
-function updateAnalytics(data) {
-    const results = data.results || [];
-    document.getElementById('facesDetected').textContent = data.faces_detected || 0;
-    document.getElementById('usersRecognized').textContent = results.length;
-    if (results.length > 0) {
-        const avgConfidence = (results.reduce((sum, r) => sum + r.confidence, 0) / results.length).toFixed(0);
-        document.getElementById('confidenceLevel').textContent = avgConfidence + '%';
-    }
-}
+  function drawBoxes(results) {
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    (results || []).forEach(function(r) {
+      var color = r.confidence > 70 ? '#06d6a0' : r.confidence > 50 ? '#ffd166' : '#ef476f';
+      ctx.strokeStyle = color; ctx.lineWidth = 3;
+      ctx.strokeRect(r.x, r.y, r.w, r.h);
+      // Label bg
+      var label = r.name + ' ' + r.confidence + '%';
+      var tw = ctx.measureText(label).width + 16;
+      ctx.fillStyle = 'rgba(0,0,0,.7)';
+      ctx.fillRect(r.x, r.y - 28, Math.max(tw, r.w), 28);
+      ctx.fillStyle = color; ctx.font = 'bold 13px Inter, sans-serif';
+      ctx.fillText(label, r.x + 6, r.y - 9);
+      // Status indicator
+      if (savedNames[r.name]) {
+        ctx.fillStyle = 'rgba(6,214,160,.85)';
+        ctx.fillRect(r.x, r.y + r.h, Math.max(tw, r.w), 22);
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.fillText('\u2713 Saved at ' + savedNames[r.name].time, r.x + 6, r.y + r.h + 15);
+      }
+    });
+  }
 
-async function saveAttendance(name) {
+  function addLog(name, data, isDuplicate) {
+    document.getElementById('emptyLog').style.display = 'none';
+    logEntries++;
+    document.getElementById('logCount').textContent = logEntries + ' entries';
+
+    var colors = ['#667eea','#f093fb','#06d6a0','#4cc9f0','#ffd166','#ef476f'];
+    var c = colors[logEntries % colors.length];
+    var initials = name.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0,2);
+    var confColor = '#06d6a0';
+    var badgeClass = isDuplicate ? 'badge-yellow' : 'badge-green';
+    var badgeText = isDuplicate ? 'Already' : 'Saved';
+
+    var detailsHtml = '';
+    if (data.user_id && data.user_id !== 'N/A') detailsHtml += '<span><i class="fas fa-id-badge"></i> ' + data.user_id + '</span>';
+    if (data.department && data.department !== 'N/A') detailsHtml += '<span><i class="fas fa-building"></i> ' + data.department + '</span>';
+    if (data.email && data.email !== 'N/A') detailsHtml += '<span><i class="fas fa-envelope"></i> ' + data.email + '</span>';
+
+    var html = '<div class="log-item">' +
+      '<div class="log-av" style="background:' + c + ';">' + initials + '</div>' +
+      '<div class="log-info">' +
+        '<div class="name">' + name + '</div>' +
+        '<div class="details">' + detailsHtml + '</div>' +
+      '</div>' +
+      '<div class="log-right">' +
+        '<div class="time"><i class="fas fa-clock"></i> ' + data.time + '</div>' +
+        '<div style="margin-top:3px;"><span class="badge-g ' + badgeClass + '" style="font-size:.7rem;">' + badgeText + '</span></div>' +
+        '<div class="time" style="margin-top:2px;">' + data.date + '</div>' +
+      '</div>' +
+    '</div>';
+    document.getElementById('logList').insertAdjacentHTML('afterbegin', html);
+  }
+
+  async function saveAttendance(r) {
+    var classId = document.getElementById('classSelect') ? document.getElementById('classSelect').value : null;
+    var attendanceType = '{{ "gate" if admin_logged_in else "class" }}';
     try {
-        const response = await fetch('/api/save_attendance', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, class_id: document.getElementById('classSelect').value || null })
-        });
-        const result = await response.json();
-        if (result.success) {
-            addLogItem(`✅ Attendance saved: ${name}`, 'success');
-        } else if (result.already_recorded) {
-            addLogItem(`Already recorded for today`, 'info');
-        } else {
-            addLogItem(`⚠️ ${result.message}`, 'error');
-        }
-    } catch (error) { 
-        console.error('Save error:', error);
-        addLogItem(`Error: ${error.message}`, 'error');
+      var resp = await fetch('/api/save_attendance', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name: r.name, class_id: classId || null, attendance_type: attendanceType })
+      });
+      var data = await resp.json();
+      if (data.success) {
+        savedNames[r.name] = { time: data.data.time, date: data.data.date };
+        savedCount++;
+        document.getElementById('rSaved').textContent = savedCount;
+        addLog(r.name, data.data, false);
+        showToast('\u2713 Attendance saved for ' + r.name + ' at ' + data.data.time, 'success');
+      } else if (data.already_recorded || data.duplicate) {
+        // Already recorded today (from a previous session or earlier)
+        savedNames[r.name] = { time: 'earlier', date: dd+'-'+mm+'-'+yyyy };
+        addLog(r.name, {
+          time: data.message.split('at ')[1] || 'earlier',
+          date: dd+'-'+mm+'-'+yyyy,
+          user_id: 'N/A', department: 'N/A', email: 'N/A'
+        }, true);
+        showToast('\u26A0 ' + r.name + ' already recorded today', 'warning');
+      } else {
+        showToast('\u2717 ' + (data.message || 'Unknown error'), 'error');
+      }
+    } catch(e) {
+      console.error('Save error:', e);
+      showToast('\u2717 Network error saving attendance', 'error');
     }
-}
+  }
 
-function addLogItem(message, type = 'pending') {
-    const log = document.getElementById('recognitionLog');
-    const item = document.createElement('div');
-    item.className = `log-item ${type}`;
-    const icons = { 'success': 'fa-check', 'error': 'fa-exclamation', 'pending': 'fa-hourglass-half', 'info': 'fa-circle-info' };
-    const time = new Date().toLocaleTimeString();
-    item.innerHTML = `<div class="log-icon"><i class="fas ${icons[type]}"></i></div><div class="log-text">${message}</div><div class="log-time">${time}</div>`;
-    log.insertBefore(item, log.firstChild);
-    while (log.children.length > 15) log.removeChild(log.lastChild);
-}
+  function showToast(msg, type) {
+    var existing = document.querySelectorAll('.rec-toast');
+    existing.forEach(function(t, i){ t.style.bottom = (20 + (i+1)*60) + 'px'; });
+    var toast = document.createElement('div');
+    toast.className = 'rec-toast ' + type;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(function() {
+      toast.style.animation = 'toastOut .4s ease forwards';
+      setTimeout(function(){ toast.remove(); }, 400);
+    }, 3500);
+  }
 
-function resetAnalytics() {
-    document.getElementById('facesDetected').textContent = '0';
-    document.getElementById('usersRecognized').textContent = '0';
-    document.getElementById('confidenceLevel').textContent = '0%';
-    document.getElementById('recognitionLog').innerHTML = '';
-    lastDetections = {};
-}
-
-function captureFrame() {
-    if (!video_element?.srcObject) return;
-    const canvas = document.createElement('canvas');
-    canvas.width = video_element.videoWidth;
-    canvas.height = video_element.videoHeight;
-    canvas.getContext('2d').drawImage(video_element, 0, 0);
-}
-
-document.getElementById('classSelect')?.addEventListener('change', function() {
-    document.getElementById('classIdForm').value = this.value;
-});
-
-window.addEventListener('beforeunload', () => {
-    if (camera_stream) camera_stream.getTracks().forEach(track => track.stop());
-});
+  window.addEventListener('beforeunload', function() {
+    if (stream) stream.getTracks().forEach(function(t){ t.stop(); });
+  });
+})();
 </script>
 {% endblock %}

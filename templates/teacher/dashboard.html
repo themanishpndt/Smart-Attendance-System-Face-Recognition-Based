@@ -1,388 +1,221 @@
 {% extends "base.html" %}
-
-{% block title %}Teacher Dashboard{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<style>
-:root {
-    --primary: #667eea;
-    --secondary: #764ba2;
-    --success: #51cf66;
-    --danger: #fa5252;
-    --warning: #ffa94d;
-    --info: #4dabf7;
-    --dark: #1a1a2e;
-}
-
-body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    min-height: 100vh;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-.dashboard-header {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    padding: 2rem;
-    color: white;
-    border-radius: 16px;
-    margin-bottom: 2rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
-
-.welcome-title {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.welcome-subtitle {
-    font-size: 1.1rem;
-    opacity: 0.9;
-}
-
-.stat-card {
-    background: white;
-    border-radius: 14px;
-    padding: 2rem;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    border-top: 5px solid;
-    height: 100%;
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-}
-
-.stat-card.primary { border-color: var(--primary); }
-.stat-card.success { border-color: var(--success); }
-.stat-card.info { border-color: var(--info); }
-.stat-card.warning { border-color: var(--warning); }
-
-.stat-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    margin-bottom: 1rem;
-}
-
-.stat-icon.primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; }
-.stat-icon.success { background: linear-gradient(135deg, #51cf66, #37b24d); color: white; }
-.stat-icon.info { background: linear-gradient(135deg, #4dabf7, #228be6); color: white; }
-.stat-icon.warning { background: linear-gradient(135deg, #ffa94d, #ff922b); color: white; }
-
-.stat-value {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: var(--dark);
-    margin-bottom: 0.3rem;
-}
-
-.stat-label {
-    font-size: 0.9rem;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 600;
-}
-
-.action-card {
-    background: white;
-    border-radius: 14px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.06);
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    text-decoration: none;
-    color: inherit;
-    border-left: 4px solid var(--primary);
-}
-
-.action-card:hover {
-    transform: translateX(10px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
-    text-decoration: none;
-    color: inherit;
-}
-
-.action-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.5rem;
-    flex-shrink: 0;
-}
-
-.action-content h5 {
-    margin: 0 0 0.3rem 0;
-    font-weight: 600;
-    color: var(--dark);
-}
-
-.action-content p {
-    margin: 0;
-    font-size: 0.85rem;
-    color: #666;
-}
-
-.clock-card {
-    background: linear-gradient(135deg, var(--info), #228be6);
-    border-radius: 14px;
-    padding: 2rem;
-    color: white;
-    text-align: center;
-    box-shadow: 0 8px 20px rgba(74, 171, 247, 0.3);
-}
-
-.current-date {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.current-time {
-    font-size: 2.5rem;
-    font-weight: 800;
-    font-family: 'Courier New', monospace;
-}
-
-.recent-activity {
-    background: white;
-    border-radius: 14px;
-    padding: 1.5rem;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-}
-
-.activity-item {
-    padding: 1rem;
-    border-left: 4px solid var(--success);
-    background: rgba(81, 207, 102, 0.05);
-    border-radius: 8px;
-    margin-bottom: 0.8rem;
-}
-
-.activity-item:last-child {
-    margin-bottom: 0;
-}
-
-.activity-student {
-    font-weight: 600;
-    color: var(--dark);
-}
-
-.activity-time {
-    font-size: 0.85rem;
-    color: #666;
-}
-
-.section-title {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--dark);
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.section-title i {
-    color: var(--primary);
-}
-
-.btn-custom {
-    padding: 12px 24px;
-    border-radius: 10px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    border: none;
-}
-
-.btn-primary-custom {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-}
-
-.btn-primary-custom:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
-    color: white;
-}
-
-.btn-danger-custom {
-    background: linear-gradient(135deg, #fa5252, #e03131);
-    color: white;
-    box-shadow: 0 8px 20px rgba(250, 82, 82, 0.3);
-}
-
-.btn-danger-custom:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(250, 82, 82, 0.4);
-    color: white;
-}
-
-@media (max-width: 768px) {
-    .welcome-title { font-size: 1.5rem; }
-    .stat-value { font-size: 2rem; }
-}
-</style>
-{% endblock %}
+{% block title %}Teacher Dashboard — Smart Attendance{% endblock %}
 
 {% block content %}
-<div class="container mt-4 mb-5">
-    <!-- Header -->
-    <div class="dashboard-header d-flex justify-content-between align-items-center">
-        <div>
-            <h1 class="welcome-title"><i class="fas fa-tachometer-alt"></i> Teacher Dashboard</h1>
-            <p class="welcome-subtitle">Welcome back, {{ session.teacher_name }}!</p>
-        </div>
-        <a href="{{ url_for('teacher_logout') }}" class="btn btn-danger-custom">
-            <i class="fas fa-sign-out-alt"></i> Sign Out
-        </a>
-    </div>
+<style>
+  .dash-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.2rem; }
+  @media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
+  .quick-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1rem; }
+  .qa { flex: 1; min-width: 130px; display: flex; align-items: center; gap: 8px; padding: .8rem 1rem;
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    font-weight: 600; font-size: .85rem; color: var(--text); transition: all .25s; text-decoration:none; }
+  .qa:hover { transform: translateY(-2px); box-shadow: var(--shadow); color: var(--c1); text-decoration:none; }
+  .qa i { font-size: 1rem; }
+  .clock { font-size: 1.6rem; font-weight: 800; text-align: center; margin: .5rem 0;
+    background: var(--g1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .clock-date { text-align: center; font-size: .82rem; color: var(--text2); }
+  .rec-item { display: flex; align-items: center; gap: .8rem; padding: .6rem .8rem; border-bottom: 1px solid var(--border); cursor:pointer; transition: background .2s; text-decoration:none; }
+  .rec-item:last-child { border-bottom: none; }
+  .rec-item:hover { background: rgba(102,126,234,.04); }
+  .rec-av { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: .75rem; color: #fff; flex-shrink: 0; }
+  .rec-info { flex: 1; } .rec-info .n { font-weight: 600; font-size: .88rem; }
+  .rec-info .t { font-size: .73rem; color: var(--text2); }
+  .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.45); z-index:9999; justify-content:center; align-items:center; }
+  .modal-overlay.active { display:flex; }
+  .modal-box { background:var(--card); border-radius:20px; padding:0; width:420px; max-width:92vw; box-shadow:0 16px 80px rgba(0,0,0,.25); overflow:hidden; animation:modalIn .3s; }
+  @keyframes modalIn { from{opacity:0;transform:scale(.92)translateY(20px)} to{opacity:1;transform:none} }
+  .modal-top { padding:1.5rem; background:var(--g1); color:#fff; text-align:center; }
+  .modal-top .m-av { width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.2);display:inline-flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;margin-bottom:.5rem; }
+  .modal-top h3 { font-size:1.1rem;margin:0; }
+  .modal-top p { font-size:.78rem;opacity:.8;margin:.2rem 0 0; }
+  .modal-body { padding:1.5rem; }
+  .modal-body .detail-row { display:flex; justify-content:space-between; padding:.5rem 0; border-bottom:1px solid var(--border); font-size:.88rem; }
+  .modal-body .detail-row:last-child { border-bottom:none; }
+  .modal-body .detail-row .lbl { color:var(--text2); font-weight:500; }
+  .modal-body .detail-row .val { font-weight:600; color:var(--text); }
+  .modal-foot { padding:.8rem 1.5rem; border-top:1px solid var(--border); text-align:right; }
+</style>
 
-    <!-- Stats Row -->
-    <div class="row mb-4">
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="stat-card primary">
-                <div class="stat-icon primary">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="stat-value">{{ classes|length }}</div>
-                <div class="stat-label">Total Classes</div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="stat-card success">
-                <div class="stat-icon success">
-                    <i class="fas fa-user-graduate"></i>
-                </div>
-                <div class="stat-value">{{ students_count }}</div>
-                <div class="stat-label">Total Students</div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="stat-card info">
-                <div class="stat-icon info">
-                    <i class="fas fa-clipboard-check"></i>
-                </div>
-                <div class="stat-value">{{ recent_attendance|length }}</div>
-                <div class="stat-label">Today's Records</div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="stat-card warning">
-                <div class="stat-icon warning">
-                    <i class="fas fa-percentage"></i>
-                </div>
-                <div class="stat-value" id="attendance-rate">{{ ((recent_attendance|length / students_count * 100)|round(1) if students_count > 0 else 0) }}%</div>
-                <div class="stat-label">Attendance Rate</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- Quick Actions -->
-        <div class="col-lg-4 mb-4">
-            <h3 class="section-title"><i class="fas fa-bolt"></i> Quick Actions</h3>
-            <a href="{{ url_for('recognize') }}" class="action-card">
-                <div class="action-icon">
-                    <i class="fas fa-camera"></i>
-                </div>
-                <div class="action-content">
-                    <h5>Take Attendance</h5>
-                    <p>Start face recognition session</p>
-                </div>
-            </a>
-            <a href="{{ url_for('manage_classes') }}" class="action-card">
-                <div class="action-icon">
-                    <i class="fas fa-chalkboard-user"></i>
-                </div>
-                <div class="action-content">
-                    <h5>Manage Classes</h5>
-                    <p>Create and organize classes</p>
-                </div>
-            </a>
-            <a href="{{ url_for('teacher_attendance') }}" class="action-card">
-                <div class="action-icon">
-                    <i class="fas fa-chart-bar"></i>
-                </div>
-                <div class="action-content">
-                    <h5>View Records</h5>
-                    <p>Check attendance history</p>
-                </div>
-            </a>
-            <a href="{{ url_for('capture') }}" class="action-card">
-                <div class="action-icon">
-                    <i class="fas fa-user-plus"></i>
-                </div>
-                <div class="action-content">
-                    <h5>Register Student</h5>
-                    <p>Add new student face data</p>
-                </div>
-            </a>
-        </div>
-
-        <!-- Clock & Start Recognition -->
-        <div class="col-lg-4 mb-4">
-            <h3 class="section-title"><i class="fas fa-clock"></i> Current Time</h3>
-            <div class="clock-card mb-3">
-                <div class="current-date" id="current-date">Loading...</div>
-                <div class="current-time" id="current-time">--:--:--</div>
-            </div>
-            <a href="{{ url_for('recognize') }}" class="btn btn-primary-custom btn-block btn-lg">
-                <i class="fas fa-camera-retro"></i> Start Recognition Now
-            </a>
-        </div>
-
-        <!-- Recent Activity -->
-        <div class="col-lg-4 mb-4">
-            <h3 class="section-title"><i class="fas fa-history"></i> Recent Activity</h3>
-            <div class="recent-activity">
-                {% if recent_attendance %}
-                    {% for record in recent_attendance[:6] %}
-                    <div class="activity-item">
-                        <div class="activity-student">{{ record.student_name }}</div>
-                        <div class="activity-time">
-                            <i class="fas fa-clock"></i> {{ record.time }} - {{ record.date }}
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                <div class="text-center py-4 text-muted">
-                    <i class="fas fa-inbox fa-3x mb-3" style="opacity: 0.3;"></i>
-                    <p>No recent attendance records</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+<div class="pg-header anim-down">
+  <div class="pg-icon"><i class="fas fa-gauge-high"></i></div>
+  <h1>Teacher Dashboard</h1>
+  <p>Welcome, {{ session.get('teacher_name', 'Teacher') }}!</p>
 </div>
 
-<script>
-// Update clock
-function updateClock() {
-    const now = new Date();
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options);
-    document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', { hour12: false });
-}
+<!-- Stats -->
+<div class="grid-3 anim-up delay-1" style="margin-bottom:1.5rem;">
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g1);"><i class="fas fa-chalkboard"></i></div>
+    <div><div class="s-val">{{ classes|length }}</div><div class="s-lbl">Classes</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g4);"><i class="fas fa-user-graduate"></i></div>
+    <div><div class="s-val">{{ students_count }}</div><div class="s-lbl">Students</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g3);"><i class="fas fa-clipboard-check"></i></div>
+    <div><div class="s-val">{{ recent_attendance|length }}</div><div class="s-lbl">Today's Records</div></div>
+  </div>
+</div>
 
-setInterval(updateClock, 1000);
-updateClock();
+<!-- Attendance Rate Bar -->
+<div class="glass-card anim-up delay-1" style="margin-bottom:1.2rem;padding:1rem 1.2rem;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
+    <span style="font-weight:600;font-size:.88rem;"><i class="fas fa-chart-line" style="color:var(--c4);margin-right:5px;"></i> Today's Attendance Rate</span>
+    <span class="badge-g {{ 'badge-green' if attendance_rate >= 75 else ('badge-yellow' if attendance_rate >= 40 else 'badge-red') }}">{{ attendance_rate }}%</span>
+  </div>
+  <div style="height:10px;border-radius:10px;background:var(--border);overflow:hidden;">
+    <div style="height:100%;width:{{ attendance_rate }}%;border-radius:10px;background:{{ 'var(--g4)' if attendance_rate >= 75 else ('linear-gradient(90deg,#ffd166,#f0c040)' if attendance_rate >= 40 else 'linear-gradient(90deg,#ef476f,#f5576c)') }};transition:width .6s;"></div>
+  </div>
+</div>
+
+<div class="dash-grid anim-up delay-2">
+  <!-- Main Area -->
+  <div>
+    <!-- Quick Actions -->
+    <div class="glass-card cbar-purple" style="margin-bottom:1.2rem;">
+      <div class="card-hdr"><i class="fas fa-bolt" style="color:var(--c5);"></i> Quick Actions</div>
+      <div class="card-inner">
+        <div class="quick-actions">
+          <a href="{{ url_for('recognize') }}" class="qa"><i class="fas fa-user-check" style="color:var(--c4);"></i> Take Attendance</a>
+          <a href="{{ url_for('manage_classes') }}" class="qa"><i class="fas fa-plus-circle" style="color:var(--c1);"></i> Manage Classes</a>
+          <a href="{{ url_for('teacher_attendance') }}" class="qa"><i class="fas fa-calendar-alt" style="color:var(--c7);"></i> View Records</a>
+          <a href="{{ url_for('export_attendance') }}" class="qa"><i class="fas fa-download" style="color:var(--c3);"></i> Export Data</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="glass-card cbar-green">
+      <div class="card-hdr" style="justify-content:space-between;">
+        <span><i class="fas fa-clock-rotate-left" style="color:var(--c4);"></i> Today's Activity</span>
+        <span class="badge-g badge-green">{{ recent_attendance|length }} records</span>
+      </div>
+      <div class="card-inner" style="padding:.5rem;max-height:400px;overflow-y:auto;">
+        {% if recent_attendance %}
+          {% for r in recent_attendance %}
+          <div class="rec-item" onclick="showStudentModal(this)" 
+               data-name="{{ r.student_name }}" data-uid="{{ r.student_user_id or '' }}" 
+               data-dept="{{ r.student_department or '' }}" data-email="{{ r.student_email or '' }}"
+               data-role="{{ r.student_role or '' }}" data-phone="{{ r.student_phone or '' }}"
+               data-time="{{ r.time }}" data-class="{{ r.class_name or 'No Class' }}">
+            <div class="rec-av" style="background:{{ ['var(--g1)','var(--g2)','var(--g3)','var(--g4)','var(--g5)'][loop.index0 % 5] }};">
+              {{ r.student_name[0:2]|upper }}
+            </div>
+            <div class="rec-info">
+              <div class="n">{{ r.student_name }}</div>
+              <div class="t">
+                {{ r.time }} · {{ r.class_name or 'No Class' }}
+                {% if r.student_department %} · <i class="fas fa-building" style="font-size:.6rem;"></i> {{ r.student_department }}{% endif %}
+              </div>
+            </div>
+            {% if r.student_user_id %}
+            <span class="badge-g badge-blue" style="font-size:.7rem;">{{ r.student_user_id }}</span>
+            {% endif %}
+            <span class="badge-g badge-green">Present</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div style="text-align:center;padding:2rem;color:var(--text2);">
+            <i class="fas fa-inbox" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.5rem;"></i>
+            No attendance recorded today yet.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div>
+    <!-- Clock -->
+    <div class="glass-card cbar-blue" style="margin-bottom:1.2rem;">
+      <div class="card-inner" style="text-align:center;">
+        <div class="clock" id="dashClock">--:--:--</div>
+        <div class="clock-date" id="dashDate"></div>
+        <div style="margin-top:.8rem;">
+          <a href="{{ url_for('teacher_attendance') }}" class="btn-g btn-blue" style="padding:.5rem 1rem;font-size:.8rem;"><i class="fas fa-clipboard-list"></i> View All Records</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Classes -->
+    <div class="glass-card cbar-pink">
+      <div class="card-hdr"><i class="fas fa-chalkboard" style="color:var(--c3);"></i> Your Classes</div>
+      <div class="card-inner" style="padding:.5rem;">
+        {% if classes %}
+          {% for c in classes %}
+          <a href="{{ url_for('view_class', class_id=c.id) }}" class="rec-item" style="color:var(--text);">
+            <div class="rec-av" style="background:{{ ['var(--g1)','var(--g2)','var(--g3)','var(--g7)'][loop.index0 % 4] }};">
+              <i class="fas fa-users" style="font-size:.7rem;"></i>
+            </div>
+            <div class="rec-info">
+              <div class="n">{{ c.name }}</div>
+              <div class="t">{{ c.description or 'No description' }}</div>
+            </div>
+          </a>
+          {% endfor %}
+        {% else %}
+          <div style="text-align:center;padding:1.5rem;color:var(--text2);font-size:.88rem;">
+            No classes yet. <a href="{{ url_for('manage_classes') }}">Create one</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Student Detail Modal -->
+<div class="modal-overlay" id="studentModal" onclick="if(event.target===this)closeStudentModal()">
+  <div class="modal-box">
+    <div class="modal-top" id="modalTop">
+      <div class="m-av" id="modalAvatar">--</div>
+      <h3 id="modalName">Student Name</h3>
+      <p id="modalSubtitle">Student Details</p>
+    </div>
+    <div class="modal-body">
+      <div class="detail-row"><span class="lbl"><i class="fas fa-id-badge"></i> User ID</span><span class="val" id="modalUserId">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-building"></i> Department</span><span class="val" id="modalDept">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-envelope"></i> Email</span><span class="val" id="modalEmail">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-user-tag"></i> Role</span><span class="val" id="modalRole">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-phone"></i> Phone</span><span class="val" id="modalPhone">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-clock"></i> Time</span><span class="val" id="modalTime">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-chalkboard"></i> Class</span><span class="val" id="modalClass">—</span></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-g btn-outline" onclick="closeStudentModal()"><i class="fas fa-times"></i> Close</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function(){
+  function tick() {
+    const now = new Date();
+    document.getElementById('dashClock').textContent = now.toLocaleTimeString();
+    document.getElementById('dashDate').textContent = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  }
+  tick(); setInterval(tick, 1000);
+})();
+
+function showStudentModal(el) {
+  const d = el.dataset;
+  document.getElementById('modalAvatar').textContent = d.name.substring(0,2).toUpperCase();
+  document.getElementById('modalName').textContent = d.name;
+  document.getElementById('modalSubtitle').textContent = d.dept ? d.dept + ' · ' + (d.role || 'Student') : (d.role || 'Student');
+  document.getElementById('modalUserId').textContent = d.uid || '—';
+  document.getElementById('modalDept').textContent = d.dept || '—';
+  document.getElementById('modalEmail').textContent = d.email || '—';
+  document.getElementById('modalRole').textContent = d.role || '—';
+  document.getElementById('modalPhone').textContent = d.phone || '—';
+  document.getElementById('modalTime').textContent = d.time || '—';
+  document.getElementById('modalClass').textContent = d.class || '—';
+  document.getElementById('studentModal').classList.add('active');
+}
+function closeStudentModal() {
+  document.getElementById('studentModal').classList.remove('active');
+}
 </script>
 {% endblock %}

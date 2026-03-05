@@ -1,782 +1,306 @@
 {% extends "base.html" %}
-
-{% block title %}Attendance Records{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<style>
-:root {
-    --primary: #667eea;
-    --secondary: #764ba2;
-    --success: #51cf66;
-    --danger: #fa5252;
-    --info: #4dabf7;
-    --dark: #1a1a2e;
-    --light: #f8f9fa;
-}
-
-body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    min-height: 100vh;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-/* Fix modal z-index overlay issue */
-.modal {
-    z-index: 1050 !important;
-    pointer-events: auto !important;
-}
-
-.modal-backdrop {
-    z-index: 1040 !important;
-    pointer-events: auto !important;
-}
-
-.modal button {
-    pointer-events: auto !important;
-    cursor: pointer !important;
-}
-
-.page-header {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    padding: 2rem;
-    color: white;
-    border-radius: 16px;
-    margin-bottom: 2rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
-
-.page-header h1 {
-    font-size: 2.2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.page-header p {
-    font-size: 1.05rem;
-    opacity: 0.9;
-    margin: 0;
-}
-
-.card-header-custom {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    padding: 1.2rem 1.5rem;
-    border-radius: 12px 12px 0 0;
-    margin: -2rem -2rem 1.5rem -2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.card-header-custom h5 {
-    margin: 0;
-    font-weight: 700;
-    font-size: 1.2rem;
-}
-
-.filter-card {
-    background: white;
-    border-radius: 14px;
-    padding: 2rem;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    margin-bottom: 2rem;
-}
-
-.form-label {
-    font-weight: 600;
-    color: var(--dark);
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.form-label i {
-    color: var(--primary);
-}
-
-.form-control {
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 12px 16px;
-    transition: all 0.3s ease;
-}
-
-.form-control:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-}
-
-.btn-custom {
-    padding: 12px 24px;
-    border-radius: 10px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    border: none;
-    cursor: pointer;
-}
-
-.btn-primary-custom {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-}
-
-.btn-primary-custom:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
-    color: white;
-}
-
-.btn-success-custom {
-    background: linear-gradient(135deg, #51cf66, #37b24d);
-    color: white;
-    box-shadow: 0 8px 20px rgba(81, 207, 102, 0.3);
-}
-
-.btn-success-custom:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(81, 207, 102, 0.4);
-    color: white;
-}
-
-.btn-danger-custom {
-    background: linear-gradient(135deg, #fa5252, #e03131);
-    color: white;
-}
-
-.btn-danger-custom:hover {
-    transform: translateY(-2px);
-    color: white;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.table-card {
-    background: white;
-    border-radius: 14px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
-    margin-bottom: 2rem;
-}
-
-.table-header {
-    background: linear-gradient(135deg, var(--info), #228be6);
-    color: white;
-    padding: 1.2rem 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.records-count {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.table-responsive-custom {
-    padding: 1.5rem;
-}
-
-.table {
-    margin: 0;
-}
-
-.table thead th {
-    background: #f8f9fa;
-    color: var(--dark);
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
-    padding: 1rem;
-    border-bottom: 2px solid #e0e0e0;
-}
-
-.table tbody tr {
-    transition: all 0.3s ease;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.table tbody tr:hover {
-    background: rgba(102, 126, 234, 0.05);
-}
-
-.table tbody td {
-    padding: 1rem;
-    vertical-align: middle;
-}
-
-.badge-success {
-    background: linear-gradient(135deg, #51cf66, #37b24d);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.8rem;
-    display: inline-block;
-}
-
-.badge-danger {
-    background: linear-gradient(135deg, #fa5252, #e03131);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.8rem;
-    display: inline-block;
-}
-
-.action-btn {
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.action-btn-info {
-    background: #4dabf7;
-    color: white;
-}
-
-.action-btn-danger {
-    background: #fa5252;
-    color: white;
-}
-
-.action-btn:hover {
-    transform: translateY(-2px);
-}
-
-.empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-}
-
-.empty-state i {
-    font-size: 4rem;
-    color: #ddd;
-    margin-bottom: 1rem;
-}
-
-.empty-state p {
-    color: #999;
-    font-size: 1.1rem;
-}
-
-.loading-spinner {
-    display: none;
-    text-align: center;
-    padding: 2rem;
-}
-
-.modal-content {
-    border-radius: 16px;
-    border: none;
-}
-
-.modal-header {
-    border-radius: 16px 16px 0 0;
-    border: none;
-}
-
-.modal-header .close {
-    color: white;
-    opacity: 0.8;
-}
-
-.modal-header .close:hover {
-    opacity: 1;
-}
-
-.record-detail-row {
-    padding: 1rem 0;
-    border-bottom: 1px solid #e0e0e0;
-    display: flex;
-    justify-content: space-between;
-}
-
-.record-detail-row:last-child {
-    border-bottom: none;
-}
-
-.record-detail-label {
-    font-weight: 600;
-    color: var(--dark);
-}
-
-.record-detail-value {
-    color: #666;
-}
-
-@media (max-width: 768px) {
-    .page-header h1 {
-        font-size: 1.7rem;
-    }
-
-    .table-responsive-custom {
-        overflow-x: auto;
-    }
-
-    .table {
-        font-size: 0.9rem;
-    }
-
-    .action-buttons {
-        flex-direction: column;
-    }
-
-    .btn-custom {
-        width: 100%;
-    }
-}
-</style>
-{% endblock %}
+{% block title %}Attendance Records — Teacher{% endblock %}
 
 {% block content %}
-<div class="container mt-4 mb-5">
-    <!-- Page Header -->
-    <div class="page-header">
-        <h1><i class="fas fa-clipboard-list"></i> Attendance Records</h1>
-        <p>Manage and view all attendance records for your classes</p>
-    </div>
+<style>
+  .ta-filters { display: flex; gap: .7rem; flex-wrap: wrap; align-items: flex-end; }
+  .ta-filters .fg { flex: 1; min-width: 150px; }
+  .ta-filters label { font-weight: 600; font-size: .78rem; text-transform: uppercase; color: var(--text2); margin-bottom: 3px; display: block; }
+  .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.45); z-index:9999; justify-content:center; align-items:center; }
+  .modal-overlay.active { display:flex; }
+  .modal-box { background:var(--card); border-radius:20px; padding:0; width:420px; max-width:92vw; box-shadow:0 16px 80px rgba(0,0,0,.25); overflow:hidden; animation:modalIn .3s; }
+  @keyframes modalIn { from{opacity:0;transform:scale(.92)translateY(20px)} to{opacity:1;transform:none} }
+  .modal-top { padding:1.5rem; background:var(--g1); color:#fff; text-align:center; }
+  .modal-top .m-av { width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.2);display:inline-flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;margin-bottom:.5rem; }
+  .modal-top h3 { font-size:1.1rem;margin:0; }
+  .modal-top p { font-size:.78rem;opacity:.8;margin:.2rem 0 0; }
+  .modal-body { padding:1.5rem; }
+  .modal-body .detail-row { display:flex; justify-content:space-between; padding:.5rem 0; border-bottom:1px solid var(--border); font-size:.88rem; }
+  .modal-body .detail-row:last-child { border-bottom:none; }
+  .modal-body .detail-row .lbl { color:var(--text2); font-weight:500; }
+  .modal-body .detail-row .val { font-weight:600; color:var(--text); }
+  .modal-foot { padding:.8rem 1.5rem; border-top:1px solid var(--border); text-align:right; }
+  .clickable-row { cursor:pointer; transition:background .2s; }
+  .clickable-row:hover { background:rgba(102,126,234,.04); }
+</style>
 
-    <!-- Filter Section -->
-    <div class="filter-card">
-        <div class="card-header-custom">
-            <h5><i class="fas fa-filter"></i> Filter Records</h5>
-            <button class="btn btn-sm btn-light" id="clearFilters" style="cursor: pointer;">
-                <i class="fas fa-redo"></i> Clear
+<div class="pg-header anim-down">
+  <div class="pg-icon"><i class="fas fa-clipboard-list"></i></div>
+  <h1>Attendance Records</h1>
+  <p>View and filter all attendance data across your classes</p>
+</div>
+
+<!-- Stats -->
+<div class="grid-3 anim-up delay-1" style="margin-bottom:1.5rem;">
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g1);"><i class="fas fa-clipboard-check"></i></div>
+    <div><div class="s-val">{{ attendance|length }}</div><div class="s-lbl">Records Today</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g4);"><i class="fas fa-chalkboard"></i></div>
+    <div><div class="s-val">{{ classes|length }}</div><div class="s-lbl">Classes</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g3);"><i class="fas fa-users"></i></div>
+    <div><div class="s-val">{{ students|length }}</div><div class="s-lbl">Students</div></div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="glass-card cbar-purple anim-up delay-2" style="margin-bottom:1.5rem;">
+  <div class="card-hdr"><i class="fas fa-filter" style="color:var(--c1);"></i> Filters</div>
+  <div class="card-inner">
+    <div class="ta-filters">
+      <div class="fg">
+        <label>Date</label>
+        <input type="date" class="fi" id="filterDate" value="{{ selected_date }}">
+      </div>
+      <div class="fg">
+        <label>Class</label>
+        <select class="fi" id="filterClass">
+          <option value="">All Classes</option>
+          {% for c in classes %}
+            <option value="{{ c.id }}" data-name="{{ c.name }}">{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="fg">
+        <label>Student</label>
+        <input type="text" class="fi" id="filterStudent" placeholder="Search student...">
+      </div>
+      <div>
+        <button class="btn-g btn-purple" onclick="applyFilters()"><i class="fas fa-search"></i> Filter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="glass-card cbar-green anim-up delay-3">
+  <div class="card-hdr" style="justify-content:space-between;">
+    <span><i class="fas fa-table" style="color:var(--c4);"></i> Attendance Table</span>
+    <div style="display:flex;gap:.5rem;">
+      <button class="btn-g btn-outline" onclick="exportCSV()" style="padding:.4rem .8rem;font-size:.78rem;"><i class="fas fa-download"></i> CSV</button>
+      <span class="badge-g badge-green" id="rowCount">{{ attendance|length }} records</span>
+    </div>
+  </div>
+  <div class="card-inner" style="padding:0;overflow-x:auto;">
+    <table class="modern-table" id="attTable">
+      <thead>
+        <tr><th>#</th><th>Student</th><th>ID</th><th>Dept</th><th>Class</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% if attendance %}
+        {% for a in attendance %}
+        <tr id="rec-{{ a.id if a.id else loop.index }}" class="clickable-row"
+            onclick="showStudentModal(this)"
+            data-name="{{ a.student_name }}" data-uid="{{ a.student_user_id or '' }}"
+            data-dept="{{ a.student_department or '' }}" data-email="{{ a.student_email or '' }}"
+            data-role="{{ a.student_role or '' }}" data-phone="{{ a.student_phone or '' }}"
+            data-time="{{ a.time }}" data-class="{{ a.class_name or '—' }}" data-date="{{ a.date }}">
+          <td>{{ loop.index }}</td>
+          <td style="font-weight:600;">{{ a.student_name }}</td>
+          <td><span style="font-size:.75rem;color:var(--text2);">{{ a.student_user_id or '—' }}</span></td>
+          <td>{% if a.student_department %}<span class="badge-g badge-blue" style="font-size:.68rem;padding:1px 6px;">{{ a.student_department }}</span>{% else %}—{% endif %}</td>
+          <td><span class="badge-g badge-blue">{{ a.class_name or '—' }}</span></td>
+          <td>{{ a.date }}</td><td>{{ a.time }}</td>
+          <td><span class="badge-g badge-green"><i class="fas fa-check" style="font-size:.65rem;"></i> {{ a.status }}</span></td>
+          <td>
+            {% if a.id %}
+            <button onclick="event.stopPropagation();deleteRecord({{ a.id }}, this)" class="btn-g btn-outline" style="padding:4px 8px;font-size:.72rem;color:var(--c6);border-color:rgba(239,71,111,.3);" title="Delete">
+              <i class="fas fa-trash-alt"></i>
             </button>
-        </div>
-
-        <form id="filter-form">
-            <div class="row mt-3">
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <label for="filter-date" class="form-label">
-                        <i class="fas fa-calendar-alt"></i> Date
-                    </label>
-                    <input type="date" class="form-control" id="filter-date" name="date">
-                </div>
-
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <label for="filter-class" class="form-label">
-                        <i class="fas fa-chalkboard-user"></i> Class
-                    </label>
-                    <select class="form-control" id="filter-class" name="class_id">
-                        <option value="">All Classes</option>
-                        {% for class in classes %}
-                        <option value="{{ class.id }}">{{ class.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <label for="filter-student" class="form-label">
-                        <i class="fas fa-user-graduate"></i> Student
-                    </label>
-                    <select class="form-control" id="filter-student" name="student_name">
-                        <option value="">All Students</option>
-                        {% for student in students %}
-                        <option value="{{ student.student_name }}">{{ student.student_name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="col-lg-3 col-md-6 mb-3 d-flex align-items-end">
-                    <button type="button" id="filter-btn" class="btn btn-primary-custom btn-custom w-100">
-                        <i class="fas fa-search"></i> Apply Filter
-                    </button>
-                </div>
-            </div>
-
-            <div class="row mt-2">
-                <div class="col-12">
-                    <div class="action-buttons">
-                        <button type="button" id="export-btn" class="btn btn-success-custom btn-custom">
-                            <i class="fas fa-file-download"></i> Export to CSV
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
-
-    <!-- Loading Spinner -->
-    <div class="loading-spinner" id="loadingSpinner">
-        <div class="spinner-border text-primary" role="status">
-            <span class="sr-only">Loading...</span>
-        </div>
-        <p class="mt-2">Loading records...</p>
-    </div>
-
-    <!-- Table Section -->
-    <div class="table-card" id="tableCard">
-        <div class="table-header">
-            <h5><i class="fas fa-list"></i> Attendance List</h5>
-            <span class="records-count" id="records-count">
-                Showing {{ attendance|length }} records
-            </span>
-        </div>
-
-        <div class="table-responsive-custom">
-            {% if attendance %}
-            <table class="table" id="attendance-table">
-                <thead>
-                    <tr>
-                        <th>Student</th>
-                        <th>Class</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for record in attendance %}
-                    <tr>
-                        <td>
-                            <i class="fas fa-user-circle" style="color: var(--primary); margin-right: 8px;"></i>
-                            {{ record.student_name }}
-                        </td>
-                        <td>{{ record.class_name or 'No Class' }}</td>
-                        <td>{{ record.date }}</td>
-                        <td>{{ record.time }}</td>
-                        <td>
-                            {% if record.status == 'Present' %}
-                            <span class="badge-success"><i class="fas fa-check-circle"></i> Present</span>
-                            {% else %}
-                            <span class="badge-danger"><i class="fas fa-times-circle"></i> Absent</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="action-btn action-btn-info view-record" 
-                                        data-id="{{ record.id }}"
-                                        data-student="{{ record.student_name }}"
-                                        data-class="{{ record.class_name or 'No Class' }}"
-                                        data-date="{{ record.date }}"
-                                        data-time="{{ record.time }}"
-                                        data-status="{{ record.status }}"
-                                        title="View Details">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="action-btn action-btn-danger delete-record" 
-                                        data-id="{{ record.id }}"
-                                        data-student="{{ record.student_name }}"
-                                        title="Delete Record">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div class="empty-state">
-                <i class="fas fa-inbox"></i>
-                <p>No attendance records found</p>
-                <p class="text-muted" style="font-size: 0.9rem;">Try adjusting your filters or take attendance using face recognition</p>
-            </div>
             {% endif %}
-        </div>
-    </div>
+          </td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr><td colspan="9" style="text-align:center;padding:3rem;color:var(--text2);">
+          <i class="fas fa-inbox" style="font-size:2.5rem;opacity:.3;display:block;margin-bottom:.8rem;"></i>
+          No attendance records found for today.
+        </td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<!-- View Record Modal -->
-<div class="modal fade" id="viewRecordModal" tabindex="-1" role="dialog" aria-labelledby="viewRecordLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, var(--info), #228be6); color: white;">
-                <h5 class="modal-title" id="viewRecordLabel">
-                    <i class="fas fa-info-circle"></i> Attendance Record Details
-                </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body" id="recordDetails">
-                <!-- Details will be populated by JavaScript -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
-        </div>
+<!-- Student Detail Modal -->
+<div class="modal-overlay" id="studentModal" onclick="if(event.target===this)closeStudentModal()">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div class="m-av" id="modalAvatar">--</div>
+      <h3 id="modalName">Student Name</h3>
+      <p id="modalSubtitle">Student Details</p>
     </div>
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteRecordModal" tabindex="-1" role="dialog" aria-labelledby="deleteRecordLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, var(--danger), #e03131); color: white;">
-                <h5 class="modal-title" id="deleteRecordLabel">
-                    <i class="fas fa-exclamation-triangle"></i> Delete Record
-                </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete the attendance record for <strong id="deleteStudentName"></strong>?</p>
-                <p class="text-danger"><i class="fas fa-exclamation-triangle"></i> This action cannot be undone!</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger btn-custom" id="confirmDeleteRecord" style="padding: 10px 20px;">Delete Record</button>
-            </div>
-        </div>
+    <div class="modal-body">
+      <div class="detail-row"><span class="lbl"><i class="fas fa-id-badge"></i> User ID</span><span class="val" id="modalUserId">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-building"></i> Department</span><span class="val" id="modalDept">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-envelope"></i> Email</span><span class="val" id="modalEmail">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-user-tag"></i> Role</span><span class="val" id="modalRole">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-phone"></i> Phone</span><span class="val" id="modalPhone">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-chalkboard"></i> Class</span><span class="val" id="modalClass">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-calendar"></i> Date</span><span class="val" id="modalDate">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-clock"></i> Time</span><span class="val" id="modalTime">—</span></div>
     </div>
+    <div class="modal-foot">
+      <button class="btn-g btn-outline" onclick="closeStudentModal()"><i class="fas fa-times"></i> Close</button>
+    </div>
+  </div>
 </div>
-
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-(function() {
-    'use strict';
-    
-    let deleteRecordId = null;
-    
-    $(document).ready(function() {
-        // Set today's date as default
-        const today = new Date().toISOString().split('T')[0];
-        $('#filter-date').val(today);
-        
-        // Filter button handler
-        $(document).on('click', '#filter-btn', function(e) {
-            e.preventDefault();
-            applyFilters();
-        });
+(function(){
+  const filterStudent = document.getElementById('filterStudent');
+  const filterClass = document.getElementById('filterClass');
 
-        // Export button handler
-        $(document).on('click', '#export-btn', function(e) {
-            e.preventDefault();
-            exportToCSV();
-        });
-
-        // Clear filters handler
-        $(document).on('click', '#clearFilters', function(e) {
-            e.preventDefault();
-            $('#filter-form')[0].reset();
-            $('#filter-date').val(today);
-            applyFilters();
-        });
-
-        // View record handler
-        $(document).on('click', '.view-record', function(e) {
-            e.preventDefault();
-            const student = $(this).data('student');
-            const classname = $(this).data('class');
-            const date = $(this).data('date');
-            const time = $(this).data('time');
-            const status = $(this).data('status');
-            
-            const details = `
-                <div class="record-detail-row">
-                    <span class="record-detail-label"><i class="fas fa-user-circle" style="color: var(--primary); margin-right: 8px;"></i>Student:</span>
-                    <span class="record-detail-value">${student}</span>
-                </div>
-                <div class="record-detail-row">
-                    <span class="record-detail-label"><i class="fas fa-chalkboard" style="color: var(--primary); margin-right: 8px;"></i>Class:</span>
-                    <span class="record-detail-value">${classname}</span>
-                </div>
-                <div class="record-detail-row">
-                    <span class="record-detail-label"><i class="fas fa-calendar" style="color: var(--primary); margin-right: 8px;"></i>Date:</span>
-                    <span class="record-detail-value">${date}</span>
-                </div>
-                <div class="record-detail-row">
-                    <span class="record-detail-label"><i class="fas fa-clock" style="color: var(--primary); margin-right: 8px;"></i>Time:</span>
-                    <span class="record-detail-value">${time}</span>
-                </div>
-                <div class="record-detail-row">
-                    <span class="record-detail-label"><i class="fas fa-info-circle" style="color: var(--primary); margin-right: 8px;"></i>Status:</span>
-                    <span class="record-detail-value">
-                        ${status === 'Present' ? '<span class="badge-success"><i class="fas fa-check-circle"></i> Present</span>' : '<span class="badge-danger"><i class="fas fa-times-circle"></i> Absent</span>'}
-                    </span>
-                </div>
-            `;
-            
-            $('#recordDetails').html(details);
-            $('#viewRecordModal').modal('show');
-        });
-
-        // Delete record handler
-        $(document).on('click', '.delete-record', function(e) {
-            e.preventDefault();
-            deleteRecordId = $(this).data('id');
-            const studentName = $(this).data('student');
-            
-            $('#deleteStudentName').text(studentName);
-            $('#deleteRecordModal').modal('show');
-        });
-
-        // Confirm delete
-        $(document).on('click', '#confirmDeleteRecord', function(e) {
-            e.preventDefault();
-            if (deleteRecordId) {
-                fetch(`/teacher/delete_record/${deleteRecordId}`, {
-                    method: 'DELETE'
-                })
-                .then(response => {
-                    if (response.ok) {
-                        $('#deleteRecordModal').modal('hide');
-                        setTimeout(() => location.reload(), 300);
-                    } else {
-                        alert('Error deleting record');
-                    }
-                })
-                .catch(error => {
-                    console.error('Delete error:', error);
-                    alert('Network error occurred');
-                });
-            }
-        });
+  function clientFilter() {
+    const q = filterStudent.value.toLowerCase();
+    const clsId = filterClass.value;
+    // Get the class name for matching
+    const clsName = clsId ? filterClass.options[filterClass.selectedIndex].dataset.name.toLowerCase() : '';
+    let visible = 0;
+    document.querySelectorAll('#attTable tbody tr').forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length < 8) return;
+      const name = cells[1].textContent.toLowerCase();
+      const className = cells[4].textContent.toLowerCase();
+      const show = (!q || name.includes(q)) && (!clsName || className.includes(clsName));
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
     });
+    document.getElementById('rowCount').textContent = visible + ' records';
+  }
 
-    function applyFilters() {
-        const date = $('#filter-date').val();
-        const classId = $('#filter-class').val();
-        const studentName = $('#filter-student').val();
-
-        console.log('Applying filters:', { date, classId, studentName });
-
-        $('#loadingSpinner').show();
-        $('#tableCard').hide();
-
-        const filterData = {};
-        if (date) filterData.date = date;
-        if (classId) filterData.class_id = classId;
-        if (studentName) filterData.student_name = studentName;
-
-        fetch('/teacher/attendance/filter', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(filterData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Filter response:', data);
-            updateAttendanceTable(data.attendance || []);
-        })
-        .catch(error => {
-            console.error('Filter error:', error);
-            alert('Error applying filters');
-        })
-        .finally(() => {
-            $('#loadingSpinner').hide();
-            $('#tableCard').show();
-        });
-    }
-
-    function updateAttendanceTable(records) {
-        const tbody = $('#attendance-table tbody');
-        
-        if (records.length === 0) {
-            $('#tableCard').html(`
-                <div class="empty-state">
-                    <i class="fas fa-inbox"></i>
-                    <p>No attendance records found</p>
-                    <p class="text-muted" style="font-size: 0.9rem;">Try adjusting your filters</p>
-                </div>
-            `);
-            $('#records-count').text('Showing 0 records');
-            return;
-        }
-
-        let html = '';
-        records.forEach(record => {
-            const statusBadge = record.status === 'Present' 
-                ? '<span class="badge-success"><i class="fas fa-check-circle"></i> Present</span>'
-                : '<span class="badge-danger"><i class="fas fa-times-circle"></i> Absent</span>';
-            
-            html += `
-                <tr>
-                    <td><i class="fas fa-user-circle" style="color: var(--primary); margin-right: 8px;"></i>${record.student_name}</td>
-                    <td>${record.class_name || 'No Class'}</td>
-                    <td>${record.date}</td>
-                    <td>${record.time}</td>
-                    <td>${statusBadge}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="action-btn action-btn-info view-record" 
-                                    data-id="${record.id}"
-                                    data-student="${record.student_name}"
-                                    data-class="${record.class_name || 'No Class'}"
-                                    data-date="${record.date}"
-                                    data-time="${record.time}"
-                                    data-status="${record.status}"
-                                    title="View Details">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="action-btn action-btn-danger delete-record" 
-                                    data-id="${record.id}"
-                                    data-student="${record.student_name}"
-                                    title="Delete Record">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        });
-
-        tbody.html(html);
-        $('#records-count').text(`Showing ${records.length} records`);
-    }
-
-    function exportToCSV() {
-        const date = $('#filter-date').val();
-        const classId = $('#filter-class').val();
-        const studentName = $('#filter-student').val();
-
-        const exportData = {};
-        if (date) exportData.date = date;
-        if (classId) exportData.class_id = classId;
-        if (studentName) exportData.student_name = studentName;
-
-        fetch('/teacher/export', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(exportData)
-        })
-        .then(response => {
-            if (response.ok) {
-                return response.blob();
-            }
-            throw new Error('Export failed');
-        })
-        .then(blob => {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `attendance_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        })
-        .catch(error => {
-            console.error('Export error:', error);
-            alert('Error exporting records');
-        });
-    }
+  if (filterStudent) filterStudent.addEventListener('input', clientFilter);
+  if (filterClass) filterClass.addEventListener('change', clientFilter);
 })();
+
+async function applyFilters() {
+  const date = document.getElementById('filterDate').value;
+  const classEl = document.getElementById('filterClass');
+  const studentEl = document.getElementById('filterStudent');
+
+  try {
+    const resp = await fetch('/teacher/attendance/filter', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        date: date,
+        class_id: classEl ? classEl.value : '',
+        student_name: studentEl ? studentEl.value : ''
+      })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      const tbody = document.querySelector('#attTable tbody');
+      if (!tbody) { location.reload(); return; }
+      tbody.innerHTML = '';
+      if (data.attendance && data.attendance.length > 0) {
+        data.attendance.forEach((a, i) => {
+          const row = document.createElement('tr');
+          row.id = 'rec-' + (a.id || i);
+          row.className = 'clickable-row';
+          row.dataset.name = a.student_name;
+          row.dataset.uid = a.student_user_id || '';
+          row.dataset.dept = a.student_department || '';
+          row.dataset.email = a.student_email || '';
+          row.dataset.role = a.student_role || '';
+          row.dataset.phone = a.student_phone || '';
+          row.dataset.time = a.time;
+          row.dataset.class = a.class_name || '—';
+          row.dataset.date = a.date;
+          row.onclick = function() { showStudentModal(this); };
+          row.innerHTML = `
+            <td>${i+1}</td>
+            <td style="font-weight:600;">${a.student_name}</td>
+            <td><span style="font-size:.75rem;color:var(--text2);">${a.student_user_id || '—'}</span></td>
+            <td>${a.student_department ? '<span class="badge-g badge-blue" style="font-size:.68rem;padding:1px 6px;">'+a.student_department+'</span>' : '—'}</td>
+            <td><span class="badge-g badge-blue">${a.class_name || '—'}</span></td>
+            <td>${a.date}</td><td>${a.time}</td>
+            <td><span class="badge-g badge-green"><i class="fas fa-check" style="font-size:.65rem;"></i> ${a.status}</span></td>
+            <td>${a.id ? '<button onclick="event.stopPropagation();deleteRecord('+a.id+', this)" class="btn-g btn-outline" style="padding:4px 8px;font-size:.72rem;color:var(--c6);border-color:rgba(239,71,111,.3);" title="Delete"><i class="fas fa-trash-alt"></i></button>' : ''}</td>
+          `;
+          tbody.appendChild(row);
+        });
+        document.getElementById('rowCount').textContent = data.attendance.length + ' records';
+      } else {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text2);">No records found</td></tr>';
+        document.getElementById('rowCount').textContent = '0 records';
+      }
+    }
+  } catch(e) {
+    console.error('Filter error:', e);
+  }
+}
+
+function exportCSV() {
+  const rows = [['#','Student','User ID','Department','Class','Date','Time','Status']];
+  document.querySelectorAll('#attTable tbody tr').forEach((row, i) => {
+    if (row.style.display === 'none') return;
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 8) {
+      rows.push([i+1, cells[1].textContent.trim(), cells[2].textContent.trim(), cells[3].textContent.trim(), cells[4].textContent.trim(), cells[5].textContent.trim(), cells[6].textContent.trim(), cells[7].textContent.trim()]);
+    }
+  });
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'attendance_export.csv'; a.click();
+}
+
+async function deleteRecord(id, btn) {
+  if (!confirm('Delete this attendance record?')) return;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  try {
+    const resp = await fetch('/teacher/delete_record/' + id, {
+      method: 'DELETE',
+      headers: {'Content-Type': 'application/json'}
+    });
+    const data = await resp.json();
+    if (data.success) {
+      const tr = btn.closest('tr');
+      tr.style.transition = 'opacity .3s';
+      tr.style.opacity = '0';
+      setTimeout(() => { tr.remove(); updateRowCount(); }, 300);
+    } else {
+      alert(data.message || 'Failed to delete');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+    }
+  } catch(e) {
+    alert('Error: ' + e.message);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+  }
+}
+
+function updateRowCount() {
+  const visible = document.querySelectorAll('#attTable tbody tr').length;
+  document.getElementById('rowCount').textContent = visible + ' records';
+}
+
+function showStudentModal(el) {
+  const d = el.dataset;
+  document.getElementById('modalAvatar').textContent = d.name.substring(0,2).toUpperCase();
+  document.getElementById('modalName').textContent = d.name;
+  document.getElementById('modalSubtitle').textContent = d.dept ? d.dept + ' · ' + (d.role || 'Student') : (d.role || 'Student');
+  document.getElementById('modalUserId').textContent = d.uid || '—';
+  document.getElementById('modalDept').textContent = d.dept || '—';
+  document.getElementById('modalEmail').textContent = d.email || '—';
+  document.getElementById('modalRole').textContent = d.role || '—';
+  document.getElementById('modalPhone').textContent = d.phone || '—';
+  document.getElementById('modalClass').textContent = d.class || '—';
+  document.getElementById('modalDate').textContent = d.date || '—';
+  document.getElementById('modalTime').textContent = d.time || '—';
+  document.getElementById('studentModal').classList.add('active');
+}
+
+function closeStudentModal() {
+  document.getElementById('studentModal').classList.remove('active');
+}
 </script>
 {% endblock %}

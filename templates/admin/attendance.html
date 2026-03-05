@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}Admin Attendance — Smart Attendance{% endblock %}
+
+{% block content %}
+<style>
+  .admin-att-header { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 20px; padding: 2rem 2.5rem;
+    color:#fff; box-shadow: 0 10px 40px rgba(240,147,251,.25); position:relative; overflow:hidden; margin-bottom:1.5rem; }
+  .admin-att-header::after { content:''; position:absolute; inset:0;
+    background: radial-gradient(circle at 80% 20%, rgba(255,255,255,.15) 0%, transparent 50%); }
+  .admin-att-header * { position:relative; z-index:1; }
+  .admin-att-header h1 { font-size:1.6rem; font-weight:800; margin-bottom:.3rem; }
+  .admin-att-header p { opacity:.9; font-size:.92rem; margin:0; }
+
+  .filter-bar { display:flex; gap:.6rem; flex-wrap:wrap; align-items:flex-end; margin-bottom:1.2rem; }
+  .filter-bar .fg { flex:1; min-width:150px; }
+  .filter-bar label { font-size:.78rem; font-weight:600; color:var(--text2); display:block; margin-bottom:4px; }
+
+  .type-badge { padding:3px 10px; border-radius:14px; font-size:.72rem; font-weight:700; }
+  .type-gate  { background:rgba(240,147,251,.12); color:#c44bc2; }
+  .type-class { background:rgba(102,126,234,.12); color:var(--c1); }
+
+  .role-badge { padding:3px 10px; border-radius:14px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
+  .role-student { background:rgba(102,126,234,.1); color:var(--c1); }
+  .role-teacher { background:rgba(6,214,160,.1); color:#00a47a; }
+  .role-staff   { background:rgba(240,147,251,.1); color:#c44bc2; }
+
+  .result-meta { display:flex; gap:1rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap; }
+  .result-meta .count { font-weight:700; color:var(--c1); }
+
+  #loadingSpinner { display:none; text-align:center; padding:2rem; }
+  #loadingSpinner i { font-size:2rem; color:var(--c1); animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<div class="admin-att-header anim-down">
+  <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:20px;background:rgba(255,255,255,.2);font-size:.78rem;font-weight:700;margin-bottom:.8rem;">
+    <i class="fas fa-shield-halved"></i> ADMIN PORTAL
+  </div>
+  <h1><i class="fas fa-clipboard-list"></i> Attendance History</h1>
+  <p>View and filter all attendance records across gate and classroom</p>
+</div>
+
+<!-- Filters -->
+<div class="glass-card cbar-pink anim-up delay-1" style="margin-bottom:1.2rem;">
+  <div class="card-inner" style="padding:1rem 1.2rem;">
+    <div class="filter-bar">
+      <div class="fg">
+        <label><i class="fas fa-calendar-day"></i> Date</label>
+        <input type="date" class="fi" id="filterDate">
+      </div>
+      <div class="fg">
+        <label><i class="fas fa-tag"></i> Type</label>
+        <select class="fi" id="filterType">
+          <option value="">All Types</option>
+          <option value="gate">Gate Entry</option>
+          <option value="class">Class Entry</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label><i class="fas fa-building"></i> Department</label>
+        <input type="text" class="fi" id="filterDept" placeholder="e.g. CSE, ECE...">
+      </div>
+      <div class="fg">
+        <label><i class="fas fa-user-tag"></i> Role</label>
+        <select class="fi" id="filterRole">
+          <option value="">All Roles</option>
+          <option value="Student">Student</option>
+          <option value="Teacher">Teacher</option>
+          <option value="Staff">Staff</option>
+        </select>
+      </div>
+      <div>
+        <button class="btn-g btn-pink" onclick="applyFilter()"><i class="fas fa-filter"></i> Filter</button>
+      </div>
+      <div>
+        <button class="btn-g btn-outline" onclick="clearFilter()"><i class="fas fa-times"></i> Clear</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Results -->
+<div class="glass-card cbar-purple anim-up delay-2">
+  <div class="card-hdr" style="justify-content:space-between;">
+    <span><i class="fas fa-list" style="color:var(--c1);"></i> Records</span>
+    <span class="badge-g badge-purple" id="totalRecords">{{ records|length }} records</span>
+  </div>
+  <div class="card-inner">
+    <div id="loadingSpinner"><i class="fas fa-spinner"></i><p>Loading records...</p></div>
+    <div id="recordsContainer">
+      {% if records %}
+      <div style="overflow-x:auto;">
+        <table class="modern-table" id="recordsTable">
+          <thead><tr>
+            <th>Name</th><th>Type</th><th>Role</th><th>Department</th><th>Class</th><th>Teacher</th><th>Date</th><th>Time</th><th>Status</th>
+          </tr></thead>
+          <tbody>
+            {% for r in records %}
+            <tr>
+              <td><strong>{{ r.student_name }}</strong></td>
+              <td>
+                {% set atype = r.attendance_type if r.attendance_type else 'gate' %}
+                <span class="type-badge type-{{ atype }}">
+                  <i class="fas {% if atype == 'gate' %}fa-door-open{% else %}fa-book-open{% endif %}"></i> {{ atype|upper }}
+                </span>
+              </td>
+              <td>
+                {% set role = r.role or 'Student' %}
+                <span class="role-badge role-{{ role|lower }}">{{ role }}</span>
+              </td>
+              <td>{{ r.department or '—' }}</td>
+              <td>{{ r.class_name or '—' }}</td>
+              <td>{{ r.teacher_name or '—' }}</td>
+              <td>{{ r.date }}</td>
+              <td><i class="fas fa-clock" style="color:var(--c7);font-size:.72rem;"></i> {{ r.time }}</td>
+              <td><span class="badge-g badge-green">{{ r.status }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:2rem;color:var(--text2);">
+        <i class="fas fa-inbox" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.6rem;"></i>
+        <p>No attendance records found</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:1rem;display:flex;gap:.6rem;">
+  <a href="{{ url_for('admin_dashboard') }}" class="btn-g btn-pink"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+  <a href="{{ url_for('recognize') }}" class="btn-g btn-green"><i class="fas fa-camera"></i> Start Recognition</a>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function applyFilter() {
+  var date = document.getElementById('filterDate').value;
+  var type = document.getElementById('filterType').value;
+  var dept = document.getElementById('filterDept').value.trim();
+  var role = document.getElementById('filterRole').value;
+
+  // Convert date from YYYY-MM-DD to DD-MM-YYYY
+  if (date) {
+    var parts = date.split('-');
+    date = parts[2] + '-' + parts[1] + '-' + parts[0];
+  }
+
+  document.getElementById('loadingSpinner').style.display = 'block';
+  document.getElementById('recordsContainer').querySelector('div:not(#loadingSpinner)') &&
+    (document.getElementById('recordsContainer').querySelector('div:last-child').style.opacity = '0.4');
+
+  fetch('/admin/attendance/filter', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ date: date, type: type, department: dept, role: role })
+  })
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById('loadingSpinner').style.display = 'none';
+    if (data.success) {
+      renderRecords(data.attendance);
+    }
+  })
+  .catch(err => {
+    document.getElementById('loadingSpinner').style.display = 'none';
+    console.error('Filter error:', err);
+  });
+}
+
+function clearFilter() {
+  document.getElementById('filterDate').value = '';
+  document.getElementById('filterType').value = '';
+  document.getElementById('filterDept').value = '';
+  document.getElementById('filterRole').value = '';
+  location.reload();
+}
+
+function renderRecords(records) {
+  document.getElementById('totalRecords').textContent = records.length + ' records';
+  var container = document.getElementById('recordsContainer');
+
+  if (records.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text2);"><i class="fas fa-inbox" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.6rem;"></i><p>No records match your filters</p></div>';
+    return;
+  }
+
+  var html = '<div style="overflow-x:auto;"><table class="modern-table"><thead><tr><th>Name</th><th>Type</th><th>Role</th><th>Department</th><th>Class</th><th>Teacher</th><th>Date</th><th>Time</th><th>Status</th></tr></thead><tbody>';
+  records.forEach(function(r) {
+    var atype = r.attendance_type || 'gate';
+    var role = r.role || 'Student';
+    var typeIcon = atype === 'gate' ? 'fa-door-open' : 'fa-book-open';
+    html += '<tr>' +
+      '<td><strong>' + r.student_name + '</strong></td>' +
+      '<td><span class="type-badge type-' + atype + '"><i class="fas ' + typeIcon + '"></i> ' + atype.toUpperCase() + '</span></td>' +
+      '<td><span class="role-badge role-' + role.toLowerCase() + '">' + role + '</span></td>' +
+      '<td>' + (r.department || '—') + '</td>' +
+      '<td>' + (r.class_name || '—') + '</td>' +
+      '<td>' + (r.teacher_name || '—') + '</td>' +
+      '<td>' + r.date + '</td>' +
+      '<td><i class="fas fa-clock" style="color:var(--c7);font-size:.72rem;"></i> ' + r.time + '</td>' +
+      '<td><span class="badge-g badge-green">' + r.status + '</span></td>' +
+    '</tr>';
+  });
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+</script>
+{% endblock %}

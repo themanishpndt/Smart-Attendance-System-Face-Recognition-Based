@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Verify Email — Smart Attendance{% endblock %}
+
+{% block content %}
+<style>
+  .auth-wrap { max-width: 460px; margin: 2rem auto; }
+  .auth-card { background: var(--card); border: 1px solid var(--border); border-radius: 22px;
+    box-shadow: var(--shadow-lg); overflow: hidden; }
+  .auth-top { background: var(--g3); padding: 2rem; text-align: center; color: #fff; position: relative; }
+  .auth-top::after { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 30% 70%, rgba(102,126,234,.15) 0%, transparent 60%); }
+  .auth-top * { position: relative; z-index: 1; }
+  .auth-top .av { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 1rem;
+    background: rgba(255,255,255,.2); backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+  .auth-top h2 { font-weight: 800; font-size: 1.4rem; margin-bottom: .2rem; }
+  .auth-top p { opacity: .85; font-size: .88rem; margin: 0; }
+  .auth-body { padding: 1.8rem 2rem; text-align: center; }
+  .auth-body label { font-weight: 600; font-size: .85rem; display: block; margin-bottom: 6px; color: var(--text2); text-align: left; }
+  .auth-footer { text-align: center; padding: 1rem 2rem 1.5rem; border-top: 1px solid var(--border); }
+  .auth-footer a { color: var(--c1); font-weight: 600; }
+
+  .otp-group { display: flex; gap: .5rem; justify-content: center; margin: 1.2rem 0; }
+  .otp-group input {
+    width: 48px; height: 56px; text-align: center; font-size: 1.4rem; font-weight: 800;
+    border: 2px solid var(--border); border-radius: 12px; background: var(--bg2);
+    color: var(--text); outline: none; font-family: 'Inter', monospace;
+    transition: border-color .25s, box-shadow .25s;
+  }
+  .otp-group input:focus { border-color: var(--c7); box-shadow: 0 0 0 3px rgba(76,201,240,.15); }
+
+  .email-badge {
+    display: inline-flex; align-items: center; gap: 6px; padding: .4rem .8rem;
+    background: rgba(76,201,240,.1); border-radius: 20px; font-size: .82rem;
+    font-weight: 600; color: var(--c7); margin: .6rem 0 1rem;
+  }
+
+  .countdown { color: var(--text2); font-size: .82rem; margin: .5rem 0; }
+  .countdown span { font-weight: 700; color: var(--c6); }
+</style>
+
+<div class="auth-wrap anim-scale">
+  <div class="auth-card">
+    <div class="auth-top">
+      <div class="av"><i class="fas fa-envelope-open-text"></i></div>
+      <h2>Verify Your Email</h2>
+      <p>Enter the 6-digit code sent to your inbox</p>
+    </div>
+    <div class="auth-body">
+      <div class="email-badge"><i class="fas fa-at"></i> {{ email }}</div>
+
+      <form method="POST" action="{{ url_for('verify_email') }}" id="otpForm">
+        <input type="hidden" name="otp" id="otpHidden">
+
+        <div class="otp-group" id="otpGroup">
+          <input type="text" maxlength="1" class="otp-digit" data-idx="0" autofocus inputmode="numeric">
+          <input type="text" maxlength="1" class="otp-digit" data-idx="1" inputmode="numeric">
+          <input type="text" maxlength="1" class="otp-digit" data-idx="2" inputmode="numeric">
+          <input type="text" maxlength="1" class="otp-digit" data-idx="3" inputmode="numeric">
+          <input type="text" maxlength="1" class="otp-digit" data-idx="4" inputmode="numeric">
+          <input type="text" maxlength="1" class="otp-digit" data-idx="5" inputmode="numeric">
+        </div>
+
+        <div class="countdown" id="countdown">Code expires in <span id="timer">10:00</span></div>
+
+        <button type="submit" class="btn-g btn-blue lg" style="width:100%;justify-content:center;margin-top:.8rem;" id="verifyBtn" disabled>
+          <i class="fas fa-shield-check"></i> Verify & Create Account
+        </button>
+      </form>
+
+      <div style="margin-top:1rem;">
+        <p style="font-size:.85rem;color:var(--text2);">Didn't receive the code?</p>
+        <form method="POST" action="{{ url_for('resend_otp') }}" style="display:inline;">
+          <button type="submit" class="btn-g btn-outline" style="padding:.5rem 1rem;font-size:.82rem;">
+            <i class="fas fa-rotate-right"></i> Resend Code
+          </button>
+        </form>
+      </div>
+    </div>
+    <div class="auth-footer">
+      <a href="{{ url_for('teacher_register') }}"><i class="fas fa-arrow-left"></i> Back to Registration</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function(){
+  const digits = document.querySelectorAll('.otp-digit');
+  const hidden = document.getElementById('otpHidden');
+  const btn = document.getElementById('verifyBtn');
+
+  function collectOtp() {
+    let val = '';
+    digits.forEach(d => val += d.value);
+    hidden.value = val;
+    btn.disabled = val.length < 6;
+  }
+
+  digits.forEach((input, i) => {
+    input.addEventListener('input', function() {
+      this.value = this.value.replace(/\D/g, '').slice(0, 1);
+      if (this.value && i < 5) digits[i + 1].focus();
+      collectOtp();
+    });
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace' && !this.value && i > 0) {
+        digits[i - 1].focus();
+        digits[i - 1].value = '';
+        collectOtp();
+      }
+    });
+    input.addEventListener('paste', function(e) {
+      e.preventDefault();
+      const pasted = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+      pasted.split('').forEach((ch, j) => { if (digits[j]) digits[j].value = ch; });
+      if (pasted.length > 0) digits[Math.min(pasted.length, 5)].focus();
+      collectOtp();
+    });
+  });
+
+  // Countdown timer (10 minutes)
+  let remaining = 600;
+  const timerEl = document.getElementById('timer');
+  const interval = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(interval);
+      timerEl.textContent = 'Expired';
+      btn.disabled = true;
+      return;
+    }
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    timerEl.textContent = m + ':' + String(s).padStart(2, '0');
+  }, 1000);
+})();
+</script>
+{% endblock %}

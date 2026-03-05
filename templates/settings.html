@@ -1,244 +1,346 @@
 {% extends "base.html" %}
+{% block title %}Settings — Smart Attendance{% endblock %}
 
-{% block head %}
-<style>
-body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
-.settings-container { max-width: 900px; margin: 2rem auto; padding: 0 15px; }
-.page-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 2.5rem;
-    border-radius: 16px;
-    box-shadow: 0 8px 30px rgba(102,126,234,0.2);
-    margin-bottom: 2rem;
-    color: white;
-}
-.page-header h1 { margin: 0; font-weight: 700; }
-.settings-card {
-    background: white;
-    border-radius: 16px;
-    padding: 2.5rem;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    margin-bottom: 1.5rem;
-}
-.setting-section {
-    padding: 1.5rem 0;
-    border-bottom: 1px solid #f0f0f0;
-}
-.setting-section:last-child { border-bottom: none; }
-.setting-section h3 {
-    color: #1a1a2e;
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-.setting-section p {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-}
-.form-label {
-    color: #333;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    display: block;
-}
-.form-control, .form-select {
-    padding: 0.75rem 1rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 1rem;
-    transition: all 0.3s;
-    width: 100%;
-}
-.form-control:focus, .form-select:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
-    outline: none;
-}
-.small-text {
-    color: #999;
-    font-size: 0.85rem;
-    margin-top: 0.25rem;
-}
-.btn-save {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-.btn-save:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(102,126,234,0.3);
-}
-.setting-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    margin-bottom: 1rem;
-}
-.toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 30px;
-}
-.toggle-switch input { opacity: 0; width: 0; height: 0; }
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: 0.4s;
-    border-radius: 30px;
-}
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 22px;
-    width: 22px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: 0.4s;
-    border-radius: 50%;
-}
-input:checked + .slider { background-color: #667eea; }
-input:checked + .slider:before { transform: translateX(30px); }
-</style>
-{% endblock %}
 {% block content %}
-<div class="settings-container">
-    <div class="page-header">
-        <h1><i class="fas fa-cog mr-3"></i>System Settings</h1>
-        <p class="mb-0 mt-2">Configure your attendance system preferences</p>
-    </div>
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }} mr-2"></i>
-                    {{ message }}
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    
-    <form method="POST" action="{{ url_for('settings') }}">
-        <div class="settings-card">
-            <div class="setting-section">
-                <div class="setting-icon">
-                    <i class="fas fa-camera"></i>
-                </div>
-                <h3>Camera Configuration</h3>
-                <p>Select and configure your camera device for face capture</p>
-                
-                <div class="mb-3">
-                    <label for="camera_index" class="form-label">Camera Index</label>
-                    <select class="form-select" id="camera_index" name="camera_index">
-                        <option value="0" {% if settings.camera_index == 0 %}selected{% endif %}>Camera 0 (Default)</option>
-                        <option value="1" {% if settings.camera_index == 1 %}selected{% endif %}>Camera 1</option>
-                        <option value="2" {% if settings.camera_index == 2 %}selected{% endif %}>Camera 2</option>
-                    </select>
-                    <small class="small-text">Select which camera device to use for capturing faces</small>
-                </div>
-            </div>
-            
-            <div class="setting-section">
-                <div class="setting-icon">
-                    <i class="fas fa-images"></i>
-                </div>
-                <h3>Face Capture Settings</h3>
-                <p>Configure the number of face samples to collect during registration</p>
-                
-                <div class="mb-3">
-                    <label for="required_samples" class="form-label">Required Face Samples</label>
-                    <input type="number" class="form-control" id="required_samples" name="required_samples"
-                           value="{{ settings.required_samples }}" min="20" max="100">
-                    <small class="small-text">Number of images to capture (20-100). More samples = better accuracy</small>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">Image Quality</label>
-                    <input type="range" class="form-range" min="1" max="100" value="92" id="imageQuality">
-                    <small class="small-text">Current: <span id="qualityValue">92</span>%</small>
-                </div>
-            </div>
-            
-            <div class="setting-section">
-                <div class="setting-icon">
-                    <i class="fas fa-brain"></i>
-                </div>
-                <h3>Recognition Accuracy</h3>
-                <p>Adjust the face recognition confidence threshold</p>
-                
-                <div class="mb-3">
-                    <label for="attendance_threshold" class="form-label">Recognition Threshold</label>
-                    <input type="number" class="form-control" id="attendance_threshold" name="attendance_threshold"
-                           value="{{ settings.attendance_threshold }}" min="0.1" max="1.0" step="0.1">
-                    <small class="small-text">Higher values require more confidence (0.1-1.0)</small>
-                </div>
-            </div>
-            
-            <div class="setting-section">
-                <div class="setting-icon">
-                    <i class="fas fa-bell"></i>
-                </div>
-                <h3>Notifications</h3>
-                <p>Enable or disable system notifications</p>
-                
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <strong>Sound Notifications</strong>
-                        <br><small class="small-text">Play sound on face detection</small>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>Email Alerts</strong>
-                        <br><small class="small-text">Send email on new registration</small>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </div>
-        </div>
-        
-        <div class="d-flex gap-3">
-            <button type="submit" class="btn-save">
-                <i class="fas fa-save mr-2"></i>Save Settings
-            </button>
-            <a href="{{ url_for('home') }}" class="btn btn-secondary btn-lg">
-                <i class="fas fa-arrow-left mr-2"></i>Back to Home
-            </a>
-        </div>
-    </form>
+<style>
+  .set-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+  @media(max-width:768px){.set-grid{grid-template-columns:1fr}}
+  .tag-list{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem}
+  .tag-item{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:8px;
+    background:rgba(102,126,234,.08);font-size:.78rem;font-weight:600;color:var(--text);
+    border:1px solid rgba(102,126,234,.15);animation:scaleIn .2s ease both}
+  .tag-item .rm{width:18px;height:18px;border-radius:50%;border:none;background:rgba(239,71,111,.1);
+    color:var(--c6);font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:all .2s}
+  .tag-item .rm:hover{background:var(--c6);color:#fff}
+  .tag-add{display:flex;gap:.4rem}
+  .tag-add input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:8px;
+    background:var(--bg);color:var(--text);font-size:.82rem}
+  .tag-add button{padding:6px 14px;border-radius:8px}
+  .field-row{margin-bottom:1rem}
+  .field-row label{font-weight:600;font-size:.82rem;display:block;margin-bottom:4px;color:var(--text2)}
+  .field-row small{color:var(--text2);font-size:.75rem;margin-top:3px;display:block}
+  .switch-row{display:flex;align-items:center;justify-content:space-between;padding:.7rem 0;
+    border-bottom:1px solid var(--border)}
+  .switch-row:last-child{border:none}
+  .switch-row .sw-label{font-weight:600;font-size:.88rem}
+  .switch-row .sw-desc{font-size:.75rem;color:var(--text2)}
+  .toggle{position:relative;width:46px;height:26px;flex-shrink:0}
+  .toggle input{opacity:0;width:0;height:0}
+  .toggle .slider{position:absolute;inset:0;background:var(--border);border-radius:26px;cursor:pointer;
+    transition:all .3s}
+  .toggle .slider:before{content:"";position:absolute;width:20px;height:20px;border-radius:50%;
+    background:#fff;left:3px;top:3px;transition:all .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .toggle input:checked + .slider{background:var(--c4)}
+  .toggle input:checked + .slider:before{transform:translateX(20px)}
+  .sys-item{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;
+    border-bottom:1px solid var(--border);font-size:.85rem}
+  .sys-item:last-child{border:none}
+  .sys-item .label{color:var(--text2)}
+  .sys-item .value{font-weight:700}
+  .danger-card{border-color:rgba(239,71,111,.3) !important}
+  .danger-card .card-hdr{color:var(--c6)}
+  .set-toast{position:fixed;top:20px;right:20px;z-index:99999;padding:.8rem 1.2rem;border-radius:12px;
+    font-weight:600;font-size:.88rem;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.2);animation:scaleIn .3s ease both}
+  .set-toast.success{background:linear-gradient(135deg,#06d6a0,#38f9d7);color:#1e1e2f}
+  .set-toast.error{background:linear-gradient(135deg,#ef476f,#f5576c)}
+</style>
+
+<div class="pg-header anim-down">
+  <div class="pg-icon"><i class="fas fa-sliders-h"></i></div>
+  <h1>Settings</h1>
+  <p>Configure system preferences, departments, roles and recognition parameters</p>
 </div>
 
+<form method="POST" action="{{ url_for('settings') }}" id="settingsForm">
+<div class="set-grid">
+  <!-- Left Column -->
+  <div>
+    <!-- Camera & Recognition -->
+    <div class="glass-card cbar-purple anim-up delay-1" style="margin-bottom:1.2rem;">
+      <div class="card-hdr"><i class="fas fa-camera" style="color:var(--c1);"></i> Camera & Recognition</div>
+      <div class="card-inner">
+        <div class="field-row">
+          <label>Camera Index</label>
+          <input type="number" class="fi" name="camera_index" value="{{ settings.camera_index }}" min="0" max="10">
+          <small>0 = default webcam. Change if you have multiple cameras.</small>
+        </div>
+        <div class="field-row">
+          <label>Required Face Samples</label>
+          <input type="number" class="fi" name="required_samples" value="{{ settings.required_samples }}" min="5" max="200">
+          <small>Images to capture per person during registration (recommended: 50).</small>
+        </div>
+        <div class="field-row">
+          <label>Confidence Threshold</label>
+          <input type="number" class="fi" name="attendance_threshold" value="{{ settings.attendance_threshold }}" min="0.1" max="1.0" step="0.05">
+          <small>Minimum score (0.0–1.0) for a face match to be valid.</small>
+        </div>
+        <div class="field-row">
+          <label>Minimum Confidence % for Attendance</label>
+          <input type="number" class="fi" name="min_confidence" value="{{ settings.min_confidence }}" min="10" max="100">
+          <small>Face must have at least this confidence % to save attendance.</small>
+        </div>
+        <div class="field-row">
+          <label>Recognition Interval (ms)</label>
+          <input type="number" class="fi" name="recognition_interval" value="{{ settings.recognition_interval }}" min="500" max="10000" step="100">
+          <small>Time between automatic recognition attempts (milliseconds).</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Behaviour Toggles -->
+    <div class="glass-card cbar-green anim-up delay-2" style="margin-bottom:1.2rem;">
+      <div class="card-hdr"><i class="fas fa-toggle-on" style="color:var(--c4);"></i> Behaviour</div>
+      <div class="card-inner">
+        <div class="switch-row">
+          <div>
+            <div class="sw-label">Auto-save Attendance</div>
+            <div class="sw-desc">Automatically record when a face is recognized</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" name="auto_save_attendance" {{ 'checked' if settings.auto_save_attendance }}>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="switch-row">
+          <div>
+            <div class="sw-label">Duplicate Prevention</div>
+            <div class="sw-desc">Prevent recording the same person more than once per day</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" name="duplicate_check" {{ 'checked' if settings.duplicate_check }}>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="switch-row">
+          <div>
+            <div class="sw-label">Notification Sound</div>
+            <div class="sw-desc">Play a sound when attendance is saved</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" name="notification_sound" {{ 'checked' if settings.notification_sound }}>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column -->
+  <div>
+    <!-- Department Management -->
+    <div class="glass-card cbar-blue anim-up delay-1" style="margin-bottom:1.2rem;">
+      <div class="card-hdr"><i class="fas fa-building" style="color:var(--c7);"></i> Departments</div>
+      <div class="card-inner">
+        <div class="tag-list" id="deptList">
+          {% for d in settings.departments %}
+          <div class="tag-item" id="dept-{{ loop.index }}">
+            <i class="fas fa-building" style="font-size:.65rem;color:var(--c7);"></i>
+            {{ d }}
+            <button type="button" class="rm" onclick="removeDept('{{ d }}', 'dept-{{ loop.index }}')" title="Remove"><i class="fas fa-times"></i></button>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="tag-add">
+          <input type="text" id="newDept" placeholder="Add department..." onkeypress="if(event.key==='Enter'){event.preventDefault();addDept();}">
+          <button type="button" class="btn-g btn-blue" onclick="addDept()" style="padding:6px 14px;font-size:.8rem;"><i class="fas fa-plus"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Role Management -->
+    <div class="glass-card cbar-pink anim-up delay-2" style="margin-bottom:1.2rem;">
+      <div class="card-hdr"><i class="fas fa-user-tag" style="color:var(--c3);"></i> Roles</div>
+      <div class="card-inner">
+        <div class="tag-list" id="roleList">
+          {% for r in settings.roles %}
+          <div class="tag-item" id="role-{{ loop.index }}">
+            <i class="fas fa-user-tag" style="font-size:.65rem;color:var(--c3);"></i>
+            {{ r }}
+            <button type="button" class="rm" onclick="removeRole('{{ r }}', 'role-{{ loop.index }}')" title="Remove"><i class="fas fa-times"></i></button>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="tag-add">
+          <input type="text" id="newRole" placeholder="Add role..." onkeypress="if(event.key==='Enter'){event.preventDefault();addRole();}">
+          <button type="button" class="btn-g btn-pink" onclick="addRole()" style="padding:6px 14px;font-size:.8rem;"><i class="fas fa-plus"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="glass-card cbar-yellow anim-up delay-3" style="margin-bottom:1.2rem;">
+      <div class="card-hdr"><i class="fas fa-server" style="color:var(--c5);"></i> System Status</div>
+      <div class="card-inner">
+        <div class="sys-item">
+          <span class="label"><i class="fas fa-database"></i> Attendance Records</span>
+          <span class="value" style="color:var(--c1);">{{ sys_stats.total_records }}</span>
+        </div>
+        <div class="sys-item">
+          <span class="label"><i class="fas fa-users"></i> Registered Users</span>
+          <span class="value" style="color:var(--c4);">{{ sys_stats.total_users }}</span>
+        </div>
+        <div class="sys-item">
+          <span class="label"><i class="fas fa-brain"></i> Face Model</span>
+          <span class="value">
+            {% if sys_stats.model_exists %}
+              <span class="badge-g badge-green" style="font-size:.72rem;">Trained</span>
+            {% else %}
+              <span class="badge-g badge-yellow" style="font-size:.72rem;">Not Trained</span>
+            {% endif %}
+          </span>
+        </div>
+        <div class="sys-item">
+          <span class="label"><i class="fas fa-images"></i> Face Data</span>
+          <span class="value">
+            {% if sys_stats.faces_data_exists %}
+              <span class="badge-g badge-green" style="font-size:.72rem;">Available</span>
+            {% else %}
+              <span class="badge-g badge-yellow" style="font-size:.72rem;">None</span>
+            {% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="glass-card danger-card anim-up delay-4" style="margin-bottom:1.2rem;">
+      <div class="card-hdr"><i class="fas fa-exclamation-triangle" style="color:var(--c6);"></i> Danger Zone</div>
+      <div class="card-inner">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem;">
+          <div>
+            <div style="font-weight:600;font-size:.88rem;">Clear All Attendance</div>
+            <div style="font-size:.75rem;color:var(--text2);">Delete all attendance records from the database</div>
+          </div>
+          <button type="button" class="btn-g btn-outline" style="color:var(--c6);border-color:rgba(239,71,111,.3);padding:5px 14px;font-size:.78rem;" onclick="clearAttendance()">
+            <i class="fas fa-trash-alt"></i> Clear
+          </button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-weight:600;font-size:.88rem;">Reset Settings</div>
+            <div style="font-size:.75rem;color:var(--text2);">Restore all settings to factory defaults</div>
+          </div>
+          <button type="button" class="btn-g btn-outline" style="color:var(--c6);border-color:rgba(239,71,111,.3);padding:5px 14px;font-size:.78rem;" onclick="resetSettings()">
+            <i class="fas fa-undo"></i> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Save Button -->
+<div style="display:flex;gap:.7rem;justify-content:flex-end;margin-top:.5rem;" class="anim-up delay-4">
+  <a href="{{ url_for('home') }}" class="btn-g btn-outline"><i class="fas fa-times"></i> Cancel</a>
+  <button type="submit" class="btn-g btn-purple lg"><i class="fas fa-save"></i> Save Settings</button>
+</div>
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
-document.getElementById('imageQuality').addEventListener('input', function() {
-    document.getElementById('qualityValue').textContent = this.value;
-});
+(function(){
+  function toast(msg, type) {
+    var t = document.createElement('div');
+    t.className = 'set-toast ' + type;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(function(){ t.remove(); }, 300); }, 3000);
+  }
+
+  async function apiAction(action, data) {
+    data = data || {};
+    data.action = action;
+    try {
+      var resp = await fetch('/settings', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      });
+      return await resp.json();
+    } catch(e) {
+      toast('Network error: ' + e.message, 'error');
+      return { success: false };
+    }
+  }
+
+  window.addDept = async function() {
+    var input = document.getElementById('newDept');
+    var dept = input.value.trim();
+    if (!dept) return;
+    var res = await apiAction('add_department', { department: dept });
+    if (res.success) {
+      toast('Department "' + dept + '" added', 'success');
+      input.value = '';
+      // Add tag to UI
+      var id = 'dept-new-' + Date.now();
+      var html = '<div class="tag-item" id="' + id + '"><i class="fas fa-building" style="font-size:.65rem;color:var(--c7);"></i> ' + dept + ' <button type="button" class="rm" onclick="removeDept(\'' + dept + '\', \'' + id + '\')" title="Remove"><i class="fas fa-times"></i></button></div>';
+      document.getElementById('deptList').insertAdjacentHTML('beforeend', html);
+    } else {
+      toast(res.message || 'Failed to add department', 'error');
+    }
+  };
+
+  window.removeDept = async function(dept, elemId) {
+    if (!confirm('Remove department "' + dept + '"?')) return;
+    var res = await apiAction('remove_department', { department: dept });
+    if (res.success) {
+      document.getElementById(elemId).remove();
+      toast('Department removed', 'success');
+    } else {
+      toast(res.message || 'Failed', 'error');
+    }
+  };
+
+  window.addRole = async function() {
+    var input = document.getElementById('newRole');
+    var role = input.value.trim();
+    if (!role) return;
+    var res = await apiAction('add_role', { role: role });
+    if (res.success) {
+      toast('Role "' + role + '" added', 'success');
+      input.value = '';
+      var id = 'role-new-' + Date.now();
+      var html = '<div class="tag-item" id="' + id + '"><i class="fas fa-user-tag" style="font-size:.65rem;color:var(--c3);"></i> ' + role + ' <button type="button" class="rm" onclick="removeRole(\'' + role + '\', \'' + id + '\')" title="Remove"><i class="fas fa-times"></i></button></div>';
+      document.getElementById('roleList').insertAdjacentHTML('beforeend', html);
+    } else {
+      toast(res.message || 'Failed to add role', 'error');
+    }
+  };
+
+  window.removeRole = async function(role, elemId) {
+    if (!confirm('Remove role "' + role + '"?')) return;
+    var res = await apiAction('remove_role', { role: role });
+    if (res.success) {
+      document.getElementById(elemId).remove();
+      toast('Role removed', 'success');
+    } else {
+      toast(res.message || 'Failed', 'error');
+    }
+  };
+
+  window.clearAttendance = async function() {
+    if (!confirm('This will DELETE ALL attendance records permanently. Continue?')) return;
+    if (!confirm('Are you absolutely sure? This cannot be undone!')) return;
+    var res = await apiAction('clear_attendance');
+    if (res.success) {
+      toast('All attendance records cleared', 'success');
+    } else {
+      toast(res.message || 'Failed', 'error');
+    }
+  };
+
+  window.resetSettings = async function() {
+    if (!confirm('Reset all settings to factory defaults?')) return;
+    var res = await apiAction('reset_settings');
+    if (res.success) {
+      toast('Settings reset — reloading...', 'success');
+      setTimeout(function(){ location.reload(); }, 1000);
+    } else {
+      toast(res.message || 'Failed', 'error');
+    }
+  };
+})();
 </script>
 {% endblock %}

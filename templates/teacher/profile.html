@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+{% block title %}Teacher Profile — Smart Attendance{% endblock %}
+
+{% block content %}
+<style>
+  .profile-page { max-width: 900px; margin: 0 auto; }
+
+  .profile-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 22px; padding: 2.5rem 2rem 5rem; text-align: center;
+    color: #fff; position: relative; overflow: hidden; margin-bottom: -3rem;
+    box-shadow: 0 10px 40px rgba(102,126,234,.25);
+  }
+  .profile-header::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 80% 20%, rgba(240,147,251,.15) 0%, transparent 50%);
+  }
+  .profile-header * { position: relative; z-index: 1; }
+  .profile-header .badge-pill {
+    display: inline-flex; align-items: center; gap: 5px; padding: 4px 14px;
+    border-radius: 20px; background: rgba(255,255,255,.2); font-size: .78rem;
+    font-weight: 700; backdrop-filter: blur(10px); margin-bottom: .5rem;
+  }
+  .profile-header h1 { font-size: 1.6rem; font-weight: 800; margin: 0; }
+  .profile-header p { opacity: .9; font-size: .9rem; margin: .3rem 0 0; }
+
+  /* Avatar Section */
+  .avatar-section { text-align: center; margin-bottom: 1.5rem; position: relative; z-index: 2; }
+  .avatar-wrap {
+    width: 120px; height: 120px; border-radius: 50%; margin: 0 auto .8rem;
+    position: relative; display: inline-block;
+  }
+  .avatar-img {
+    width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
+    border: 4px solid var(--card); box-shadow: 0 6px 25px rgba(0,0,0,.15);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+  }
+  .avatar-placeholder {
+    width: 120px; height: 120px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.8rem; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: 4px solid var(--card); box-shadow: 0 6px 25px rgba(0,0,0,.15);
+  }
+  .avatar-edit-btn {
+    position: absolute; bottom: 4px; right: 4px;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2); border: 3px solid var(--card);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #fff; font-size: .85rem;
+    transition: transform .25s, box-shadow .25s;
+    box-shadow: 0 3px 12px rgba(102,126,234,.4);
+  }
+  .avatar-edit-btn:hover { transform: scale(1.15); box-shadow: 0 5px 18px rgba(102,126,234,.5); }
+  .avatar-actions { display: flex; gap: .5rem; justify-content: center; margin-top: .4rem; }
+  .avatar-actions .btn-sm {
+    padding: 5px 14px; border-radius: 10px; font-size: .78rem;
+    font-weight: 600; border: none; cursor: pointer; transition: all .25s;
+  }
+  .btn-upload { background: rgba(102,126,234,.12); color: var(--c1); }
+  .btn-upload:hover { background: rgba(102,126,234,.22); }
+  .btn-remove { background: rgba(239,71,111,.08); color: var(--c6); }
+  .btn-remove:hover { background: rgba(239,71,111,.15); }
+
+  /* Profile Card */
+  .profile-card {
+    background: var(--card); border-radius: 20px; border: 1px solid var(--border);
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .profile-card-body { padding: 2rem; }
+  .section-title {
+    font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+    color: var(--c1); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title i { font-size: .85rem; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .form-group { margin-bottom: .2rem; }
+  .form-group label {
+    display: block; font-weight: 600; font-size: .82rem;
+    color: var(--text2); margin-bottom: .3rem;
+  }
+  .form-group label i { margin-right: 4px; font-size: .78rem; }
+
+  .form-group .fi { font-size: .9rem; }
+  .form-group .fi:read-only { background: var(--bg); opacity: .7; cursor: not-allowed; }
+
+  .full-width { grid-column: 1 / -1; }
+
+  .profile-footer {
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    padding-top: 1.5rem; border-top: 1px solid var(--border); margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+  .save-btn {
+    padding: .75rem 2rem; border-radius: 14px; border: none;
+    background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
+    font-weight: 700; font-size: .95rem; cursor: pointer; transition: all .3s;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 6px 20px rgba(102,126,234,.3);
+  }
+  .save-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(102,126,234,.4); }
+  .save-btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+
+  .back-link {
+    display: flex; align-items: center; gap: 6px; font-weight: 600;
+    font-size: .88rem; color: var(--text2); transition: color .25s;
+  }
+  .back-link:hover { color: var(--c1); text-decoration: none; }
+
+  /* Info cards at bottom */
+  .info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+  @media (max-width: 640px) { .info-row { grid-template-columns: 1fr; } }
+  .info-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 1.2rem; display: flex; align-items: center; gap: 1rem;
+    box-shadow: var(--shadow); transition: transform .25s;
+  }
+  .info-card:hover { transform: translateY(-2px); }
+  .info-icon {
+    width: 44px; height: 44px; border-radius: 14px; display: flex;
+    align-items: center; justify-content: center; font-size: 1.1rem; color: #fff; flex-shrink: 0;
+  }
+  .info-label { font-size: .75rem; color: var(--text2); text-transform: uppercase; letter-spacing: .3px; font-weight: 600; }
+  .info-value { font-size: .95rem; font-weight: 700; color: var(--text); margin-top: 1px; }
+
+  /* Image preview modal */
+  .img-preview-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6);
+    z-index: 9999; justify-content: center; align-items: center;
+  }
+  .img-preview-overlay.active { display: flex; }
+  .img-preview-box {
+    background: var(--card); border-radius: 20px; padding: 1.5rem; max-width: 400px;
+    width: 90%; text-align: center; box-shadow: 0 16px 80px rgba(0,0,0,.3);
+    animation: scaleIn .3s ease;
+  }
+  .img-preview-box img { width: 200px; height: 200px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; }
+  .img-preview-box .preview-actions { display: flex; gap: .6rem; justify-content: center; }
+</style>
+
+<div class="profile-page">
+  <!-- Header -->
+  <div class="profile-header anim-down">
+    <div class="badge-pill"><i class="fas fa-chalkboard-teacher"></i> TEACHER PORTAL</div>
+    <h1><i class="fas fa-user-pen"></i> My Profile</h1>
+    <p>Manage your teacher account details and profile image</p>
+  </div>
+
+  <!-- Main Profile Card -->
+  <div class="profile-card anim-up delay-1">
+    <div class="profile-card-body">
+      <form method="POST" enctype="multipart/form-data" id="profileForm">
+        <!-- Avatar -->
+        <div class="avatar-section">
+          <div class="avatar-wrap">
+            {% if teacher.profile_image %}
+              <img src="{{ teacher.profile_image }}" alt="Profile" class="avatar-img" id="avatarPreview">
+            {% else %}
+              <div class="avatar-placeholder" id="avatarPlaceholder">{{ teacher.full_name[:1]|upper }}</div>
+              <img src="" alt="Profile" class="avatar-img" id="avatarPreview" style="display:none;">
+            {% endif %}
+            <label for="profileImageInput" class="avatar-edit-btn" title="Change photo">
+              <i class="fas fa-camera"></i>
+            </label>
+            <input type="file" name="profile_image" id="profileImageInput" accept="image/*" style="display:none;">
+          </div>
+          <div style="font-weight:700;font-size:1.1rem;margin-top:.3rem;">{{ teacher.full_name }}</div>
+          <div style="font-size:.82rem;color:var(--text2);">@{{ teacher.username }}</div>
+          <div class="avatar-actions">
+            <label for="profileImageInput" class="btn-sm btn-upload"><i class="fas fa-upload"></i> Upload Photo</label>
+            {% if teacher.profile_image %}
+            <form method="POST" action="{{ url_for('teacher_remove_image') }}" style="display:inline;">
+              <button type="submit" class="btn-sm btn-remove" onclick="return confirm('Remove profile image?')">
+                <i class="fas fa-trash-alt"></i> Remove
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Personal Info -->
+        <div class="section-title"><i class="fas fa-user"></i> Personal Information</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label><i class="fas fa-user"></i> Full Name</label>
+            <input type="text" name="full_name" class="fi" value="{{ teacher.full_name }}" required>
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-at"></i> Username</label>
+            <input type="text" class="fi" value="{{ teacher.username }}" readonly>
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-envelope"></i> Email Address</label>
+            <input type="email" name="email" class="fi" value="{{ teacher.email }}" required>
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-phone"></i> Phone Number</label>
+            <input type="tel" name="phone" class="fi" value="{{ teacher.phone or '' }}" placeholder="+91 XXXXX XXXXX">
+          </div>
+        </div>
+
+        <!-- Professional Info -->
+        <div class="section-title" style="margin-top:1.5rem;"><i class="fas fa-briefcase"></i> Professional Information</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label><i class="fas fa-building"></i> Department</label>
+            <input type="text" name="department" class="fi" value="{{ teacher.department or '' }}" placeholder="e.g. Computer Science">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-id-badge"></i> Designation</label>
+            <input type="text" name="designation" class="fi" value="{{ teacher.designation or '' }}" placeholder="e.g. Assistant Professor">
+          </div>
+          <div class="form-group full-width">
+            <label><i class="fas fa-pen-fancy"></i> Bio</label>
+            <textarea name="bio" class="fi" rows="3" placeholder="Write a short bio about yourself...">{{ teacher.bio or '' }}</textarea>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="profile-footer">
+          <a href="{{ url_for('teacher_dashboard') }}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+          </a>
+          <button type="submit" class="save-btn" id="saveBtn">
+            <i class="fas fa-check"></i> Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Info Cards -->
+  <div class="info-row anim-up delay-2">
+    <div class="info-card">
+      <div class="info-icon" style="background:var(--g1);"><i class="fas fa-calendar-alt"></i></div>
+      <div>
+        <div class="info-label">Member Since</div>
+        <div class="info-value">{{ teacher.created_at[:10] if teacher.created_at else 'N/A' }}</div>
+      </div>
+    </div>
+    <div class="info-card">
+      <div class="info-icon" style="background:var(--g6);"><i class="fas fa-chalkboard-teacher"></i></div>
+      <div>
+        <div class="info-label">Role</div>
+        <div class="info-value">Teacher</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Image Preview Overlay -->
+<div class="img-preview-overlay" id="imgPreviewOverlay" onclick="closePreview(event)">
+  <div class="img-preview-box">
+    <h5 style="font-weight:700;margin-bottom:.8rem;">Preview</h5>
+    <img src="" alt="Preview" id="previewImg">
+    <div class="preview-actions">
+      <button class="btn-g btn-outline" onclick="cancelImage()" type="button">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+      <button class="btn-g btn-purple" onclick="confirmImage()" type="button">
+        <i class="fas fa-check"></i> Use This Photo
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function(){
+  const input = document.getElementById('profileImageInput');
+  const preview = document.getElementById('avatarPreview');
+  const placeholder = document.getElementById('avatarPlaceholder');
+  const overlay = document.getElementById('imgPreviewOverlay');
+  const previewImg = document.getElementById('previewImg');
+  let pendingFile = null;
+
+  input.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      alert('Image must be smaller than 5MB.');
+      input.value = '';
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file.');
+      input.value = '';
+      return;
+    }
+
+    pendingFile = file;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      previewImg.src = ev.target.result;
+      overlay.classList.add('active');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  window.confirmImage = function() {
+    if (pendingFile) {
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        preview.src = ev.target.result;
+        preview.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+      };
+      reader.readAsDataURL(pendingFile);
+    }
+    overlay.classList.remove('active');
+    document.getElementById('saveBtn').classList.add('has-changes');
+  };
+
+  window.cancelImage = function() {
+    input.value = '';
+    pendingFile = null;
+    overlay.classList.remove('active');
+  };
+
+  window.closePreview = function(e) {
+    if (e.target === overlay) cancelImage();
+  };
+
+  // Track form changes
+  const form = document.getElementById('profileForm');
+  form.addEventListener('input', function() {
+    document.getElementById('saveBtn').classList.add('has-changes');
+  });
+})();
+</script>
+{% endblock %}

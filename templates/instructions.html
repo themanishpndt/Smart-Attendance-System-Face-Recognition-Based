@@ -1,80 +1,48 @@
 {% extends "base.html" %}
-
-{% block title %}Instructions{% endblock %}
-
+{% block title %}Instructions — Smart Attendance{% endblock %}
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <h1 class="display-4 mb-4 text-center">How to Use Smart Attendance</h1>
-            
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0"><i class="fas fa-info-circle mr-2"></i>Important Rules</h3>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-warning">
-                        <strong>Name Requirements:</strong>
-                        <ul>
-                            <li>Use only alphabetic characters (A-Z, a-z) and spaces</li>
-                            <li>Spaces are allowed between first name and last name</li>
-                            <li>No numbers or special characters allowed</li>
-                            <li>Example valid names: John Smith, Mary Jane Wilson</li>
-                            <li>Example invalid names: John123, Tom@Work</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+<style>
+  .step-row { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1.5rem; }
+  .step-card {
+    flex: 1; min-width: 260px; background: var(--card); border: 1px solid var(--border);
+    border-radius: 18px; padding: 2rem 1.5rem; text-align: center; box-shadow: var(--shadow);
+    transition: transform .3s;
+  }
+  .step-card:hover { transform: translateY(-4px); }
+  .step-num {
+    width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 1rem;
+    display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+    font-weight: 800; color: #fff;
+  }
+  .step-card h4 { font-weight: 700; margin-bottom: .4rem; }
+  .step-card p { color: var(--text2); font-size: .9rem; margin: 0; }
+</style>
 
-            <div class="card mb-4">
-                <div class="card-header bg-success text-white">
-                    <h3 class="mb-0"><i class="fas fa-user-plus mr-2"></i>Step 1: Register New User</h3>
-                </div>
-                <div class="card-body">
-                    <ol>
-                        <li>Click on "Capture Face" button on the home page</li>
-                        <li>Enter your name using only alphabets and spaces</li>
-                        <li>Look directly at the camera</li>
-                        <li>Stay still while your face is being captured</li>
-                        <li>Wait for the confirmation message</li>
-                    </ol>
-                </div>
-            </div>
+<div class="pg-header anim-down">
+  <div class="pg-icon"><i class="fas fa-book-open"></i></div>
+  <h1>How It Works</h1>
+  <p>Three simple steps to smart attendance</p>
+</div>
 
-            <div class="card mb-4">
-                <div class="card-header bg-info text-white">
-                    <h3 class="mb-0"><i class="fas fa-user-check mr-2"></i>Step 2: Take Attendance</h3>
-                </div>
-                <div class="card-body">
-                    <ol>
-                        <li>Click on "Start Recognition" button</li>
-                        <li>Stand in front of the camera</li>
-                        <li>Ensure good lighting conditions</li>
-                        <li>Your attendance will be marked automatically</li>
-                        <li>Wait for the confirmation message</li>
-                    </ol>
-                </div>
-            </div>
+<div class="step-row anim-up delay-1">
+  <div class="step-card cbar-purple">
+    <div class="step-num" style="background:var(--g1);">1</div>
+    <h4>Register Faces</h4>
+    <p>Go to the <strong>Capture</strong> page, enter a name, and let the webcam capture 50 face samples for training.</p>
+  </div>
+  <div class="step-card cbar-green">
+    <div class="step-num" style="background:var(--g4);">2</div>
+    <h4>Take Attendance</h4>
+    <p>Navigate to <strong>Recognize</strong> and start the camera. The AI automatically identifies faces and logs attendance.</p>
+  </div>
+  <div class="step-card cbar-blue">
+    <div class="step-num" style="background:var(--g3);">3</div>
+    <h4>View Records</h4>
+    <p>Check the <strong>Attendance</strong> page to see records, filter by date or department, and export to CSV/JSON.</p>
+  </div>
+</div>
 
-            <div class="card mb-4">
-                <div class="card-header bg-secondary text-white">
-                    <h3 class="mb-0"><i class="fas fa-table mr-2"></i>Step 3: View Records</h3>
-                </div>
-                <div class="card-body">
-                    <ol>
-                        <li>Click on "View Attendance" button</li>
-                        <li>View attendance records for the current date</li>
-                        <li>Records show name and timestamp of attendance</li>
-                    </ol>
-                </div>
-            </div>
-
-            <div class="text-center mt-4">
-                <a href="{{ url_for('home') }}" class="btn btn-primary btn-lg">
-                    <i class="fas fa-home mr-2"></i>Return to Home
-                </a>
-            </div>
-        </div>
-    </div>
+<div style="text-align:center;margin-top:2rem;" class="anim-up delay-2">
+  <a href="{{ url_for('capture') }}" class="btn-g btn-purple lg"><i class="fas fa-rocket"></i> Get Started</a>
 </div>
 {% endblock %}

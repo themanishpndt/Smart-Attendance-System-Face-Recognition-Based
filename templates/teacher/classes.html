@@ -1,525 +1,205 @@
 {% extends "base.html" %}
-
-{% block title %}Manage Classes{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<style>
-:root {
-    --primary: #667eea;
-    --secondary: #764ba2;
-    --success: #51cf66;
-    --danger: #fa5252;
-    --dark: #1a1a2e;
-}
-
-body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    min-height: 100vh;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-/* Fix modal z-index overlay issue */
-.modal {
-    z-index: 1050 !important;
-    pointer-events: auto !important;
-}
-
-.modal-backdrop {
-    z-index: 1040 !important;
-    pointer-events: auto !important;
-}
-
-.modal.fade {
-    pointer-events: auto !important;
-}
-
-.modal.show {
-    pointer-events: auto !important;
-}
-
-.modal-header,
-.modal-body,
-.modal-footer,
-.modal-content {
-    pointer-events: auto !important;
-}
-
-.modal button,
-.modal input,
-.modal textarea,
-.modal select {
-    pointer-events: auto !important;
-}
-
-/* Button cursor styles */
-.modal .btn {
-    cursor: pointer !important;
-}
-
-#confirmDelete,
-.btn-danger {
-    cursor: pointer !important;
-}
-
-.btn-secondary {
-    cursor: pointer !important;
-}
-
-.page-header {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    padding: 2rem;
-    color: white;
-    border-radius: 16px;
-    margin-bottom: 2rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    text-align: center;
-}
-
-.page-header h1 {
-    font-size: 2.2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.page-header p {
-    font-size: 1.05rem;
-    opacity: 0.9;
-    margin: 0;
-}
-
-.form-card {
-    background: white;
-    border-radius: 14px;
-    padding: 2rem;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    height: 100%;
-}
-
-.card-header-custom {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    padding: 1.2rem 1.5rem;
-    border-radius: 12px 12px 0 0;
-    margin: -2rem -2rem 1.5rem -2rem;
-}
-
-.card-header-custom h5 {
-    margin: 0;
-    font-weight: 700;
-    font-size: 1.2rem;
-}
-
-.form-label {
-    font-weight: 600;
-    color: var(--dark);
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.form-label i {
-    color: var(--primary);
-}
-
-.form-control {
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 12px 16px;
-    transition: all 0.3s ease;
-}
-
-.form-control:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-}
-
-.btn-custom {
-    padding: 12px 24px;
-    border-radius: 10px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    border: none;
-    width: 100%;
-}
-
-.btn-primary-custom {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-}
-
-.btn-primary-custom:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
-    color: white;
-}
-
-.classes-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-}
-
-.class-card {
-    background: white;
-    border-radius: 14px;
-    padding: 1.5rem;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    border-top: 5px solid var(--primary);
-    position: relative;
-}
-
-.class-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2);
-}
-
-.class-name {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--dark);
-    margin-bottom: 0.5rem;
-}
-
-.class-description {
-    color: #666;
-    font-size: 0.95rem;
-    margin-bottom: 1rem;
-    min-height: 40px;
-}
-
-.class-meta {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding-top: 1rem;
-    border-top: 1px solid #f0f0f0;
-    font-size: 0.85rem;
-    color: #999;
-}
-
-.class-actions {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 1rem;
-}
-
-.btn-sm-custom {
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    transition: all 0.3s ease;
-    border: none;
-    flex: 1;
-}
-
-.btn-info-custom {
-    background: linear-gradient(135deg, #4dabf7, #228be6);
-    color: white;
-}
-
-.btn-danger-custom {
-    background: linear-gradient(135deg, #fa5252, #e03131);
-    color: white;
-}
-
-.btn-info-custom:hover,
-.btn-danger-custom:hover {
-    transform: translateY(-2px);
-    color: white;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-    background: white;
-    border-radius: 14px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-}
-
-.empty-state i {
-    font-size: 4rem;
-    color: #ddd;
-    margin-bottom: 1rem;
-}
-
-.empty-state p {
-    color: #999;
-    font-size: 1.1rem;
-}
-
-.modal-content {
-    border-radius: 16px;
-    border: none;
-}
-
-.modal-header {
-    background: linear-gradient(135deg, var(--danger), #e03131);
-    color: white;
-    border-radius: 16px 16px 0 0;
-    border: none;
-}
-
-.modal-header .close {
-    color: white;
-    opacity: 0.8;
-}
-
-.modal-header .close:hover {
-    opacity: 1;
-}
-
-@media (max-width: 768px) {
-    .classes-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
-{% endblock %}
+{% block title %}Classes — Smart Attendance{% endblock %}
 
 {% block content %}
-<div class="container mt-4 mb-5">
-    <!-- Page Header -->
-    <div class="page-header">
-        <h1><i class="fas fa-chalkboard-user"></i> Manage Classes</h1>
-        <p>Create and organize your classes for efficient attendance tracking</p>
-    </div>
+<style>
+  .cls-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+  .cls-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+    overflow: hidden; box-shadow: var(--shadow); transition: all .3s; }
+  .cls-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+  .cls-top { height: 8px; }
+  .cls-body { padding: 1.3rem; }
+  .cls-body h4 { font-weight: 700; font-size: 1.05rem; margin-bottom: .3rem; }
+  .cls-body p { font-size: .82rem; color: var(--text2); margin-bottom: .8rem; }
+  .cls-meta { display: flex; gap: .8rem; font-size: .78rem; color: var(--text2); margin-bottom: 1rem; flex-wrap:wrap; }
+  .cls-meta i { margin-right: 3px; }
+  .cls-actions { display: flex; gap: .5rem; flex-wrap:wrap; }
+  .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.45); z-index:9999; justify-content:center; align-items:center; }
+  .modal-overlay.active { display:flex; }
+  .modal-box { background:var(--card); border-radius:20px; padding:0; width:480px; max-width:92vw; box-shadow:0 16px 80px rgba(0,0,0,.25); overflow:hidden; animation:modalIn .3s; }
+  @keyframes modalIn { from{opacity:0;transform:scale(.92)translateY(20px)} to{opacity:1;transform:none} }
+  .modal-top { padding:1.2rem 1.5rem; background:var(--g1); color:#fff; display:flex; justify-content:space-between; align-items:center; }
+  .modal-top h3 { font-size:1rem;margin:0;font-weight:700; }
+  .modal-body { padding:1.5rem; }
+  .modal-body label { font-weight:600; font-size:.82rem; display:block; margin-bottom:3px; color:var(--text2); }
+  .modal-body .fg { margin-bottom:1rem; }
+  .modal-foot { padding:.8rem 1.5rem; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:.5rem; }
+</style>
 
-    <div class="row">
-        <!-- Create Class Form -->
-        <div class="col-lg-4 mb-4">
-            <div class="form-card">
-                <div class="card-header-custom">
-                    <h5><i class="fas fa-plus-circle"></i> Create New Class</h5>
-                </div>
-                
-                <form method="POST" action="{{ url_for('manage_classes') }}" id="createClassForm">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">
-                            <i class="fas fa-tag"></i> Class Name
-                        </label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="name" 
-                               name="name" 
-                               placeholder="e.g., Computer Science 101" 
-                               required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="department" class="form-label">
-                            <i class="fas fa-building"></i> Department
-                        </label>
-                        <select class="form-control" 
-                                id="department" 
-                                name="department" 
-                                required>
-                            <option value="">Select Department</option>
-                            <option value="Computer Science">Computer Science</option>
-                            <option value="Information Technology">Information Technology</option>
-                            <option value="Mathematics">Mathematics</option>
-                            <option value="Physics">Physics</option>
-                            <option value="Chemistry">Chemistry</option>
-                            <option value="Biology">Biology</option>
-                            <option value="Engineering">Engineering</option>
-                            <option value="Business">Business</option>
-                            <option value="Economics">Economics</option>
-                            <option value="English">English</option>
-                            <option value="History">History</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="description" class="form-label">
-                            <i class="fas fa-align-left"></i> Description
-                        </label>
-                        <textarea class="form-control" 
-                                  id="description" 
-                                  name="description" 
-                                  rows="4" 
-                                  placeholder="Brief description of the class..."></textarea>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary-custom btn-custom">
-                        <i class="fas fa-plus-circle"></i> Create Class
-                    </button>
-                </form>
-            </div>
-        </div>
-        
-        <!-- Class List -->
-        <div class="col-lg-8 mb-4">
-            <div class="mb-3 d-flex justify-content-between align-items-center">
-                <h3 style="color: white; font-weight: 700;">
-                    <i class="fas fa-list"></i> Your Classes ({{ classes|length }})
-                </h3>
-            </div>
-            
-            {% if classes %}
-            <div class="classes-grid">
-                {% for class in classes %}
-                <div class="class-card">
-                    <div class="class-name">{{ class.name }}</div>
-                    
-                    {% if class.department %}
-                    <div class="mb-2">
-                        <span class="badge" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem;">
-                            <i class="fas fa-building"></i> {{ class.department }}
-                        </span>
-                    </div>
-                    {% endif %}
-                    
-                    <div class="class-description">
-                        {{ class.description or 'No description provided' }}
-                    </div>
-                    
-                    <div class="class-meta">
-                        <span><i class="fas fa-users"></i> {{ class.student_count or 0 }} Students</span>
-                        <span><i class="fas fa-calendar-plus"></i> {{ class.created_at }}</span>
-                    </div>
-                    
-                    <div class="class-actions">
-                        <a href="{{ url_for('view_class', class_id=class.id) }}" 
-                           class="btn btn-info-custom btn-sm-custom">
-                            <i class="fas fa-eye"></i> View Details
-                        </a>
-                        <button class="btn btn-danger-custom btn-sm-custom delete-class" 
-                                data-id="{{ class.id }}"
-                                data-name="{{ class.name }}">
-                            <i class="fas fa-trash-alt"></i> Delete
-                        </button>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="empty-state">
-                <i class="fas fa-chalkboard-user"></i>
-                <p>No classes created yet</p>
-                <p class="text-muted" style="font-size: 0.9rem;">Create your first class using the form on the left</p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
+<div class="pg-header anim-down">
+  <div class="pg-icon"><i class="fas fa-chalkboard"></i></div>
+  <h1>Your Classes</h1>
+  <p>Manage classes and their students</p>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteClassModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, #fa5252, #e03131); color: white;">
-                <h5 class="modal-title">
-                    <i class="fas fa-exclamation-triangle"></i> Delete Class
-                </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white; opacity: 1;">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete class <strong id="deleteClassName"></strong>?</p>
-                <p class="text-danger"><i class="fas fa-exclamation-triangle"></i> This action cannot be undone!</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete">Delete Class</button>
-            </div>
+<!-- Create Class -->
+<div class="glass-card cbar-purple anim-up delay-1" style="margin-bottom:1.5rem;">
+  <div class="card-hdr"><i class="fas fa-plus-circle" style="color:var(--c1);"></i> Create New Class</div>
+  <div class="card-inner">
+    <form method="POST" action="{{ url_for('manage_classes') }}">
+      <div class="grid-3" style="gap:.8rem;">
+        <div>
+          <label style="font-weight:600;font-size:.82rem;display:block;margin-bottom:3px;">Class Name *</label>
+          <input type="text" class="fi" name="name" placeholder="e.g. CS-101" required>
         </div>
+        <div>
+          <label style="font-weight:600;font-size:.82rem;display:block;margin-bottom:3px;">Department</label>
+          <select class="fi" name="department" id="createDept">
+            <option value="">Select Department...</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-weight:600;font-size:.82rem;display:block;margin-bottom:3px;">Description</label>
+          <input type="text" class="fi" name="description" placeholder="Brief description">
+        </div>
+      </div>
+      <div style="margin-top:.8rem;text-align:right;">
+        <button type="submit" class="btn-g btn-purple"><i class="fas fa-plus"></i> Create Class</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Classes Grid -->
+{% if classes %}
+<div class="cls-grid anim-up delay-2">
+  {% for c in classes %}
+  <div class="cls-card" id="class-{{ c.id }}">
+    <div class="cls-top" style="background:{{ ['var(--g1)','var(--g2)','var(--g3)','var(--g4)','var(--g5)','var(--g7)'][loop.index0 % 6] }};"></div>
+    <div class="cls-body">
+      <h4>{{ c.name }}</h4>
+      <p>{{ c.description or 'No description provided' }}</p>
+      <div class="cls-meta">
+        <span><i class="fas fa-users"></i> {{ c.student_count }} students</span>
+        {% if c.department %}<span><i class="fas fa-building"></i> {{ c.department }}</span>{% endif %}
+        <span><i class="fas fa-clipboard-check"></i> {{ c.today_attendance }} today</span>
+      </div>
+      <div class="cls-actions">
+        <a href="{{ url_for('view_class', class_id=c.id) }}" class="btn-g btn-purple" style="padding:.5rem 1rem;font-size:.8rem;"><i class="fas fa-eye"></i> View</a>
+        <a href="{{ url_for('class_student_attendance', class_id=c.id) }}" class="btn-g btn-green" style="padding:.5rem 1rem;font-size:.8rem;"><i class="fas fa-chart-bar"></i> Attendance</a>
+        <button class="btn-g btn-blue" style="padding:.5rem 1rem;font-size:.8rem;" onclick="openEditModal({{ c.id }}, '{{ c.name }}', '{{ c.department or '' }}', '{{ c.description or '' }}')">
+          <i class="fas fa-edit"></i> Edit
+        </button>
+        <form method="POST" action="{{ url_for('delete_class', class_id=c.id) }}" style="margin:0;display:inline;">
+          <button type="submit" class="btn-g btn-outline" style="padding:.5rem 1rem;font-size:.8rem;color:var(--c6);border-color:rgba(239,71,111,.3);"
+            onclick="return confirm('Delete {{ c.name }}? All associated data will be lost.')">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </form>
+      </div>
     </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="glass-card anim-up delay-2" style="text-align:center;padding:3rem;">
+  <i class="fas fa-chalkboard" style="font-size:3rem;color:var(--c1);opacity:.3;display:block;margin-bottom:1rem;"></i>
+  <p style="color:var(--text2);">No classes created yet. Use the form above to create your first class.</p>
+</div>
+{% endif %}
+
+<!-- Edit Class Modal -->
+<div class="modal-overlay" id="editModal" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal-box">
+    <div class="modal-top">
+      <h3><i class="fas fa-edit" style="margin-right:6px;"></i> Edit Class</h3>
+      <button onclick="closeEditModal()" style="background:none;border:none;color:#fff;font-size:1.1rem;cursor:pointer;"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editClassId">
+      <div class="fg">
+        <label>Class Name *</label>
+        <input type="text" class="fi" id="editName" required>
+      </div>
+      <div class="fg">
+        <label>Department</label>
+        <select class="fi" id="editDept">
+          <option value="">Select Department...</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Description</label>
+        <input type="text" class="fi" id="editDesc">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-g btn-outline" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-g btn-purple" onclick="saveEditClass()" id="editSaveBtn"><i class="fas fa-save"></i> Save Changes</button>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-(function() {
-    'use strict';
-    
-    console.log('Classes page script loaded');
-    
-    let deleteClassId = null;
-
-    // Wait for jQuery and Bootstrap to be ready
-    $(document).ready(function() {
-        console.log('jQuery ready, initializing delete handlers');
-        
-        // Delete class handler - using event delegation
-        $(document).on('click', '.delete-class', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            deleteClassId = $(this).data('id');
-            const className = $(this).data('name');
-            
-            console.log('Delete clicked for class:', className, 'ID:', deleteClassId);
-            
-            $('#deleteClassName').text(className);
-            $('#deleteClassModal').modal('show');
-            
-            // Ensure modal is visible and clickable
-            $('.modal-backdrop').css('pointer-events', 'auto');
-            $('#deleteClassModal').css('pointer-events', 'auto');
+// Load department options from API
+(async function() {
+  try {
+    const resp = await fetch('/api/options');
+    const data = await resp.json();
+    if (data.departments) {
+      const selects = [document.getElementById('createDept'), document.getElementById('editDept')];
+      selects.forEach(sel => {
+        if (!sel) return;
+        data.departments.forEach(dept => {
+          const opt = document.createElement('option');
+          opt.value = dept; opt.textContent = dept;
+          sel.appendChild(opt);
         });
-
-        // Confirm delete - ensure this button is properly handled
-        $(document).on('click', '#confirmDelete', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            console.log('Confirm delete clicked for ID:', deleteClassId);
-            if (deleteClassId) {
-                // Close modal first
-                $('#deleteClassModal').modal('hide');
-                // Redirect after short delay
-                setTimeout(function() {
-                    window.location.href = '/teacher/delete_class/' + deleteClassId;
-                }, 300);
-            }
-        });
-
-        // Cancel button - ensure modal closes
-        $(document).on('click', '.modal-footer .btn-secondary', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            $('#deleteClassModal').modal('hide');
-            deleteClassId = null;
-        });
-
-        // Form validation
-        $('#createClassForm').on('submit', function(e) {
-            const name = $('#name').val().trim();
-            const department = $('#department').val();
-            
-            if (name.length < 3) {
-                e.preventDefault();
-                alert('Class name must be at least 3 characters long');
-                return false;
-            }
-            
-            if (!department) {
-                e.preventDefault();
-                alert('Please select a department');
-                return false;
-            }
-        });
-
-        // Flash message handling
-        {% if get_flashed_messages() %}
-        const messages = {{ get_flashed_messages(with_categories=true)|tojson }};
-        messages.forEach(function([category, message]) {
-            const alertClass = category === 'error' ? 'danger' : category;
-            const alert = $('<div>')
-                .addClass('alert alert-' + alertClass + ' alert-dismissible fade show')
-                .html(message + '<button type="button" class="close" data-dismiss="alert">&times;</button>');
-            
-            $('.container').prepend(alert);
-            setTimeout(function() { alert.remove(); }, 5000);
-        });
-        {% endif %}
-    });
+      });
+    }
+  } catch(e) { console.error('Failed to load options:', e); }
 })();
+
+function openEditModal(id, name, dept, desc) {
+  document.getElementById('editClassId').value = id;
+  document.getElementById('editName').value = name;
+  document.getElementById('editDesc').value = desc;
+  // Set department dropdown
+  const deptSel = document.getElementById('editDept');
+  deptSel.value = dept;
+  // If value not in options, add it
+  if (deptSel.value !== dept && dept) {
+    const opt = document.createElement('option');
+    opt.value = dept; opt.textContent = dept;
+    deptSel.appendChild(opt);
+    deptSel.value = dept;
+  }
+  document.getElementById('editModal').classList.add('active');
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('active');
+}
+
+async function saveEditClass() {
+  const id = document.getElementById('editClassId').value;
+  const name = document.getElementById('editName').value.trim();
+  const dept = document.getElementById('editDept').value;
+  const desc = document.getElementById('editDesc').value.trim();
+  if (!name) { alert('Class name is required'); return; }
+
+  const btn = document.getElementById('editSaveBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+  try {
+    const resp = await fetch('/teacher/edit_class/' + id, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ name, department: dept, description: desc })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      closeEditModal();
+      location.reload();
+    } else {
+      alert(data.message || 'Failed to update class');
+    }
+  } catch(e) {
+    alert('Error: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+  }
+}
 </script>
 {% endblock %}

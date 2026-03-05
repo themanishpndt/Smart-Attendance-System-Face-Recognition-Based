@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Admin Registration — Smart Attendance{% endblock %}
+
+{% block content %}
+<style>
+  .auth-wrap { max-width: 480px; margin: 2rem auto; }
+  .auth-card { background: var(--card); border: 1px solid var(--border); border-radius: 22px;
+    box-shadow: var(--shadow-lg); overflow: hidden; }
+  .auth-top { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 2rem; text-align: center; color: #fff; position: relative; }
+  .auth-top::after { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 30% 70%, rgba(102,126,234,.2) 0%, transparent 60%); }
+  .auth-top * { position: relative; z-index: 1; }
+  .auth-top .av { width: 68px; height: 68px; border-radius: 50%; margin: 0 auto 1rem;
+    background: rgba(255,255,255,.2); backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
+  .auth-top h2 { font-weight: 800; font-size: 1.5rem; margin-bottom: .3rem; }
+  .auth-top p { opacity: .85; font-size: .88rem; margin: 0; }
+  .auth-body { padding: 1.8rem 2rem; }
+  .auth-body .fg { margin-bottom: 1rem; }
+  .auth-body label { font-weight: 600; font-size: .85rem; display: block; margin-bottom: 5px; color: var(--text2); }
+  .pw-wrap { position: relative; }
+  .pw-wrap .fi { padding-right: 44px; }
+  .pw-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;
+    color: var(--text2); background: none; border: none; font-size: .9rem; }
+  .auth-footer { text-align: center; padding: 1rem 2rem 1.5rem; border-top: 1px solid var(--border); }
+  .auth-footer a { color: var(--c6); font-weight: 600; text-decoration: none; }
+  .auth-footer a:hover { text-decoration: underline; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+  @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+  .auth-alert { padding: .7rem 1rem; border-radius: 10px; font-size: .85rem; margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 8px; }
+  .auth-alert-danger { background: rgba(239,71,111,.08); color: var(--c6); border: 1px solid rgba(239,71,111,.15); }
+  .auth-alert-success { background: rgba(6,214,160,.08); color: #00a47a; border: 1px solid rgba(6,214,160,.15); }
+  .auth-alert-warning { background: rgba(255,209,102,.08); color: #b58900; border: 1px solid rgba(255,209,102,.15); }
+  .portal-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 20px;
+    background: rgba(255,255,255,.2); font-size: .75rem; font-weight: 700; margin-bottom: .8rem; letter-spacing: .5px; }
+  .pw-strength { height: 4px; border-radius: 4px; margin-top: 6px; background: var(--border); overflow: hidden; }
+  .pw-strength .bar { height: 100%; border-radius: 4px; transition: width .3s, background .3s; width: 0; }
+</style>
+
+<div class="auth-wrap anim-scale">
+  <div class="auth-card">
+    <div class="auth-top">
+      <div class="portal-badge"><i class="fas fa-shield-halved"></i> ADMIN PORTAL</div>
+      <div class="av"><i class="fas fa-user-shield"></i></div>
+      <h2>Create Admin Account</h2>
+      <p>Set up your college gate management portal</p>
+    </div>
+    <div class="auth-body">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="auth-alert auth-alert-{{ category }}">
+              <i class="fas {% if category == 'danger' %}fa-exclamation-circle{% elif category == 'success' %}fa-check-circle{% else %}fa-exclamation-triangle{% endif %}"></i>
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('admin_register') }}">
+        <div class="fg">
+          <label><i class="fas fa-user"></i> Full Name <span style="color:var(--c6);">*</span></label>
+          <input type="text" class="fi" name="full_name" placeholder="Enter your full name" required>
+        </div>
+        <div class="form-row">
+          <div class="fg">
+            <label><i class="fas fa-at"></i> Username <span style="color:var(--c6);">*</span></label>
+            <input type="text" class="fi" name="username" placeholder="Choose username" required>
+          </div>
+          <div class="fg">
+            <label><i class="fas fa-envelope"></i> Email <span style="color:var(--c6);">*</span></label>
+            <input type="email" class="fi" name="email" placeholder="admin@college.edu" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="fg">
+            <label><i class="fas fa-building-columns"></i> College / Institution</label>
+            <input type="text" class="fi" name="college_name" placeholder="College name">
+          </div>
+          <div class="fg">
+            <label><i class="fas fa-phone"></i> Phone</label>
+            <input type="tel" class="fi" name="phone" placeholder="Phone number">
+          </div>
+        </div>
+        <div class="fg">
+          <label><i class="fas fa-lock"></i> Password <span style="color:var(--c6);">*</span></label>
+          <div class="pw-wrap">
+            <input type="password" class="fi" id="regPw" name="password" placeholder="Min 6 characters" required
+                   oninput="checkPwStrength(this.value)">
+            <button type="button" class="pw-toggle" onclick="togglePw()"><i class="fas fa-eye" id="pwIcon"></i></button>
+          </div>
+          <div class="pw-strength"><div class="bar" id="pwBar"></div></div>
+        </div>
+
+        <button type="submit" class="btn-g btn-pink lg" style="width:100%;justify-content:center;margin-top:.5rem;">
+          <i class="fas fa-user-plus"></i> Create Admin Account
+        </button>
+      </form>
+    </div>
+    <div class="auth-footer">
+      Already have an account? <a href="{{ url_for('admin_login') }}">Sign In</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function togglePw() {
+  const inp = document.getElementById('regPw');
+  const icon = document.getElementById('pwIcon');
+  if (inp.type === 'password') { inp.type = 'text'; icon.className = 'fas fa-eye-slash'; }
+  else { inp.type = 'password'; icon.className = 'fas fa-eye'; }
+}
+function checkPwStrength(pw) {
+  const bar = document.getElementById('pwBar');
+  let score = 0;
+  if (pw.length >= 6) score++;
+  if (pw.length >= 10) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const pct = (score / 5) * 100;
+  bar.style.width = pct + '%';
+  bar.style.background = pct < 40 ? '#ef476f' : pct < 70 ? '#ffd166' : '#06d6a0';
+}
+</script>
+{% endblock %}

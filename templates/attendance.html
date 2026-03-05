@@ -1,871 +1,248 @@
 {% extends "base.html" %}
-
-{% block title %}Attendance Dashboard{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/attendance.css') }}">
-<style>
-/* Override and enhance base styles */
-body.attendance-page {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.attendance-container {
-    max-width: 1600px;
-    margin: 0 auto;
-    padding: 0;
-}
-
-/* Smooth animations */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Enhanced Header */
-.page-header {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    padding: 3rem 2.5rem;
-    border-radius: 0;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-    margin-bottom: 0;
-    color: white;
-    animation: slideDown 0.5s ease-out;
-    position: relative;
-    overflow: hidden;
-}
-
-.page-header::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 400px;
-    height: 100%;
-    background: radial-gradient(circle at 100% 50%, rgba(255,255,255,0.1) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-.page-header h1 {
-    font-size: 2.8rem;
-    font-weight: 800;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    position: relative;
-    z-index: 1;
-}
-
-.page-header h1 i {
-    color: #43e97b;
-}
-
-.page-header p {
-    font-size: 1.1rem;
-    opacity: 0.95;
-    position: relative;
-    z-index: 1;
-}
-
-.date-badge {
-    background: rgba(255,255,255,0.15);
-    padding: 10px 24px;
-    border-radius: 25px;
-    font-size: 1rem;
-    display: inline-block;
-    margin-top: 15px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.2);
-    position: relative;
-    z-index: 1;
-}
-
-.date-badge i {
-    margin-right: 8px;
-    color: #43e97b;
-}
-
-/* Main Content Wrapper */
-.main-content {
-    background: white;
-    padding: 3rem 2.5rem;
-    border-radius: 0;
-}
-
-/* Stats Grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.2rem;
-    margin-bottom: 2rem;
-    animation: fadeInUp 0.6s ease-out 0.2s both;
-}
-
-.stat-card {
-    background: linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%);
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid rgba(102,126,234,0.1);
-}
-
-.stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #667eea, #764ba2);
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 35px rgba(102,126,234,0.15);
-    background: linear-gradient(135deg, #f8fafb 0%, #f3f6fb 100%);
-}
-
-.stat-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-}
-
-.stat-icon {
-    width: 45px;
-    height: 45px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    color: white;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    box-shadow: 0 3px 12px rgba(102,126,234,0.25);
-}
-
-.stat-value {
-    font-size: 2.2rem;
-    font-weight: 900;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 0.25rem;
-    line-height: 1;
-}
-
-.stat-label {
-    color: #666;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* Department Stats */
-.dept-stats {
-    background: linear-gradient(135deg, #f8fff4 0%, #f0fff0 100%);
-    padding: 2rem;
-    border-radius: 16px;
-    margin-bottom: 3rem;
-    border: 1px solid rgba(67,233,123,0.2);
-    animation: fadeInUp 0.6s ease-out 0.3s both;
-}
-
-.dept-stats h3 {
-    margin-bottom: 1.5rem;
-    color: #1a3a2a;
-    font-size: 1.3rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.dept-stats h3 i {
-    color: #43e97b;
-}
-
-.dept-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.dept-chip {
-    background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 25px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 4px 15px rgba(81,207,102,0.3);
-    transition: all 0.3s ease;
-}
-
-.dept-chip:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(81,207,102,0.4);
-}
-
-.dept-chip .count {
-    background: rgba(255,255,255,0.3);
-    padding: 3px 12px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 700;
-}
-
-/* Filter Section */
-.filter-section {
-    background: linear-gradient(135deg, #f8fafc 0%, #f0f3f8 100%);
-    padding: 1.25rem;
-    border-radius: 12px;
-    margin-bottom: 2rem;
-    border: 1px solid rgba(102,126,234,0.1);
-    animation: fadeInUp 0.6s ease-out 0.4s both;
-}
-
-.filter-section form {
-    display: flex;
-    align-items: flex-end;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.filter-header {
-    display: none;
-}
-
-.filter-grid {
-    display: flex;
-    align-items: flex-end;
-    gap: 1rem;
-    margin-bottom: 0;
-    flex: 1;
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-    min-width: 150px;
-}
-
-.filter-label {
-    font-weight: 700;
-    color: #333;
-    font-size: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.filter-label i {
-    color: #667eea;
-    width: 18px;
-}
-
-.filter-input,
-.filter-select {
-    padding: 8px 12px;
-    border: 2px solid #e0e0e0;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    transition: all 0.3s ease;
-    background: white;
-    font-family: inherit;
-}
-
-.filter-input:focus,
-.filter-select:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
-    background: #f8f9ff;
-}
-
-.filter-input::placeholder {
-    color: #999;
-}
-
-.filter-actions {
-    display: flex;
-    gap: 0.75rem;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-}
-
-.btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    text-decoration: none;
-    font-family: inherit;
-    min-width: auto;
-    justify-content: center;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(102,126,234,0.3);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102,126,234,0.4);
-}
-
-.btn-secondary {
-    background: white;
-    color: #667eea;
-    border: 2px solid #667eea;
-    box-shadow: 0 2px 10px rgba(102,126,234,0.1);
-}
-
-.btn-secondary:hover {
-    background: #f8f9ff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(102,126,234,0.2);
-}
-
-/* Table Section */
-.table-section {
-    background: linear-gradient(135deg, #f8fafc 0%, #f0f3f8 100%);
-    padding: 2.5rem;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    animation: fadeInUp 0.6s ease-out 0.5s both;
-    border: 1px solid rgba(102,126,234,0.1);
-}
-
-.table-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.table-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1a1a2e;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.table-title i {
-    color: #667eea;
-}
-
-.record-count {
-    color: #666;
-    font-size: 0.95rem;
-    font-weight: 600;
-}
-
-.table-actions {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.btn-success {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(67,233,123,0.3);
-}
-
-.btn-success:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(67,233,123,0.4);
-}
-
-/* Table Responsive */
-.table-responsive {
-    overflow-x: auto;
-    border-radius: 12px;
-}
-
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.95rem;
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.data-table thead {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-.data-table thead th {
-    padding: 1.5rem 1.25rem;
-    text-align: left;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    letter-spacing: 1px;
-    white-space: nowrap;
-    border-bottom: 2px solid rgba(255,255,255,0.2);
-}
-
-.data-table tbody tr {
-    border-bottom: 1px solid #f0f0f0;
-    transition: all 0.2s ease;
-}
-
-.data-table tbody tr:hover {
-    background: linear-gradient(90deg, rgba(102,126,234,0.03), rgba(118,75,162,0.03));
-}
-
-.data-table tbody td {
-    padding: 1.5rem 1.25rem;
-    vertical-align: middle;
-}
-
-.data-table tbody tr:nth-child(even) {
-    background: #fafbfc;
-}
-
-.data-table tbody tr:last-child {
-    border-bottom: 2px solid #667eea;
-}
-
-/* Table Data Styling */
-.sno-col {
-    font-weight: 700;
-    color: #667eea;
-    font-size: 1.1rem;
-}
-
-.id-badge {
-    background: linear-gradient(135deg, #e3f2ff, #cce5ff);
-    color: #1971c2;
-    padding: 6px 14px;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    display: inline-block;
-}
-
-.name-col {
-    font-weight: 700;
-    color: #1a1a2e;
-    font-size: 1.05rem;
-}
-
-.dept-badge {
-    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
-    color: #e65100;
-    padding: 6px 14px;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    display: inline-block;
-}
-
-.date-col {
-    color: #555;
-    font-weight: 600;
-}
-
-.time-col {
-    color: #666;
-    font-weight: 500;
-}
-
-.status-badge {
-    padding: 7px 16px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.status-present {
-    background: linear-gradient(135deg, #d3f9d8, #b8f7bf);
-    color: #2f9e44;
-}
-
-.status-absent {
-    background: linear-gradient(135deg, #ffe3e3, #ffc9c9);
-    color: #c92a2a;
-}
-
-/* No Records State */
-.no-records {
-    text-align: center;
-    padding: 5rem 2rem;
-    color: #666;
-}
-
-.no-records i {
-    font-size: 5rem;
-    color: #ddd;
-    margin-bottom: 1rem;
-}
-
-.no-records h3 {
-    font-size: 1.8rem;
-    margin-bottom: 1rem;
-    color: #555;
-}
-
-/* Back Button */
-.back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    color: white;
-    font-weight: 600;
-    padding: 12px 24px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 10px;
-    margin-top: 2rem;
-    transition: all 0.3s ease;
-}
-
-.back-link:hover {
-    background: rgba(255,255,255,0.3);
-    transform: translateX(-4px);
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
-    .stats-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-    
-    .filter-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .stats-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 0.8rem;
-    }
-    
-    .stat-card {
-        padding: 1.5rem;
-    }
-    
-    .stat-value {
-        font-size: 2.2rem;
-    }
-    
-    .filter-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .filter-actions {
-        justify-content: stretch;
-        gap: 0.75rem;
-    }
-    
-    .btn {
-        flex: 1;
-    }
-    
-    .table-section {
-        padding: 1.5rem;
-    }
-    
-    .table-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .table-actions {
-        width: 100%;
-    }
-    
-    .table-actions .btn {
-        flex: 1;
-    }
-    
-    .data-table {
-        font-size: 0.85rem;
-    }
-    
-    .data-table thead th,
-    .data-table tbody td {
-        padding: 1rem 0.75rem;
-    }
-    
-    .date-badge {
-        font-size: 0.9rem;
-        padding: 8px 16px;
-    }
-}
-
-@media print {
-    body { background: white; }
-    .filter-section, .btn, .page-header p { display: none !important; }
-}
-</style>
-{% endblock %}
+{% block title %}Attendance Records — Smart Attendance{% endblock %}
 
 {% block content %}
-<div class="attendance-container">
-    <!-- Header -->
-    <div class="page-header">
-        <h1>
-            <i class="fas fa-chart-bar"></i>
-            Attendance Dashboard
-        </h1>
-        <p>Real-time attendance monitoring and analytics</p>
-        <div class="date-badge">
-            <i class="fas fa-calendar-day"></i> Today: {{ current_date }}
-        </div>
-    </div>
+<style>
+  .att-filters { display: flex; gap: .7rem; flex-wrap: wrap; align-items: flex-end; }
+  .att-filters .fg { flex: 1; min-width: 160px; }
+  .att-filters label { font-weight: 600; font-size: .78rem; text-transform: uppercase; color: var(--text2); margin-bottom: 3px; display: block; letter-spacing: .3px; }
+  .dept-chips { display: flex; gap: .4rem; flex-wrap: wrap; margin: 1rem 0; }
+  .dept-chip { padding: 5px 14px; border-radius: 20px; font-size: .78rem; font-weight: 600;
+    background: rgba(102,126,234,.08); color: var(--c1); cursor: pointer; border: 1px solid transparent;
+    transition: all .25s; }
+  .dept-chip:hover, .dept-chip.active { background: var(--g1); color: #fff; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .status-present { background: var(--c4); }
+  .status-absent { background: var(--c6); }
+  .no-data { text-align: center; padding: 3rem 1rem; }
+  .no-data i { font-size: 3rem; color: var(--c1); opacity: .3; margin-bottom: 1rem; display: block; }
+  .no-data p { color: var(--text2); }
+  .modern-table th { white-space: nowrap; }
+  .modern-table td { vertical-align: middle; }
+  .user-cell { display: flex; align-items: center; gap: .6rem; }
+  .user-cell .av { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; font-weight: 700; font-size: .72rem; color: #fff; flex-shrink: 0; }
+  .user-cell .info .name { font-weight: 600; font-size: .88rem; }
+  .user-cell .info .meta { font-size: .72rem; color: var(--text2); }
+  .today-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px;
+    font-size: .7rem; font-weight: 700; background: rgba(6,214,160,.1); color: var(--c4); }
+</style>
 
-    <div class="main-content">
-        {% if has_records %}
-            <!-- Statistics Cards -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <div class="stat-icon">
-                            <i class="fas fa-list-check"></i>
-                        </div>
-                    </div>
-                    <div class="stat-value">{{ stats.total_records }}</div>
-                    <div class="stat-label">Total Records</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <div class="stat-icon">
-                            <i class="fas fa-user-check"></i>
-                        </div>
-                    </div>
-                    <div class="stat-value">{{ stats.today_count }}</div>
-                    <div class="stat-label">Present Today</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <div class="stat-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                    </div>
-                    <div class="stat-value">{{ stats.unique_users }}</div>
-                    <div class="stat-label">Unique Users</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <div class="stat-icon">
-                            <i class="fas fa-building"></i>
-                        </div>
-                    </div>
-                    <div class="stat-value">{{ stats.dept_stats|length }}</div>
-                    <div class="stat-label">Active Departments</div>
-                </div>
-            </div>
-
-            <!-- Department Statistics -->
-            {% if stats.dept_stats %}
-            <div class="dept-stats">
-                <h3>
-                    <i class="fas fa-chart-pie"></i>
-                    Department-wise Attendance
-                </h3>
-                <div class="dept-chips">
-                    {% for dept, count in stats.dept_stats.items() %}
-                    <div class="dept-chip">
-                        <span>{{ dept }}</span>
-                        <span class="count">{{ count }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Filter Section -->
-            <div class="filter-section">
-                <div class="filter-header">
-                    <div class="filter-title">
-                        <i class="fas fa-sliders-h"></i>
-                        Filter Records
-                    </div>
-                    <div class="filter-info">
-                        <i class="fas fa-info-circle"></i>
-                        <span>Showing {{ attendance_data|length }} records</span>
-                    </div>
-                </div>
-
-                <form method="GET" action="{{ url_for('show_attendance') }}" id="filterForm">
-                    <div class="filter-grid">
-                        <div class="filter-group">
-                            <label class="filter-label">
-                                <i class="fas fa-calendar"></i>
-                                Date
-                            </label>
-                            <input type="date" name="date" class="filter-input" 
-                                   value="{{ filter_date }}" 
-                                   onchange="document.getElementById('filterForm').submit()">
-                        </div>
-
-                        <div class="filter-group">
-                            <label class="filter-label">
-                                <i class="fas fa-building"></i>
-                                Department
-                            </label>
-                            <select name="department" class="filter-select" 
-                                    onchange="document.getElementById('filterForm').submit()">
-                                <option value="">All Departments</option>
-                                {% for dept in departments %}
-                                <option value="{{ dept }}" {% if dept == filter_department %}selected{% endif %}>
-                                    {{ dept }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="filter-group">
-                            <label class="filter-label">
-                                <i class="fas fa-search"></i>
-                                Search
-                            </label>
-                            <input type="text" name="name" class="filter-input" 
-                                   placeholder="Name or ID..." 
-                                   value="{{ filter_name }}">
-                        </div>
-                    </div>
-
-                    <div class="filter-actions">
-                        <a href="{{ url_for('show_attendance') }}" class="btn btn-secondary">
-                            <i class="fas fa-redo"></i> Reset
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-check"></i> Apply
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Table Section -->
-            <div class="table-section">
-                <div class="table-header">
-                    <div>
-                        <div class="table-title">
-                            <i class="fas fa-table"></i>
-                            Attendance Records
-                        </div>
-                        <div class="record-count">{{ attendance_data|length }} record{{ 's' if attendance_data|length != 1 else '' }} found</div>
-                    </div>
-                    <div class="table-actions">
-                        <button onclick="window.print()" class="btn btn-secondary">
-                            <i class="fas fa-print"></i> Print
-                        </button>
-                        <button onclick="exportToCSV()" class="btn btn-success">
-                            <i class="fas fa-download"></i> Export
-                        </button>
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="data-table" id="attendanceTable">
-                        <thead>
-                            <tr>
-                                <th style="width: 60px;"><i class="fas fa-hashtag"></i> S.No</th>
-                                <th style="width: 120px;"><i class="fas fa-id-card"></i> ID</th>
-                                <th style="width: 150px;"><i class="fas fa-user"></i> Name</th>
-                                <th style="width: 180px;"><i class="fas fa-building"></i> Department</th>
-                                <th style="width: 130px;"><i class="fas fa-calendar"></i> Date</th>
-                                <th style="width: 130px;"><i class="fas fa-clock"></i> Time</th>
-                                <th style="width: 120px;"><i class="fas fa-badge-check"></i> Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for record in attendance_data %}
-                            <tr>
-                                <td class="sno-col">{{ loop.index }}</td>
-                                <td>
-                                    <span class="id-badge">{{ record.user_id }}</span>
-                                </td>
-                                <td class="name-col">{{ record.name }}</td>
-                                <td>
-                                    <span class="dept-badge">{{ record.department }}</span>
-                                </td>
-                                <td class="date-col">{{ record.date }}</td>
-                                <td class="time-col">{{ record.time }}</td>
-                                <td>
-                                    <span class="status-badge status-{{ record.status|lower }}">
-                                        <i class="fas fa-{{ 'check-circle' if record.status|lower == 'present' else 'times-circle' }}"></i>
-                                        {{ record.status }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-        {% else %}
-            <div class="table-section">
-                <div class="no-records">
-                    <i class="fas fa-inbox"></i>
-                    <h3>No Records Found</h3>
-                    <p>No attendance records match your current filters.</p>
-                    <div style="margin-top: 2rem;">
-                        <a href="{{ url_for('show_attendance') }}" class="btn btn-secondary" style="margin-right: 1rem;">
-                            <i class="fas fa-redo"></i> Reset Filters
-                        </a>
-                        <a href="{{ url_for('home') }}" class="btn btn-primary">
-                            <i class="fas fa-home"></i> Back Home
-                        </a>
-                    </div>
-                </div>
-            </div>
-        {% endif %}
-    </div>
+<div class="pg-header anim-down">
+  <div class="pg-icon"><i class="fas fa-calendar-check"></i></div>
+  <h1>Attendance Records</h1>
+  <p>View today's attendance — one entry per person, no duplicates</p>
 </div>
 
-<a href="{{ url_for('home') }}" class="back-link" style="margin-left: 2.5%; margin-right: 2.5%;">
-    <i class="fas fa-arrow-left"></i> Back to Home
-</a>
+<!-- Stats -->
+<div class="grid-4 anim-up delay-1" style="margin-bottom:1.5rem;">
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g1);"><i class="fas fa-database"></i></div>
+    <div><div class="s-val">{{ stats.total_records }}</div><div class="s-lbl">Records</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g4);"><i class="fas fa-users"></i></div>
+    <div><div class="s-val">{{ stats.unique_users }}</div><div class="s-lbl">Unique People</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g3);"><i class="fas fa-calendar-day"></i></div>
+    <div><div class="s-val">{{ stats.today_count }}</div><div class="s-lbl">Today</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g5);"><i class="fas fa-percentage"></i></div>
+    <div><div class="s-val">{{ departments|length }}</div><div class="s-lbl">Departments</div></div>
+  </div>
+</div>
 
-<script src="{{ url_for('static', filename='js/attendance.js') }}"></script>
+<!-- Filters -->
+<div class="glass-card cbar-purple anim-up delay-2" style="margin-bottom:1.5rem;">
+  <div class="card-hdr"><i class="fas fa-filter" style="color:var(--c1);"></i> Filters</div>
+  <div class="card-inner">
+    <form method="GET" action="{{ url_for('show_attendance') }}">
+      <div class="att-filters">
+        <div class="fg">
+          <label>Date</label>
+          <input type="date" class="fi" name="date" value="{{ filter_date }}">
+        </div>
+        <div class="fg">
+          <label>Department</label>
+          <select class="fi" name="department">
+            <option value="">All Departments</option>
+            {% for dept in departments %}
+              <option value="{{ dept }}" {{ 'selected' if filter_department == dept }}>{{ dept }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="fg">
+          <label>Name / ID</label>
+          <input type="text" class="fi" name="name" value="{{ filter_name }}" placeholder="Search name or ID...">
+        </div>
+        <div>
+          <button type="submit" class="btn-g btn-purple"><i class="fas fa-search"></i> Filter</button>
+        </div>
+        <div>
+          <a href="{{ url_for('show_attendance') }}" class="btn-g btn-outline"><i class="fas fa-times"></i> Clear</a>
+        </div>
+      </div>
+    </form>
+
+    {% if departments %}
+    <div class="dept-chips">
+      {% for dept in departments %}
+      <span class="dept-chip {{ 'active' if filter_department == dept }}"
+        onclick="window.location='{{ url_for('show_attendance') }}?department={{ dept }}&date={{ filter_date }}'">{{ dept }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Table -->
+<div class="glass-card cbar-green anim-up delay-3">
+  <div class="card-hdr" style="justify-content:space-between;">
+    <span><i class="fas fa-table" style="color:var(--c4);"></i> Records</span>
+    <span class="badge-g badge-green">{{ attendance_data|length }} found</span>
+  </div>
+  <div class="card-inner" style="padding:0;overflow-x:auto;">
+    {% if has_records %}
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Person</th>
+          <th>ID</th>
+          <th>Department</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set colors = ['#667eea','#f093fb','#06d6a0','#4cc9f0','#ffd166','#ef476f','#a18cd1','#fccb90'] %}
+        {% for record in attendance_data %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>
+            <div class="user-cell">
+              <div class="av" style="background:{{ colors[loop.index0 % 8] }};">
+                {{ record.student_name[:2]|upper }}
+              </div>
+              <div class="info">
+                <div class="name">{{ record.student_name }}</div>
+                {% if record.email != 'N/A' %}
+                <div class="meta">{{ record.email }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </td>
+          <td><span style="font-weight:600;font-size:.82rem;">{{ record.user_id }}</span></td>
+          <td>
+            {% if record.department != 'N/A' %}
+            <span class="badge-g badge-purple" style="font-size:.72rem;">{{ record.department }}</span>
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            {{ record.date }}
+            {% if record.date == current_date %}
+            <span class="today-badge"><i class="fas fa-circle" style="font-size:5px;"></i> Today</span>
+            {% endif %}
+          </td>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;">{{ record.time }}</td>
+          <td>
+            {% if record.status == 'Present' %}
+              <span class="badge-g badge-green"><span class="status-dot status-present"></span> Present</span>
+            {% else %}
+              <span class="badge-g badge-red"><span class="status-dot status-absent"></span> {{ record.status }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="no-data">
+      <i class="fas fa-inbox"></i>
+      <p>No attendance records found for <strong>{{ current_date }}</strong>.<br>
+      Try changing the date or start face recognition to record attendance.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Charts Section -->
+{% if has_records %}
+<div class="grid-2 anim-up delay-4" style="margin-top:1.5rem;">
+  <div class="glass-card cbar-blue">
+    <div class="card-hdr"><i class="fas fa-chart-pie" style="color:var(--c7);"></i> Attendance by Department</div>
+    <div class="card-inner" style="display:flex;justify-content:center;">
+      <canvas id="deptChart" style="max-width:280px;max-height:280px;"></canvas>
+    </div>
+  </div>
+  <div class="glass-card cbar-pink">
+    <div class="card-hdr"><i class="fas fa-chart-bar" style="color:var(--c3);"></i> Attendees</div>
+    <div class="card-inner">
+      <canvas id="topChart" style="max-height:280px;"></canvas>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+{% if has_records %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+(function(){
+  var rows = document.querySelectorAll('.modern-table tbody tr');
+  var deptMap = {};
+  var nameList = [];
+  rows.forEach(function(row) {
+    var cells = row.querySelectorAll('td');
+    var name = cells[1].querySelector('.name').textContent.trim();
+    var dept = cells[3].textContent.trim() || 'N/A';
+    if (dept === '—') dept = 'N/A';
+    deptMap[dept] = (deptMap[dept] || 0) + 1;
+    nameList.push(name);
+  });
+
+  // Department Doughnut Chart
+  var deptLabels = Object.keys(deptMap);
+  var deptData = Object.values(deptMap);
+  var deptColors = ['#667eea','#f093fb','#06d6a0','#4cc9f0','#ffd166','#ef476f','#a18cd1','#fccb90'];
+  new Chart(document.getElementById('deptChart'), {
+    type: 'doughnut',
+    data: {
+      labels: deptLabels,
+      datasets: [{ data: deptData, backgroundColor: deptColors.slice(0, deptLabels.length), borderWidth: 0, hoverOffset: 8 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, font: { family: 'Inter', weight: '600', size: 12 } } }
+      }
+    }
+  });
+
+  // Attendees Bar Chart (unique names — already deduplicated by backend)
+  var barColors = ['#667eea','#f093fb','#06d6a0','#4cc9f0','#ffd166','#ef476f','#a18cd1','#fccb90'];
+  new Chart(document.getElementById('topChart'), {
+    type: 'bar',
+    data: {
+      labels: nameList.slice(0, 10),
+      datasets: [{ label: 'Present', data: nameList.slice(0, 10).map(function(){ return 1; }),
+        backgroundColor: barColors.slice(0, Math.min(nameList.length, 10)), borderRadius: 8, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Inter', weight: '600' }, stepSize: 1 } },
+        y: { grid: { display: false }, ticks: { font: { family: 'Inter', weight: '600', size: 11 } } }
+      }
+    }
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}

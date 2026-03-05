@@ -1,332 +1,506 @@
 {% extends "base.html" %}
-
-{% block title %}Register New User - Face Capture{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/capture.css') }}">
-{% endblock %}
+{% block title %}Face Registration — Smart Attendance{% endblock %}
 
 {% block content %}
-<!-- Capture Page Container -->
-<div class="capture-page">
-  <div class="container">
-    <div class="capture-container">
+<style>
+  /* ── Wizard ── */
+  .wizard-steps{display:flex;justify-content:center;gap:.5rem;margin-bottom:2rem;flex-wrap:wrap}
+  .wiz-step{display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:30px;
+    font-size:.85rem;font-weight:600;color:var(--text2);background:var(--card);
+    border:2px solid var(--border);transition:all .35s}
+  .wiz-step.active{background:var(--g1);color:#fff;border-color:transparent;box-shadow:0 4px 15px rgba(102,126,234,.3)}
+  .wiz-step.done{background:var(--g4);color:#1e1e2f;border-color:transparent}
+  .wiz-step .num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:.78rem;font-weight:800;background:rgba(255,255,255,.25)}
+  .wiz-step.active .num{background:rgba(255,255,255,.3)}
+  .wiz-conn{width:40px;height:2px;background:var(--border);border-radius:2px;align-self:center}
+  .wiz-conn.done{background:var(--c4)}
 
-      <!-- Header Section -->
-      <div class="row mb-5">
-        <div class="col-md-12 text-center">
-          <h1 class="display-4 mb-3">
-            <i class="fas fa-camera text-primary"></i> Complete Face Registration
-          </h1>
-          <p class="lead text-secondary">
-            Fill in your details and capture 50 high-quality photos for accurate face recognition
-          </p>
-          <div class="alert alert-primary d-inline-block">
-            <i class="fas fa-shield-alt mr-2"></i>
-            <strong>Secure Registration:</strong> Your data is encrypted and stored securely
-          </div>
+  .step-panel{display:none}
+  .step-panel.active{display:block;animation:fadeUp .4s ease both}
+
+  /* Form */
+  .cap-form .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .cap-form .fg{margin-bottom:0}
+  .cap-form label{font-weight:600;font-size:.85rem;margin-bottom:4px;display:block;color:var(--text2)}
+  .cap-form .full-w{grid-column:1/-1}
+  @media(max-width:600px){.cap-form .form-grid{grid-template-columns:1fr}}
+
+  /* Camera */
+  .cam-wrap{position:relative;border-radius:16px;overflow:hidden;background:#000;max-width:640px;margin:0 auto;aspect-ratio:4/3}
+  .cam-wrap video{width:100%;height:100%;object-fit:cover;display:block;border-radius:16px}
+  .cam-wrap canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .cam-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(0,0,0,.6);color:#fff;z-index:2;border-radius:16px;transition:opacity .3s}
+  .cam-overlay.hidden{opacity:0;pointer-events:none}
+  .cam-overlay i{font-size:3rem;margin-bottom:1rem;opacity:.7}
+  .cam-overlay p{font-size:1rem;opacity:.8}
+
+  .prog-bar{height:8px;border-radius:8px;background:var(--border);margin-top:1rem;overflow:hidden}
+  .prog-fill{height:100%;border-radius:8px;background:var(--g1);width:0%;transition:width .3s}
+
+  .cap-stats{display:flex;gap:1rem;margin-top:1rem;flex-wrap:wrap}
+  .cap-stat{flex:1;min-width:100px;background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:.8rem 1rem;text-align:center}
+  .cap-stat .val{font-size:1.4rem;font-weight:800}
+  .cap-stat .lbl{font-size:.72rem;text-transform:uppercase;color:var(--text2);letter-spacing:.5px}
+
+  .cam-controls{display:flex;gap:.7rem;justify-content:center;margin-top:1.2rem;flex-wrap:wrap}
+
+  /* Status badge */
+  .cam-status{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:.8rem;font-size:.82rem;color:var(--text2)}
+  .cam-status .dot{width:8px;height:8px;border-radius:50%;background:#ef4444}
+  .cam-status .dot.on{background:#22c55e;animation:pulse 1.5s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  /* Success */
+  .success-panel{text-align:center;padding:2rem 0}
+  .success-icon{width:100px;height:100px;border-radius:50%;background:var(--g4);margin:0 auto 1.5rem;
+    display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:#fff;
+    box-shadow:0 10px 30px rgba(6,214,160,.3)}
+  .reg-detail{display:inline-flex;align-items:center;gap:6px;padding:.3rem .7rem;border-radius:8px;
+    background:var(--bg2);border:1px solid var(--border);font-size:.82rem;margin:.2rem}
+
+  /* Toast */
+  .cap-toast{position:fixed;top:20px;right:20px;padding:.8rem 1.2rem;border-radius:12px;font-size:.88rem;
+    font-weight:600;z-index:9999;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:all .4s;
+    transform:translateX(120%);opacity:0;max-width:360px}
+  .cap-toast.show{transform:translateX(0);opacity:1}
+  .cap-toast.success{background:linear-gradient(135deg,#06d6a0,#1b9aaa)}
+  .cap-toast.error{background:linear-gradient(135deg,#ef476f,#f78da7)}
+  .cap-toast.info{background:linear-gradient(135deg,#4cc9f0,#4361ee)}
+
+  /* Loading overlay */
+  .upload-overlay{position:absolute;inset:0;background:rgba(0,0,0,.7);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;border-radius:16px;z-index:10;color:#fff}
+  .upload-overlay .spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,.2);
+    border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:1rem}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* Error banner */
+  .cap-error{background:rgba(239,71,111,.08);border:1px solid rgba(239,71,111,.2);border-radius:12px;
+    padding:.8rem 1.2rem;color:var(--c6);font-size:.88rem;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+</style>
+
+<!-- Toast container -->
+<div class="cap-toast" id="capToast"></div>
+
+<!-- Header -->
+<div class="pg-header anim-down">
+  <div class="pg-icon"><i class="fas fa-camera-retro"></i></div>
+  <h1>Face Registration</h1>
+  <p>Capture face data to register a new user in the system</p>
+</div>
+
+{% if error %}
+<div class="cap-error anim-up"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endif %}
+
+<!-- Wizard Steps -->
+<div class="wizard-steps anim-up delay-1">
+  <div class="wiz-step active" id="ws1"><span class="num">1</span> Details</div>
+  <div class="wiz-conn" id="wc1"></div>
+  <div class="wiz-step" id="ws2"><span class="num">2</span> Camera</div>
+  <div class="wiz-conn" id="wc2"></div>
+  <div class="wiz-step" id="ws3"><span class="num">3</span> Complete</div>
+</div>
+
+<!-- Step 1: User Details -->
+<div class="step-panel active" id="step1">
+  <div class="glass-card cbar-purple">
+    <div class="card-hdr"><i class="fas fa-user-edit" style="color:var(--c1)"></i> User Details</div>
+    <div class="card-inner cap-form">
+      <div class="form-grid">
+        <div class="fg">
+          <label for="cap-name"><i class="fas fa-user"></i> Full Name *</label>
+          <input type="text" class="fi" id="cap-name" placeholder="e.g. John Doe" required>
+        </div>
+        <div class="fg">
+          <label for="cap-email"><i class="fas fa-envelope"></i> Email *</label>
+          <input type="email" class="fi" id="cap-email" placeholder="john@example.com" required>
+        </div>
+        <div class="fg">
+          <label for="cap-id"><i class="fas fa-id-badge"></i> User ID *</label>
+          <input type="text" class="fi" id="cap-id" placeholder="e.g. STU001" required>
+        </div>
+        <div class="fg">
+          <label for="cap-dept"><i class="fas fa-building"></i> Department *</label>
+          <select class="fi" id="cap-dept" required>
+            <option value="">Select Department</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label for="cap-phone"><i class="fas fa-phone"></i> Phone</label>
+          <input type="tel" class="fi" id="cap-phone" placeholder="+91 XXXXXXXXXX">
+        </div>
+        <div class="fg">
+          <label for="cap-role"><i class="fas fa-user-tag"></i> Role *</label>
+          <select class="fi" id="cap-role">
+            <option value="">Select Role</option>
+          </select>
+        </div>
+        <div class="fg full-w">
+          <label for="cap-notes"><i class="fas fa-sticky-note"></i> Notes</label>
+          <textarea class="fi" id="cap-notes" rows="2" placeholder="Any additional info..."></textarea>
         </div>
       </div>
-
-      <!-- Phase 1: Username Input Form -->
-      <div id="username-form" class="row mb-4">
-        <div class="col-md-8 mx-auto">
-          <div class="card shadow-lg">
-            <div class="card-header bg-primary text-white">
-              <h5 class="mb-0">
-                <i class="fas fa-user-plus mr-2"></i>Step 1: Registration Details
-              </h5>
-            </div>
-            <div class="card-body">
-              <form id="username-input-form" onsubmit="return false;">
-                
-                <!-- Full Name -->
-                <div class="form-group">
-                  <label for="capture-username" class="font-weight-bold">
-                    <i class="fas fa-user text-primary"></i> Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    class="form-control form-control-lg"
-                    id="capture-username"
-                    placeholder="Enter your full name (e.g., John Smith)"
-                    pattern="[A-Za-z\s]+"
-                    required
-                  />
-                  <small class="form-text text-muted">
-                    <i class="fas fa-info-circle"></i> Letters and spaces only
-                  </small>
-                </div>
-
-                <!-- Email -->
-                <div class="form-group">
-                  <label for="capture-email" class="font-weight-bold">
-                    <i class="fas fa-envelope text-primary"></i> Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    class="form-control form-control-lg"
-                    id="capture-email"
-                    placeholder="your.email@example.com"
-                    required
-                  />
-                  <small class="form-text text-muted">
-                    <i class="fas fa-info-circle"></i> Valid email required
-                  </small>
-                </div>
-
-                <!-- Row for ID and Department -->
-                <div class="row">
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label for="capture-id" class="font-weight-bold">
-                        <i class="fas fa-id-card text-primary"></i> ID Number *
-                      </label>
-                      <input
-                        type="text"
-                        class="form-control form-control-lg"
-                        id="capture-id"
-                        placeholder="e.g., EMP001 or STU12345"
-                        required
-                      />
-                      <small class="form-text text-muted">
-                        Employee/Student ID
-                      </small>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label for="capture-department" class="font-weight-bold">
-                        <i class="fas fa-building text-primary"></i> Department *
-                      </label>
-                      <select class="form-control form-control-lg" id="capture-department" required>
-                        <option value="">Select Department</option>
-                        <option value="Computer Science">Computer Science</option>
-                        <option value="Information Technology">Information Technology</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Mechanical">Mechanical</option>
-                        <option value="Civil">Civil</option>
-                        <option value="Electrical">Electrical</option>
-                        <option value="Administration">Administration</option>
-                        <option value="Management">Management</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Row for Phone and Role -->
-                <div class="row">
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label for="capture-phone" class="font-weight-bold">
-                        <i class="fas fa-phone text-primary"></i> Phone Number
-                      </label>
-                      <input
-                        type="tel"
-                        class="form-control form-control-lg"
-                        id="capture-phone"
-                        placeholder="+1 234 567 8900"
-                        pattern="[0-9+\s()-]+"
-                      />
-                      <small class="form-text text-muted">
-                        Optional contact number
-                      </small>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label for="capture-role" class="font-weight-bold">
-                        <i class="fas fa-user-tag text-primary"></i> Role *
-                      </label>
-                      <select class="form-control form-control-lg" id="capture-role" required>
-                        <option value="">Select Role</option>
-                        <option value="Student">Student</option>
-                        <option value="Teacher">Teacher</option>
-                        <option value="Staff">Staff</option>
-                        <option value="Administrator">Administrator</option>
-                        <option value="Guest">Guest</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Additional Notes -->
-                <div class="form-group">
-                  <label for="capture-notes" class="font-weight-bold">
-                    <i class="fas fa-sticky-note text-primary"></i> Additional Notes
-                  </label>
-                  <textarea
-                    class="form-control"
-                    id="capture-notes"
-                    rows="2"
-                    placeholder="Any additional information (optional)"
-                  ></textarea>
-                </div>
-
-                <div class="alert alert-info">
-                  <h6 class="alert-heading">
-                    <i class="fas fa-lightbulb mr-2"></i>Tips for Best Results:
-                  </h6>
-                  <ul class="mb-0 small">
-                    <li>✓ Ensure good lighting from the front</li>
-                    <li>✓ Look directly at the camera</li>
-                    <li>✓ Keep your face centered in the frame</li>
-                    <li>✓ Remove sunglasses and hats</li>
-                    <li>✓ Keep natural expression</li>
-                  </ul>
-                </div>
-
-                <button type="button" class="btn btn-primary btn-lg btn-block" id="proceed-camera-btn">
-                  <i class="fas fa-arrow-right mr-2"></i>Proceed to Camera
-                </button>
-
-                <a href="{{ url_for('home') }}" class="btn btn-secondary btn-lg btn-block mt-2">
-                  <i class="fas fa-times mr-2"></i>Cancel
-                </a>
-              </form>
-            </div>
-          </div>
-        </div>
+      <div style="margin-top:1.2rem;text-align:right;">
+        <button class="btn-g btn-purple" onclick="goToStep(2)" id="nextBtn">
+          <i class="fas fa-arrow-right"></i> Next — Camera
+        </button>
       </div>
-
-      <!-- Phase 2: Camera Capture Interface (Hidden by default) -->
-      <div id="capture-interface" class="capture-interface" style="display: none;">
-
-        <!-- Status Feedback -->
-        <div id="capture-status" class="alert alert-info mb-4">
-          <i class="fas fa-spinner fa-spin mr-2"></i>
-          <span id="status-text">Initializing camera...</span>
-        </div>
-
-        <!-- Camera Feed Section -->
-        <div class="card shadow-lg mb-4">
-          <div class="card-header bg-gradient-success text-white" style="background: linear-gradient(135deg, #06d6a0 0%, #00b894 100%);">
-            <div class="d-flex justify-content-between align-items-center">
-              <h5 class="mb-0">
-                <i class="fas fa-video mr-2"></i>Step 2: Live Camera Feed
-              </h5>
-              <span class="badge badge-light" style="font-size: 0.9rem;">
-                <i class="fas fa-circle text-danger blink-animation"></i> LIVE
-              </span>
-            </div>
-          </div>
-          <div class="card-body p-0">
-            <div class="video-wrapper" id="video-container">
-              <video id="camera-feed" autoplay playsinline muted></video>
-              <canvas id="face-detection-overlay" width="1280" height="720"></canvas>
-              
-              <!-- Capture counter overlay -->
-              <div style="position: absolute; top: 15px; left: 15px; z-index: 10; background: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 8px; color: white; font-weight: bold;">
-                <i class="fas fa-camera mr-2"></i>
-                <span id="captured-count">0</span> / <span>50</span>
-              </div>
-            </div>
-
-            <!-- Progress Section -->
-            <div class="p-3 bg-light border-top">
-              <div class="progress" style="height: 30px;">
-                <div
-                  id="capture-progress"
-                  class="progress-bar progress-bar-striped progress-bar-animated bg-success"
-                  style="width: 0%;"
-                  role="progressbar"
-                  aria-valuenow="0"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                >
-                  <span id="progress-text" class="progress-text">0 / 50</span>
-                </div>
-              </div>
-
-              <div class="progress-info mt-3 d-flex justify-content-between align-items-center small text-muted">
-                <span>
-                  <i class="fas fa-bolt text-warning"></i>
-                  <strong>Fast Capture:</strong> 1 photo/second when face detected
-                </span>
-                <span id="timer-display" class="font-weight-bold text-success">Ready</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Control Buttons -->
-        <div class="row mb-4">
-          <div class="col-md-12">
-            <div class="capture-controls">
-              <button
-                type="button"
-                class="btn btn-success btn-lg"
-                id="start-capture-btn"
-              >
-                <i class="fas fa-play mr-2"></i>Start Capture
-              </button>
-              <button
-                type="button"
-                class="btn btn-warning btn-lg"
-                id="stop-capture-btn"
-                disabled
-              >
-                <i class="fas fa-stop mr-2"></i>Stop Capture
-              </button>
-              <button
-                type="button"
-                class="btn btn-primary btn-lg"
-                id="submit-capture-btn"
-                disabled
-              >
-                <i class="fas fa-upload mr-2"></i>Submit & Save
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Statistics Cards -->
-        <div class="row mb-4">
-          <div class="col-md-6">
-            <div class="stat-card">
-              <div class="stat-value" id="captured-count">0</div>
-              <div class="stat-label">Images Captured</div>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="stat-card">
-              <div class="stat-value" id="remaining-count">100</div>
-              <div class="stat-label">Remaining</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Instructions Panel -->
-        <div class="row">
-          <div class="col-md-12">
-            <div class="card bg-light border-0">
-              <div class="card-body">
-                <h6 class="mb-3">
-                  <i class="fas fa-tasks text-primary mr-2"></i>Capture Process:
-                </h6>
-                <ol class="mb-0 small">
-                  <li>Click <strong>"Start Capture"</strong> to begin recording</li>
-                  <li>Position your face in the camera frame center</li>
-                  <li>System auto-captures 100 images (moves head slightly for variety)</li>
-                  <li>Click <strong>"Stop Capture"</strong> when done</li>
-                  <li>Click <strong>"Submit & Save"</strong> to register and train model</li>
-                </ol>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
     </div>
   </div>
 </div>
 
-<!-- Third-party Libraries (loaded here, not in base to keep capture.js modular) -->
-<script async defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
+<!-- Step 2: Camera Capture -->
+<div class="step-panel" id="step2">
+  <div class="glass-card cbar-green">
+    <div class="card-hdr"><i class="fas fa-video" style="color:var(--c4)"></i> <span id="cam-title">Camera Capture</span></div>
+    <div class="card-inner">
+      <div class="cam-wrap" id="camWrap">
+        <video id="camVideo" autoplay playsinline muted></video>
+        <canvas id="camCanvas"></canvas>
+        <div class="cam-overlay" id="camOverlay">
+          <i class="fas fa-video"></i>
+          <p>Click <strong>Start Camera</strong> to begin</p>
+        </div>
+      </div>
 
-<!-- Capture Application Script -->
-<script src="{{ url_for('static', filename='js/capture.js') }}"></script>
+      <div class="cam-status" id="camStatus">
+        <span class="dot" id="camDot"></span> <span id="camStatusText">Camera off</span>
+      </div>
 
+      <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+
+      <div class="cap-stats">
+        <div class="cap-stat"><div class="val text-grad" id="capCount">0</div><div class="lbl">Captured</div></div>
+        <div class="cap-stat"><div class="val" id="capTotal" style="color:var(--c4)">50</div><div class="lbl">Required</div></div>
+        <div class="cap-stat"><div class="val" id="capFaces" style="color:var(--c7)">0</div><div class="lbl">Faces Detected</div></div>
+        <div class="cap-stat"><div class="val" id="capQuality" style="color:var(--c6)">—</div><div class="lbl">Quality</div></div>
+      </div>
+
+      <div class="cam-controls">
+        <button class="btn-g btn-outline" onclick="goToStep(1)" id="backBtn"><i class="fas fa-arrow-left"></i> Back</button>
+        <button class="btn-g btn-green" id="startCamBtn" onclick="startCamera()"><i class="fas fa-play"></i> Start Camera</button>
+        <button class="btn-g btn-purple" id="startCapBtn" onclick="startCapture()" style="display:none"><i class="fas fa-camera"></i> Start Capture</button>
+        <button class="btn-g btn-orange" id="stopCapBtn" onclick="stopCapture()" style="display:none"><i class="fas fa-stop"></i> Stop</button>
+        <button class="btn-g btn-green" id="uploadBtn" onclick="uploadFrames()" style="display:none"><i class="fas fa-cloud-arrow-up"></i> Upload &amp; Register</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 3: Complete -->
+<div class="step-panel" id="step3">
+  <div class="success-panel">
+    <div class="success-icon anim-scale"><i class="fas fa-check"></i></div>
+    <h2 style="font-weight:800;font-size:1.5rem;margin-bottom:.5rem;">Registration Complete!</h2>
+    <p style="color:var(--text2);max-width:440px;margin:0 auto 1rem;">
+      <span id="regName" style="font-weight:700;color:var(--c1)"></span> has been registered successfully.
+    </p>
+    <div style="margin-bottom:1.5rem" id="regDetails"></div>
+    <div style="display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;">
+      <a href="{{ url_for('capture') }}" class="btn-g btn-purple"><i class="fas fa-plus"></i> Register Another</a>
+      <a href="{{ url_for('recognize') }}" class="btn-g btn-green"><i class="fas fa-user-check"></i> Recognize</a>
+      <a href="{{ url_for('home') }}" class="btn-g btn-outline"><i class="fas fa-home"></i> Home</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function(){
+  /* === State === */
+  let stream = null;
+  let capturing = false;
+  let capturedFrames = [];
+  let faceDetected = false;
+  let faceApiReady = false;
+  const REQUIRED = 50;
+
+  const video   = document.getElementById('camVideo');
+  const canvas  = document.getElementById('camCanvas');
+  const overlay = document.getElementById('camOverlay');
+  const camDot  = document.getElementById('camDot');
+  const camText = document.getElementById('camStatusText');
+
+  /* === Toast === */
+  function toast(msg, type) {
+    const el = document.getElementById('capToast');
+    el.textContent = msg;
+    el.className = 'cap-toast ' + (type || 'info') + ' show';
+    clearTimeout(el._t);
+    el._t = setTimeout(function(){ el.classList.remove('show'); }, 4000);
+  }
+
+  /* === Wizard === */
+  window.goToStep = function(n) {
+    if (n === 2) {
+      var name  = document.getElementById('cap-name').value.trim();
+      var email = document.getElementById('cap-email').value.trim();
+      var uid   = document.getElementById('cap-id').value.trim();
+      var dept  = document.getElementById('cap-dept').value;
+      if (!name || !/^[a-zA-Z\s]+$/.test(name)) { toast('Please enter a valid name (letters & spaces only)', 'error'); return; }
+      if (!email || !email.includes('@')) { toast('Please enter a valid email address', 'error'); return; }
+      if (!uid) { toast('Please enter a User ID', 'error'); return; }
+      if (!dept) { toast('Please select a department', 'error'); return; }
+    }
+    document.querySelectorAll('.step-panel').forEach(function(p){ p.classList.remove('active'); });
+    document.getElementById('step' + n).classList.add('active');
+    for (var i = 1; i <= 3; i++) {
+      var ws = document.getElementById('ws' + i);
+      ws.classList.remove('active','done');
+      if (i < n) ws.classList.add('done');
+      else if (i === n) ws.classList.add('active');
+      var wc = document.getElementById('wc' + (i - 1));
+      if (wc) { if (i <= n) wc.classList.add('done'); else wc.classList.remove('done'); }
+    }
+  };
+
+  /* === Camera === */
+  window.startCamera = async function() {
+    try {
+      document.getElementById('startCamBtn').disabled = true;
+      document.getElementById('startCamBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting...';
+      camText.textContent = 'Requesting camera...';
+
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+      });
+      video.srcObject = stream;
+      await video.play();
+
+      overlay.classList.add('hidden');
+      camDot.classList.add('on');
+      camText.textContent = 'Camera active';
+
+      document.getElementById('startCamBtn').style.display = 'none';
+      document.getElementById('startCapBtn').style.display = '';
+      toast('Camera started — position your face in the frame', 'success');
+
+      // Load face-api.js for visual feedback (non-blocking)
+      loadFaceApi();
+    } catch(e) {
+      document.getElementById('startCamBtn').disabled = false;
+      document.getElementById('startCamBtn').innerHTML = '<i class="fas fa-play"></i> Start Camera';
+      var msg = e.name === 'NotAllowedError' ? 'Camera permission denied. Please allow camera access in your browser.'
+              : e.name === 'NotFoundError' ? 'No camera found. Please connect a webcam.'
+              : 'Camera error: ' + e.message;
+      toast(msg, 'error');
+      camText.textContent = 'Camera failed';
+    }
+  };
+
+  /* === Face-api.js for visual face boxes (optional, non-blocking) === */
+  async function loadFaceApi() {
+    try {
+      if (typeof faceapi === 'undefined') {
+        await new Promise(function(resolve, reject) {
+          var s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js';
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+      var MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+      faceApiReady = true;
+      camText.textContent = 'Camera active \u2022 Face detection ready';
+      detectFacesLoop();
+    } catch(e) {
+      console.warn('face-api.js unavailable, using server-side detection:', e);
+      camText.textContent = 'Camera active \u2022 Server-side detection';
+    }
+  }
+
+  async function detectFacesLoop() {
+    if (!stream || !faceApiReady) return;
+    try {
+      var detections = await faceapi.detectAllFaces(video,
+        new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.35 }));
+      faceDetected = detections.length > 0;
+
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      var ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      detections.forEach(function(d) {
+        var b = d.box;
+        ctx.strokeStyle = capturing ? '#4cc9f0' : '#06d6a0';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(b.x, b.y, b.width, b.height);
+        var corner = 15;
+        ctx.lineWidth = 4; ctx.strokeStyle = '#fff';
+        ctx.beginPath(); ctx.moveTo(b.x, b.y+corner); ctx.lineTo(b.x, b.y); ctx.lineTo(b.x+corner, b.y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(b.x+b.width-corner, b.y); ctx.lineTo(b.x+b.width, b.y); ctx.lineTo(b.x+b.width, b.y+corner); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(b.x, b.y+b.height-corner); ctx.lineTo(b.x, b.y+b.height); ctx.lineTo(b.x+corner, b.y+b.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(b.x+b.width-corner, b.y+b.height); ctx.lineTo(b.x+b.width, b.y+b.height); ctx.lineTo(b.x+b.width, b.y+b.height-corner); ctx.stroke();
+        ctx.fillStyle = 'rgba(6,214,160,.85)';
+        ctx.fillRect(b.x, b.y-22, 80, 20);
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Inter,sans-serif';
+        ctx.fillText('Face ' + (d.score*100).toFixed(0) + '%', b.x+4, b.y-7);
+      });
+      document.getElementById('capFaces').textContent = detections.length;
+    } catch(e) {}
+    if (stream) requestAnimationFrame(detectFacesLoop);
+  }
+
+  /* === Capture loop === */
+  window.startCapture = function() {
+    capturing = true;
+    capturedFrames = [];
+    document.getElementById('startCapBtn').style.display = 'none';
+    document.getElementById('stopCapBtn').style.display = '';
+    document.getElementById('backBtn').style.display = 'none';
+    document.getElementById('uploadBtn').style.display = 'none';
+    document.getElementById('capCount').textContent = '0';
+    document.getElementById('progFill').style.width = '0%';
+    document.getElementById('capQuality').textContent = '\u2014';
+    toast('Capturing... look at the camera and turn your head slowly', 'info');
+    captureLoop();
+  };
+
+  window.stopCapture = function() {
+    capturing = false;
+    document.getElementById('stopCapBtn').style.display = 'none';
+    document.getElementById('backBtn').style.display = '';
+    if (capturedFrames.length >= 5) {
+      document.getElementById('uploadBtn').style.display = '';
+      document.getElementById('startCapBtn').style.display = '';
+      toast(capturedFrames.length + ' frames captured. Upload to register or capture more.', 'success');
+    } else {
+      document.getElementById('startCapBtn').style.display = '';
+      toast('Only ' + capturedFrames.length + ' frames. Need at least 5. Try again.', 'error');
+    }
+  };
+
+  function captureLoop() {
+    if (!capturing) return;
+    if (capturedFrames.length >= REQUIRED) {
+      capturing = false;
+      document.getElementById('stopCapBtn').style.display = 'none';
+      document.getElementById('backBtn').style.display = '';
+      document.getElementById('uploadBtn').style.display = '';
+      toast('All ' + REQUIRED + ' frames captured! Click Upload to register.', 'success');
+      updateQuality();
+      return;
+    }
+    // Capture regardless of client-side face detection — server handles detection
+    var shouldCapture = faceApiReady ? faceDetected : true;
+    if (shouldCapture && video.readyState >= 2) {
+      var tmpC = document.createElement('canvas');
+      tmpC.width = video.videoWidth || 640;
+      tmpC.height = video.videoHeight || 480;
+      tmpC.getContext('2d').drawImage(video, 0, 0);
+      capturedFrames.push(tmpC.toDataURL('image/jpeg', 0.85));
+      var count = capturedFrames.length;
+      document.getElementById('capCount').textContent = count;
+      document.getElementById('progFill').style.width = (count / REQUIRED * 100) + '%';
+      if (count % 10 === 0) updateQuality();
+    }
+    setTimeout(captureLoop, 200);
+  }
+
+  function updateQuality() {
+    var pct = capturedFrames.length / REQUIRED * 100;
+    var el = document.getElementById('capQuality');
+    if (pct >= 100) { el.textContent = 'Great'; el.style.color = '#06d6a0'; }
+    else if (pct >= 60) { el.textContent = 'Good'; el.style.color = '#4cc9f0'; }
+    else if (pct >= 30) { el.textContent = 'Fair'; el.style.color = '#ffd166'; }
+    else { el.textContent = 'Low'; el.style.color = '#ef476f'; }
+  }
+
+  /* === Upload === */
+  window.uploadFrames = async function() {
+    if (capturedFrames.length < 5) { toast('Need at least 5 captured frames', 'error'); return; }
+
+    var wrap = document.getElementById('camWrap');
+    var loadDiv = document.createElement('div');
+    loadDiv.className = 'upload-overlay';
+    loadDiv.innerHTML = '<div class="spinner"></div><p style="font-weight:700;">Processing ' + capturedFrames.length + ' images...</p><p style="font-size:.82rem;opacity:.7;">This may take a moment</p>';
+    wrap.appendChild(loadDiv);
+
+    document.getElementById('uploadBtn').disabled = true;
+    document.getElementById('startCapBtn').style.display = 'none';
+    document.getElementById('backBtn').style.display = 'none';
+    document.getElementById('cam-title').textContent = 'Uploading & Training...';
+
+    var name = document.getElementById('cap-name').value.trim();
+
+    try {
+      var resp = await fetch('/api/upload_capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: name,
+          images: capturedFrames,
+          email: document.getElementById('cap-email').value.trim(),
+          userId: document.getElementById('cap-id').value.trim(),
+          department: document.getElementById('cap-dept').value,
+          phone: document.getElementById('cap-phone').value.trim(),
+          role: document.getElementById('cap-role').value,
+          notes: document.getElementById('cap-notes').value.trim()
+        })
+      });
+
+      var data = await resp.json();
+      if (data.success) {
+        if (stream) { stream.getTracks().forEach(function(t){ t.stop(); }); stream = null; }
+        document.getElementById('regName').textContent = name;
+        var details = document.getElementById('regDetails');
+        var ud = data.userData || {};
+        details.innerHTML =
+          '<span class="reg-detail"><i class="fas fa-envelope"></i> ' + (ud.email||'') + '</span> ' +
+          '<span class="reg-detail"><i class="fas fa-id-badge"></i> ' + (ud.userId||'') + '</span> ' +
+          '<span class="reg-detail"><i class="fas fa-building"></i> ' + (ud.department||'') + '</span> ' +
+          '<span class="reg-detail"><i class="fas fa-images"></i> ' + (data.totalSamples||capturedFrames.length) + ' samples</span>';
+        goToStep(3);
+        toast('Registration successful!', 'success');
+      } else {
+        loadDiv.remove();
+        resetUploadButtons();
+        toast(data.error || 'Upload failed. Please try again.', 'error');
+      }
+    } catch(e) {
+      loadDiv.remove();
+      resetUploadButtons();
+      toast('Network error: ' + e.message, 'error');
+    }
+  };
+
+  function resetUploadButtons() {
+    document.getElementById('uploadBtn').disabled = false;
+    document.getElementById('uploadBtn').style.display = '';
+    document.getElementById('startCapBtn').style.display = '';
+    document.getElementById('backBtn').style.display = '';
+    document.getElementById('cam-title').textContent = 'Camera Capture';
+  }
+
+  window.addEventListener('beforeunload', function() {
+    if (stream) stream.getTracks().forEach(function(t){ t.stop(); });
+  });
+
+  // Load department & role dropdowns from settings API
+  (async function loadOptions() {
+    try {
+      var resp = await fetch('/api/options');
+      var data = await resp.json();
+      var deptSel = document.getElementById('cap-dept');
+      var roleSel = document.getElementById('cap-role');
+      (data.departments || []).forEach(function(d) {
+        var o = document.createElement('option'); o.value = d; o.textContent = d;
+        deptSel.appendChild(o);
+      });
+      (data.roles || []).forEach(function(r) {
+        var o = document.createElement('option'); o.value = r; o.textContent = r;
+        roleSel.appendChild(o);
+      });
+    } catch(e) { console.error('Failed to load options:', e); }
+  })();
+})();
+</script>
 {% endblock %}

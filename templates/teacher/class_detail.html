@@ -1,454 +1,259 @@
 {% extends "base.html" %}
-
-{% block title %}Class Details{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<style>
-:root {
-    --primary: #667eea;
-    --secondary: #764ba2;
-    --success: #51cf66;
-    --danger: #fa5252;
-    --dark: #1a1a2e;
-}
-
-body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    min-height: 100vh;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-/* Fix modal z-index overlay issue */
-.modal {
-    z-index: 1050 !important;
-    pointer-events: auto !important;
-}
-
-.modal-backdrop {
-    z-index: 1040 !important;
-    pointer-events: auto !important;
-}
-
-.modal.fade {
-    pointer-events: auto !important;
-}
-
-.modal.show {
-    pointer-events: auto !important;
-}
-
-.modal-header,
-.modal-body,
-.modal-footer,
-.modal-content {
-    pointer-events: auto !important;
-}
-
-.modal button,
-.modal input,
-.modal textarea,
-.modal select {
-    pointer-events: auto !important;
-}
-
-.page-header {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    padding: 2rem;
-    color: white;
-    border-radius: 16px;
-    margin-bottom: 2rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    text-align: center;
-}
-
-.page-header h1 {
-    font-size: 2.2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.page-header p {
-    font-size: 1.05rem;
-    opacity: 0.9;
-    margin: 0;
-}
-
-.info-card {
-    background: white;
-    border-radius: 14px;
-    padding: 2rem;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    margin-bottom: 2rem;
-}
-
-.card-header-custom {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    padding: 1.2rem 1.5rem;
-    border-radius: 12px 12px 0 0;
-    margin: -2rem -2rem 1.5rem -2rem;
-}
-
-.card-header-custom h5 {
-    margin: 0;
-    font-weight: 700;
-    font-size: 1.2rem;
-}
-
-.stat-card {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    text-align: center;
-    margin-bottom: 1rem;
-}
-
-.stat-card h3 {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-    font-weight: 700;
-}
-
-.stat-card p {
-    margin: 0;
-    opacity: 0.9;
-}
-
-.student-item {
-    background: #f8f9fa;
-    padding: 1rem 1.5rem;
-    border-radius: 10px;
-    margin-bottom: 0.75rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: all 0.3s ease;
-}
-
-.student-item:hover {
-    transform: translateX(5px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.student-name {
-    font-weight: 600;
-    color: var(--dark);
-}
-
-.student-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.btn-custom {
-    padding: 10px 20px;
-    border-radius: 10px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    border: none;
-}
-
-.btn-primary-custom {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-}
-
-.btn-danger-custom {
-    background: linear-gradient(135deg, var(--danger), #e03131);
-    color: white;
-}
-
-.btn-primary-custom:hover,
-.btn-danger-custom:hover {
-    transform: translateY(-2px);
-    color: white;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 3rem 2rem;
-    color: #999;
-}
-
-.empty-state i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-}
-
-.table-responsive {
-    border-radius: 10px;
-    overflow: hidden;
-    background: white;
-}
-
-.table {
-    margin: 0;
-}
-
-.table thead th {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    border: none;
-    font-weight: 600;
-    padding: 1rem;
-}
-
-.table tbody td {
-    padding: 1rem;
-    vertical-align: middle;
-}
-
-.modal-content {
-    border-radius: 16px;
-    border: none;
-}
-
-.modal-header {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    border-radius: 16px 16px 0 0;
-}
-
-.modal-header .btn-close {
-    filter: brightness(0) invert(1);
-}
-
-.form-control {
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 12px 16px;
-}
-
-.form-control:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-}
-</style>
-{% endblock %}
+{% block title %}{{ class_info.name }} — Smart Attendance{% endblock %}
 
 {% block content %}
-<div class="container mt-4 mb-5">
-    <!-- Page Header -->
-    <div class="page-header">
-        <h1><i class="fas fa-chalkboard"></i> {{ class_info.name }}</h1>
-        <p>{{ class_info.description or 'No description provided' }}</p>
-        {% if class_info.department %}
-        <span class="badge" style="background: rgba(255,255,255,0.2); padding: 8px 16px; font-size: 1rem; margin-top: 0.5rem;">
-            <i class="fas fa-building"></i> {{ class_info.department }}
-        </span>
-        {% endif %}
-    </div>
+<style>
+  .cd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+  @media (max-width: 768px) { .cd-grid { grid-template-columns: 1fr; } }
+  .stu-item { display: flex; align-items: center; gap: .7rem; padding: .6rem .8rem;
+    border-bottom: 1px solid var(--border); cursor:pointer; transition:background .2s; }
+  .stu-item:last-child { border-bottom: none; }
+  .stu-item:hover { background: rgba(102,126,234,.04); }
+  .stu-av { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; font-weight: 700; font-size: .75rem; color: #fff; flex-shrink: 0; }
+  .stu-info { flex:1; min-width:0; }
+  .stu-info .n { font-weight: 600; font-size: .88rem; }
+  .stu-info .meta { font-size: .72rem; color: var(--text2); display:flex; gap:.5rem; flex-wrap:wrap; }
+  .rm-btn { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border); background: var(--card);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text2);
+    font-size: .75rem; transition: all .2s; }
+  .rm-btn:hover { border-color: var(--c6); color: var(--c6); background: rgba(239,71,111,.05); }
+  /* Modal */
+  .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.45); z-index:9999; justify-content:center; align-items:center; }
+  .modal-overlay.active { display:flex; }
+  .modal-box { background:var(--card); border-radius:20px; padding:0; width:420px; max-width:92vw; box-shadow:0 16px 80px rgba(0,0,0,.25); overflow:hidden; animation:modalIn .3s; }
+  @keyframes modalIn { from{opacity:0;transform:scale(.92)translateY(20px)} to{opacity:1;transform:none} }
+  .modal-top { padding:1.5rem; background:var(--g1); color:#fff; text-align:center; }
+  .modal-top .m-av { width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.2);display:inline-flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;margin-bottom:.5rem; }
+  .modal-top h3 { font-size:1.1rem;margin:0; }
+  .modal-top p { font-size:.78rem;opacity:.8;margin:.2rem 0 0; }
+  .modal-body { padding:1.5rem; }
+  .modal-body .detail-row { display:flex; justify-content:space-between; padding:.5rem 0; border-bottom:1px solid var(--border); font-size:.88rem; }
+  .modal-body .detail-row:last-child { border-bottom:none; }
+  .modal-body .detail-row .lbl { color:var(--text2); font-weight:500; }
+  .modal-body .detail-row .val { font-weight:600; color:var(--text); }
+  .modal-foot { padding:.8rem 1.5rem; border-top:1px solid var(--border); text-align:right; }
+  /* Autocomplete */
+  .ac-wrap { position:relative; }
+  .ac-list { position:absolute; top:100%; left:0; right:0; max-height:180px; overflow-y:auto; background:var(--card); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow-lg); display:none; z-index:100; }
+  .ac-list.show { display:block; }
+  .ac-list div { padding:.5rem .8rem; font-size:.85rem; cursor:pointer; }
+  .ac-list div:hover { background:rgba(102,126,234,.08); }
+  .search-box { position:relative; }
+  .search-box input { padding-right:2rem; }
+  .search-box .search-icon { position:absolute; right:10px; top:50%; transform:translateY(-50%); color:var(--text2); font-size:.8rem; }
+</style>
 
-    <div class="row">
-        <!-- Statistics -->
-        <div class="col-lg-4 mb-4">
-            <div class="stat-card">
-                <h3>{{ students|length }}</h3>
-                <p><i class="fas fa-users"></i> Total Students</p>
-            </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, #51cf66, #37b24d);">
-                <h3>{{ attendance|length }}</h3>
-                <p><i class="fas fa-clipboard-check"></i> Total Records</p>
-            </div>
-            <a href="{{ url_for('recognize') }}" class="btn btn-primary-custom btn-custom w-100">
-                <i class="fas fa-camera"></i> Take Attendance Now
-            </a>
-        </div>
-
-        <!-- Students List -->
-        <div class="col-lg-8 mb-4">
-            <div class="info-card">
-                <div class="card-header-custom">
-                    <h5><i class="fas fa-user-graduate"></i> Students in Class</h5>
-                </div>
-                
-                <div class="mb-3">
-                    <button class="btn btn-primary-custom btn-custom" data-toggle="modal" data-target="#addStudentModal">
-                        <i class="fas fa-user-plus"></i> Add Student
-                    </button>
-                </div>
-
-                {% if students %}
-                <div class="students-list">
-                    {% for student in students %}
-                    <div class="student-item">
-                        <div>
-                            <div class="student-name">
-                                <i class="fas fa-user"></i> {{ student.student_name }}
-                            </div>
-                            <small class="text-muted">Added: {{ student.added_at }}</small>
-                        </div>
-                        <div class="student-actions">
-                            <button class="btn btn-sm btn-danger-custom remove-student" 
-                                    data-student="{{ student.student_name }}">
-                                <i class="fas fa-user-minus"></i> Remove
-                            </button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="empty-state">
-                    <i class="fas fa-user-graduate"></i>
-                    <p>No students in this class yet</p>
-                    <small>Add students to start tracking their attendance</small>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Attendance -->
-    <div class="row">
-        <div class="col-12">
-            <div class="info-card">
-                <div class="card-header-custom">
-                    <h5><i class="fas fa-history"></i> Recent Attendance Records</h5>
-                </div>
-
-                {% if attendance %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Student</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for record in attendance %}
-                            <tr>
-                                <td><i class="fas fa-user"></i> {{ record.student_name }}</td>
-                                <td><i class="fas fa-calendar"></i> {{ record.date }}</td>
-                                <td><i class="fas fa-clock"></i> {{ record.time }}</td>
-                                <td>
-                                    <span class="badge bg-success" style="padding: 6px 12px; border-radius: 6px;">
-                                        {{ record.status }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="empty-state">
-                    <i class="fas fa-clipboard-list"></i>
-                    <p>No attendance records yet</p>
-                    <small>Start taking attendance to see records here</small>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+<div class="pg-header anim-down">
+  <div class="pg-icon"><i class="fas fa-chalkboard"></i></div>
+  <h1>{{ class_info.name }}</h1>
+  <p>{{ class_info.description or 'Class details and student management' }}{% if class_info.department %} · <i class="fas fa-building" style="font-size:.75rem;"></i> {{ class_info.department }}{% endif %}</p>
 </div>
 
-<!-- Add Student Modal -->
-<div class="modal fade" id="addStudentModal" tabindex="-1" role="dialog" aria-labelledby="addStudentModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addStudentModalLabel">
-                    <i class="fas fa-user-plus"></i> Add Student to Class
-                </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white; opacity: 1;">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="addStudentForm">
-                    <div class="form-group">
-                        <label for="student_name">Student Name</label>
-                        <input type="text" class="form-control" id="student_name" name="student_name" required>
-                        <small class="form-text text-muted">Enter the exact name used during face registration</small>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary-custom btn-custom" id="saveStudent">
-                    <i class="fas fa-plus-circle"></i> Add Student
-                </button>
-            </div>
-        </div>
+<!-- Stats -->
+<div class="grid-3 anim-up delay-1" style="margin-bottom:1.5rem;">
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g1);"><i class="fas fa-users"></i></div>
+    <div><div class="s-val">{{ students|length }}</div><div class="s-lbl">Students</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g4);"><i class="fas fa-clipboard-check"></i></div>
+    <div><div class="s-val">{{ attendance|length }}</div><div class="s-lbl">Records</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g3);"><i class="fas fa-chart-line"></i></div>
+    <div>
+      <div class="s-val">
+        <a href="{{ url_for('class_student_attendance', class_id=class_info.id) }}" style="color:var(--c7);">View</a>
+      </div>
+      <div class="s-lbl">Attendance Chart</div>
     </div>
+  </div>
+</div>
+
+<div class="cd-grid anim-up delay-2">
+  <!-- Students -->
+  <div class="glass-card cbar-purple" style="display:flex;flex-direction:column;">
+    <div class="card-hdr" style="justify-content:space-between;">
+      <span><i class="fas fa-user-graduate" style="color:var(--c1);"></i> Students</span>
+      <span class="badge-g badge-purple">{{ students|length }}</span>
+    </div>
+    <!-- Search -->
+    <div style="padding:.5rem .8rem;">
+      <div class="search-box">
+        <input type="text" class="fi" id="searchStudent" placeholder="Search students..." oninput="filterStudents(this.value)" style="font-size:.82rem;">
+        <i class="fas fa-search search-icon"></i>
+      </div>
+    </div>
+    <div class="card-inner" style="flex:1;padding:.5rem;max-height:400px;overflow-y:auto;" id="studentsList">
+      {% if students %}
+        {% for s in students %}
+        <div class="stu-item" id="stu-{{ loop.index }}" data-searchname="{{ s.student_name|lower }}"
+             onclick="showStudentModal(this)"
+             data-name="{{ s.student_name }}" data-uid="{{ s.user_id or '' }}" 
+             data-dept="{{ s.department or '' }}" data-email="{{ s.email or '' }}"
+             data-role="{{ s.role or '' }}" data-phone="{{ s.phone or '' }}" data-added="{{ s.added_at }}">
+          <div class="stu-av" style="background:{{ ['var(--g1)','var(--g2)','var(--g3)','var(--g4)','var(--g5)'][loop.index0 % 5] }};">
+            {{ s.student_name[0:2]|upper }}
+          </div>
+          <div class="stu-info">
+            <div class="n">{{ s.student_name }}</div>
+            <div class="meta">
+              {% if s.user_id %}<span><i class="fas fa-id-badge"></i> {{ s.user_id }}</span>{% endif %}
+              {% if s.department %}<span><i class="fas fa-building"></i> {{ s.department }}</span>{% endif %}
+              {% if s.role %}<span class="badge-g badge-blue" style="font-size:.65rem;padding:1px 6px;">{{ s.role }}</span>{% endif %}
+            </div>
+          </div>
+          <button class="rm-btn" onclick="event.stopPropagation();removeStudent('{{ s.student_name }}', {{ class_info.id }}, 'stu-{{ loop.index }}')" title="Remove">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="text-align:center;padding:2rem;color:var(--text2);font-size:.88rem;" id="noStudents">No students yet.</div>
+      {% endif %}
+    </div>
+    <!-- Add Student with Autocomplete -->
+    <div style="border-top:1px solid var(--border);padding:.8rem 1rem;">
+      <div style="display:flex;gap:.5rem;">
+        <div class="ac-wrap" style="flex:1;">
+          <input type="text" class="fi" id="newStudent" placeholder="Type student name..." autocomplete="off" oninput="showSuggestions(this.value)" onfocus="showSuggestions(this.value)">
+          <div class="ac-list" id="acList"></div>
+        </div>
+        <button class="btn-g btn-green" onclick="addStudent()" style="padding:.5rem 1rem;"><i class="fas fa-plus"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Attendance -->
+  <div class="glass-card cbar-green" style="display:flex;flex-direction:column;">
+    <div class="card-hdr" style="justify-content:space-between;">
+      <span><i class="fas fa-clipboard-list" style="color:var(--c4);"></i> Recent Attendance</span>
+      <span class="badge-g badge-green">{{ attendance|length }}</span>
+    </div>
+    <div class="card-inner" style="flex:1;padding:0;overflow-x:auto;">
+      {% if attendance %}
+      <table class="modern-table" style="font-size:.82rem;">
+        <thead><tr><th>Name</th><th>ID</th><th>Dept</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for a in attendance %}
+          <tr>
+            <td style="font-weight:600;">{{ a.student_name }}</td>
+            <td><span style="font-size:.75rem;color:var(--text2);">{{ a.student_user_id or '—' }}</span></td>
+            <td>{% if a.student_department %}<span class="badge-g badge-blue" style="font-size:.68rem;padding:1px 6px;">{{ a.student_department }}</span>{% else %}—{% endif %}</td>
+            <td>{{ a.date }}</td><td>{{ a.time }}</td>
+            <td><span class="badge-g badge-green">{{ a.status }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="text-align:center;padding:2rem;color:var(--text2);">No attendance records yet.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:1.5rem;display:flex;gap:.7rem;flex-wrap:wrap;">
+  <a href="{{ url_for('manage_classes') }}" class="btn-g btn-outline"><i class="fas fa-arrow-left"></i> Back to Classes</a>
+  <a href="{{ url_for('class_student_attendance', class_id=class_info.id) }}" class="btn-g btn-green"><i class="fas fa-chart-bar"></i> Attendance Report</a>
+  <a href="{{ url_for('recognize') }}" class="btn-g btn-purple"><i class="fas fa-user-check"></i> Take Attendance</a>
+</div>
+
+<!-- Student Detail Modal -->
+<div class="modal-overlay" id="studentModal" onclick="if(event.target===this)closeStudentModal()">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div class="m-av" id="modalAvatar">--</div>
+      <h3 id="modalName">Student Name</h3>
+      <p id="modalSubtitle">Student Details</p>
+    </div>
+    <div class="modal-body">
+      <div class="detail-row"><span class="lbl"><i class="fas fa-id-badge"></i> User ID</span><span class="val" id="modalUserId">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-building"></i> Department</span><span class="val" id="modalDept">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-envelope"></i> Email</span><span class="val" id="modalEmail">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-user-tag"></i> Role</span><span class="val" id="modalRole">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-phone"></i> Phone</span><span class="val" id="modalPhone">—</span></div>
+      <div class="detail-row"><span class="lbl"><i class="fas fa-calendar-plus"></i> Added</span><span class="val" id="modalAdded">—</span></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-g btn-outline" onclick="closeStudentModal()"><i class="fas fa-times"></i> Close</button>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-(function() {
-    'use strict';
-    
-    const classId = {{ class_info.id }};
-    console.log('Class detail page loaded for class ID:', classId);
+// Registered users for autocomplete
+const registeredUsers = [{% for u in all_registered %}"{{ u.username }}"{% if not loop.last %},{% endif %}{% endfor %}];
 
-    $(document).ready(function() {
-        // Add student
-        $('#saveStudent').on('click', function() {
-            const studentName = $('#student_name').val().trim();
-            
-            if (!studentName) {
-                alert('Please enter a student name');
-                return;
-            }
+function showSuggestions(val) {
+  const list = document.getElementById('acList');
+  if (!val.trim()) { list.classList.remove('show'); list.innerHTML=''; return; }
+  const q = val.toLowerCase();
+  const matches = registeredUsers.filter(n => n.toLowerCase().includes(q)).slice(0, 10);
+  if (matches.length === 0) { list.classList.remove('show'); return; }
+  list.innerHTML = matches.map(n => `<div onclick="selectStudent('${n}')">${n}</div>`).join('');
+  list.classList.add('show');
+}
 
-            const formData = new FormData();
-            formData.append('student_name', studentName);
+function selectStudent(name) {
+  document.getElementById('newStudent').value = name;
+  document.getElementById('acList').classList.remove('show');
+}
 
-            fetch('/teacher/add_student_to_class/' + classId, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    location.reload();
-                } else {
-                    alert(data.message || 'Failed to add student');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Network error occurred while adding student');
-            });
-        });
+// Hide autocomplete when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.ac-wrap')) document.getElementById('acList').classList.remove('show');
+});
 
-        // Remove student
-        $('.remove-student').on('click', function() {
-            const studentName = $(this).data('student');
-            
-            if (!confirm('Remove ' + studentName + ' from this class?')) {
-                return;
-            }
+function filterStudents(val) {
+  const q = val.toLowerCase();
+  document.querySelectorAll('#studentsList .stu-item').forEach(el => {
+    el.style.display = el.dataset.searchname.includes(q) ? '' : 'none';
+  });
+}
 
-            const formData = new FormData();
-            formData.append('student_name', studentName);
+async function addStudent() {
+  const name = document.getElementById('newStudent').value.trim();
+  if (!name) return;
+  const fd = new FormData(); fd.append('student_name', name);
+  try {
+    const resp = await fetch('/teacher/add_student_to_class/{{ class_info.id }}', { method:'POST', body: fd });
+    const data = await resp.json();
+    if (data.success) { location.reload(); }
+    else { alert(data.message || 'Failed to add student'); }
+  } catch(e) { alert('Error: ' + e.message); }
+}
 
-            fetch('/teacher/remove_student_from_class/' + classId, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    location.reload();
-                } else {
-                    alert(data.message || 'Failed to remove student');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Network error occurred while removing student');
-            });
-        });
-    });
-})();
+async function removeStudent(name, classId, elemId) {
+  if (!confirm('Remove ' + name + ' from this class?')) return;
+  const fd = new FormData(); fd.append('student_name', name);
+  try {
+    const resp = await fetch('/teacher/remove_student_from_class/' + classId, { method:'POST', body: fd });
+    const data = await resp.json();
+    if (data.success) { document.getElementById(elemId).remove(); }
+    else { alert(data.message || 'Failed'); }
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+function showStudentModal(el) {
+  const d = el.dataset;
+  document.getElementById('modalAvatar').textContent = d.name.substring(0,2).toUpperCase();
+  document.getElementById('modalName').textContent = d.name;
+  document.getElementById('modalSubtitle').textContent = d.dept ? d.dept + ' · ' + (d.role || 'Student') : (d.role || 'Student');
+  document.getElementById('modalUserId').textContent = d.uid || '—';
+  document.getElementById('modalDept').textContent = d.dept || '—';
+  document.getElementById('modalEmail').textContent = d.email || '—';
+  document.getElementById('modalRole').textContent = d.role || '—';
+  document.getElementById('modalPhone').textContent = d.phone || '—';
+  document.getElementById('modalAdded').textContent = d.added || '—';
+  document.getElementById('studentModal').classList.add('active');
+}
+
+function closeStudentModal() {
+  document.getElementById('studentModal').classList.remove('active');
+}
 </script>
 {% endblock %}

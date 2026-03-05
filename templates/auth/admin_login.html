@@ -1,14 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Sign In — Smart Attendance{% endblock %}
+{% block title %}Admin Sign In — Smart Attendance{% endblock %}
 
 {% block content %}
 <style>
   .auth-wrap { max-width: 440px; margin: 2rem auto; }
   .auth-card { background: var(--card); border: 1px solid var(--border); border-radius: 22px;
     box-shadow: var(--shadow-lg); overflow: hidden; }
-  .auth-top { background: var(--g1); padding: 2.2rem 2rem; text-align: center; color: #fff; position: relative; }
+  .auth-top { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 2.2rem 2rem; text-align: center; color: #fff; position: relative; }
   .auth-top::after { content: ''; position: absolute; inset: 0;
-    background: radial-gradient(circle at 70% 30%, rgba(240,147,251,.2) 0%, transparent 60%); }
+    background: radial-gradient(circle at 30% 70%, rgba(102,126,234,.2) 0%, transparent 60%); }
   .auth-top * { position: relative; z-index: 1; }
   .auth-top .av { width: 68px; height: 68px; border-radius: 50%; margin: 0 auto 1rem;
     background: rgba(255,255,255,.2); backdrop-filter: blur(10px);
@@ -18,43 +18,38 @@
   .auth-body { padding: 1.8rem 2rem; }
   .auth-body .fg { margin-bottom: 1.1rem; }
   .auth-body label { font-weight: 600; font-size: .85rem; display: block; margin-bottom: 5px; color: var(--text2); }
-  .auth-body label i { width: 16px; text-align: center; margin-right: 2px; }
   .pw-wrap { position: relative; }
   .pw-wrap .fi { padding-right: 44px; }
   .pw-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;
     color: var(--text2); background: none; border: none; font-size: .9rem; padding: 4px; }
   .pw-toggle:hover { color: var(--c1); }
-  .auth-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; margin-top: -.2rem; }
+  .auth-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
   .remember-label { display: flex; align-items: center; gap: 6px; font-size: .82rem; color: var(--text2);
     font-weight: 500; cursor: pointer; user-select: none; }
-  .remember-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--c1); cursor: pointer; }
-  .forgot-link { font-size: .82rem; color: var(--c6); font-weight: 600; text-decoration: none; }
-  .forgot-link:hover { color: var(--c2); text-decoration: underline; }
-  .login-btn { width: 100%; justify-content: center; position: relative; }
-  .login-btn .spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.3);
-    border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
-  .login-btn.loading .btn-text { display: none; }
-  .login-btn.loading .spinner { display: inline-block; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .remember-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--c6); cursor: pointer; }
+  .login-btn { width: 100%; justify-content: center; }
   .auth-footer { text-align: center; padding: 1rem 2rem 1.5rem; border-top: 1px solid var(--border); }
-  .auth-footer a { color: var(--c1); font-weight: 600; text-decoration: none; }
+  .auth-footer a { color: var(--c6); font-weight: 600; text-decoration: none; }
   .auth-footer a:hover { text-decoration: underline; }
   .auth-divider { display: flex; align-items: center; gap: 12px; margin: 1.2rem 0; color: var(--text2); font-size: .82rem; }
   .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .auth-alert { padding: .7rem 1rem; border-radius: 10px; font-size: .85rem; margin-bottom: 1rem;
     display: flex; align-items: center; gap: 8px; }
   .auth-alert-danger { background: rgba(239,71,111,.08); color: var(--c6); border: 1px solid rgba(239,71,111,.15); }
-  .auth-alert-warning { background: rgba(255,209,102,.08); color: #b58900; border: 1px solid rgba(255,209,102,.15); }
   .auth-alert-success { background: rgba(6,214,160,.08); color: #00a47a; border: 1px solid rgba(6,214,160,.15); }
+  .auth-alert-warning { background: rgba(255,209,102,.08); color: #b58900; border: 1px solid rgba(255,209,102,.15); }
   .auth-alert-info { background: rgba(76,201,240,.08); color: #0895c8; border: 1px solid rgba(76,201,240,.15); }
+  .portal-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 20px;
+    background: rgba(255,255,255,.2); font-size: .75rem; font-weight: 700; margin-bottom: .8rem; letter-spacing: .5px; }
 </style>
 
 <div class="auth-wrap anim-scale">
   <div class="auth-card">
     <div class="auth-top">
-      <div class="av"><i class="fas fa-chalkboard-teacher"></i></div>
-      <h2>Welcome Back</h2>
-      <p>Sign in to your teacher account</p>
+      <div class="portal-badge"><i class="fas fa-shield-halved"></i> ADMIN PORTAL</div>
+      <div class="av"><i class="fas fa-building-columns"></i></div>
+      <h2>Admin Sign In</h2>
+      <p>College gate attendance management</p>
     </div>
     <div class="auth-body">
       {% with messages = get_flashed_messages(with_categories=true) %}
@@ -68,44 +63,37 @@
         {% endif %}
       {% endwith %}
 
-      <form method="POST" action="{{ url_for('teacher_login') }}" id="loginForm">
+      <form method="POST" action="{{ url_for('admin_login') }}">
         <div class="fg">
-          <label for="username"><i class="fas fa-user"></i> Username</label>
-          <input type="text" class="fi" id="username" name="username" placeholder="Enter your username"
+          <label for="username"><i class="fas fa-user-shield"></i> Username</label>
+          <input type="text" class="fi" id="username" name="username" placeholder="Enter admin username"
                  autocomplete="username" required autofocus>
         </div>
         <div class="fg">
           <label for="password"><i class="fas fa-lock"></i> Password</label>
           <div class="pw-wrap">
-            <input type="password" class="fi" id="password" name="password" placeholder="Enter your password"
+            <input type="password" class="fi" id="password" name="password" placeholder="Enter password"
                    autocomplete="current-password" required>
-            <button type="button" class="pw-toggle" onclick="togglePw()" title="Show/hide password">
-              <i class="fas fa-eye" id="pwIcon"></i>
-            </button>
+            <button type="button" class="pw-toggle" onclick="togglePw()"><i class="fas fa-eye" id="pwIcon"></i></button>
           </div>
         </div>
         <div class="auth-row">
           <label class="remember-label">
             <input type="checkbox" name="remember" value="1"> Remember me
           </label>
-          <a href="{{ url_for('forgot_password') }}" class="forgot-link">
-            <i class="fas fa-key" style="font-size:.72rem;"></i> Forgot Password?
-          </a>
         </div>
-        <button type="submit" class="btn-g btn-purple lg login-btn" id="loginBtn">
-          <span class="btn-text"><i class="fas fa-arrow-right"></i> Sign In</span>
-          <span class="spinner"></span>
+        <button type="submit" class="btn-g btn-pink lg login-btn">
+          <i class="fas fa-arrow-right"></i> Sign In
         </button>
       </form>
 
       <div class="auth-divider">or</div>
-
       <a href="{{ url_for('home') }}" class="btn-g btn-outline lg" style="width:100%;justify-content:center;">
-        <i class="fas fa-home"></i> Continue as Guest
+        <i class="fas fa-home"></i> Back to Home
       </a>
     </div>
     <div class="auth-footer">
-      Don't have an account? <a href="{{ url_for('teacher_register') }}">Create Account</a>
+      Don't have an admin account? <a href="{{ url_for('admin_register') }}">Create Account</a>
     </div>
   </div>
 </div>
@@ -119,12 +107,5 @@ function togglePw() {
   if (inp.type === 'password') { inp.type = 'text'; icon.className = 'fas fa-eye-slash'; }
   else { inp.type = 'password'; icon.className = 'fas fa-eye'; }
 }
-
-document.getElementById('loginForm').addEventListener('submit', function() {
-  const btn = document.getElementById('loginBtn');
-  btn.classList.add('loading');
-  btn.disabled = true;
-  setTimeout(() => { btn.classList.remove('loading'); btn.disabled = false; }, 5000);
-});
 </script>
 {% endblock %}
