@@ -173,20 +173,24 @@ def generate_token():
 def build_verification_email(full_name, otp_code):
     """Build the HTML body for account verification email (Teacher - purple)."""
     return f"""
-    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(102,126,234,.15);">
-      <div style="background:linear-gradient(135deg,#667eea,#764ba2);padding:2rem;text-align:center;color:#fff;">
-        <div style="width:56px;height:56px;background:rgba(255,255,255,.2);border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">&#128274;</div>
-        <h2 style="margin:0;font-size:1.4rem;">Verify Your Email</h2>
-        <p style="opacity:.85;margin:.3rem 0 0;">Smart Attendance System — Teacher Portal</p>
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(102,126,234,.18);">
+      <div style="background:linear-gradient(135deg,#667eea,#764ba2);padding:2.2rem 2rem;text-align:center;color:#fff;">
+        <div style="width:64px;height:64px;background:rgba(255,255,255,.18);border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:1.7rem;">&#128274;</div>
+        <h2 style="margin:0;font-size:1.5rem;font-weight:800;">Email Verification</h2>
+        <p style="opacity:.85;margin:.4rem 0 0;font-size:.88rem;">Smart Attendance System — Teacher Portal</p>
       </div>
       <div style="padding:2rem;text-align:center;">
-        <p style="color:#555;font-size:.95rem;">Hello <strong>{full_name}</strong>,</p>
-        <p style="color:#555;font-size:.95rem;">Use this verification code to complete your registration:</p>
-        <div style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:2rem;font-weight:800;letter-spacing:8px;padding:1rem 2rem;border-radius:12px;display:inline-block;margin:1rem 0;">{otp_code}</div>
-        <p style="color:#888;font-size:.82rem;">This code expires in <strong>10 minutes</strong>.</p>
-        <p style="color:#888;font-size:.82rem;">If you didn't request this, please ignore this email.</p>
+        <p style="color:#444;font-size:.95rem;line-height:1.6;">Hello <strong>{full_name}</strong>,</p>
+        <p style="color:#555;font-size:.92rem;line-height:1.6;">Thank you for registering. Please use the verification code below to complete your account setup:</p>
+        <div style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:2.2rem;font-weight:800;letter-spacing:10px;padding:1.1rem 2.5rem;border-radius:14px;display:inline-block;margin:1.2rem 0;box-shadow:0 4px 16px rgba(102,126,234,.3);">{otp_code}</div>
+        <div style="background:#f8f9ff;border:1px solid #e8ecff;border-radius:10px;padding:.8rem 1rem;margin:1rem auto;max-width:380px;">
+          <p style="color:#667eea;font-size:.82rem;margin:0;font-weight:600;">&#9200; This code expires in <strong>10 minutes</strong></p>
+        </div>
+        <p style="color:#999;font-size:.8rem;margin-top:.8rem;">If you didn't create an account, you can safely ignore this email.</p>
       </div>
-      <div style="background:#f8f8ff;padding:1rem;text-align:center;font-size:.75rem;color:#aaa;border-top:1px solid #eee;">Smart Attendance System &copy; 2025</div>
+      <div style="background:#f4f3ff;padding:1rem;text-align:center;font-size:.75rem;color:#aaa;border-top:1px solid #e8e6ff;">
+        &copy; 2025 Smart Attendance System &middot; All rights reserved
+      </div>
     </div>
     """
 
@@ -194,26 +198,30 @@ def build_verification_email(full_name, otp_code):
 def build_admin_verification_email(full_name, otp_code):
     """Build the HTML body for account verification email (Admin - pink)."""
     return f"""
-    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(240,147,251,.15);">
-      <div style="background:linear-gradient(135deg,#f093fb,#f5576c);padding:2rem;text-align:center;color:#fff;">
-        <div style="width:56px;height:56px;background:rgba(255,255,255,.2);border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">&#128737;</div>
-        <h2 style="margin:0;font-size:1.4rem;">Admin Email Verification</h2>
-        <p style="opacity:.85;margin:.3rem 0 0;">Smart Attendance System — Admin Portal</p>
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(240,147,251,.18);">
+      <div style="background:linear-gradient(135deg,#f093fb,#f5576c);padding:2.2rem 2rem;text-align:center;color:#fff;">
+        <div style="width:64px;height:64px;background:rgba(255,255,255,.18);border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:1.7rem;">&#128737;</div>
+        <h2 style="margin:0;font-size:1.5rem;font-weight:800;">Admin Email Verification</h2>
+        <p style="opacity:.85;margin:.4rem 0 0;font-size:.88rem;">Smart Attendance System — Admin Portal</p>
       </div>
       <div style="padding:2rem;text-align:center;">
-        <p style="color:#555;font-size:.95rem;">Hello <strong>{full_name}</strong>,</p>
-        <p style="color:#555;font-size:.95rem;">Use this verification code to activate your admin account:</p>
-        <div style="background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;font-size:2rem;font-weight:800;letter-spacing:8px;padding:1rem 2rem;border-radius:12px;display:inline-block;margin:1rem 0;">{otp_code}</div>
-        <p style="color:#888;font-size:.82rem;">This code expires in <strong>10 minutes</strong>.</p>
-        <p style="color:#888;font-size:.82rem;">If you didn't request this, please ignore this email.</p>
+        <p style="color:#444;font-size:.95rem;line-height:1.6;">Hello <strong>{full_name}</strong>,</p>
+        <p style="color:#555;font-size:.92rem;line-height:1.6;">Thank you for registering as an administrator. Please enter the verification code below to activate your admin account:</p>
+        <div style="background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;font-size:2.2rem;font-weight:800;letter-spacing:10px;padding:1.1rem 2.5rem;border-radius:14px;display:inline-block;margin:1.2rem 0;box-shadow:0 4px 16px rgba(245,87,108,.3);">{otp_code}</div>
+        <div style="background:#fff5f7;border:1px solid #fce;border-radius:10px;padding:.8rem 1rem;margin:1rem auto;max-width:380px;">
+          <p style="color:#f5576c;font-size:.82rem;margin:0;font-weight:600;">&#9200; This code expires in <strong>10 minutes</strong></p>
+        </div>
+        <p style="color:#999;font-size:.8rem;margin-top:.8rem;">If you didn't request this, you can safely ignore this email.</p>
       </div>
-      <div style="background:#fff5f7;padding:1rem;text-align:center;font-size:.75rem;color:#aaa;border-top:1px solid #fce;">Smart Attendance System &copy; 2025</div>
+      <div style="background:#fff5f7;padding:1rem;text-align:center;font-size:.75rem;color:#aaa;border-top:1px solid #fce;">
+        &copy; 2025 Smart Attendance System &middot; All rights reserved
+      </div>
     </div>
     """
 
 
-def build_reset_email(full_name, reset_link):
-    """Build the HTML body for password reset email."""
+def build_reset_email(full_name, otp_code):
+    """Build the HTML body for password reset OTP email (pink theme)."""
     return f"""
     <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(240,147,251,.15);">
       <div style="background:linear-gradient(135deg,#f093fb,#f5576c);padding:2rem;text-align:center;color:#fff;">
@@ -223,12 +231,133 @@ def build_reset_email(full_name, reset_link):
       </div>
       <div style="padding:2rem;text-align:center;">
         <p style="color:#555;font-size:.95rem;">Hello <strong>{full_name}</strong>,</p>
-        <p style="color:#555;font-size:.95rem;">We received a request to reset your password. Click the button below:</p>
-        <a href="{reset_link}" style="display:inline-block;background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;font-weight:700;padding:.8rem 2rem;border-radius:12px;text-decoration:none;font-size:1rem;margin:1rem 0;">Reset Password</a>
-        <p style="color:#888;font-size:.82rem;">This link expires in <strong>30 minutes</strong>.</p>
+        <p style="color:#555;font-size:.95rem;">We received a request to reset your password. Use the verification code below:</p>
+        <div style="background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;font-size:2.2rem;font-weight:800;letter-spacing:10px;padding:1.1rem 2.5rem;border-radius:14px;display:inline-block;margin:1.2rem 0;box-shadow:0 4px 16px rgba(245,87,108,.3);">{otp_code}</div>
+        <div style="background:#fff5f7;border:1px solid #fce;border-radius:10px;padding:.8rem 1rem;margin:1rem auto;max-width:380px;">
+          <p style="color:#f5576c;font-size:.82rem;margin:0;font-weight:600;">&#9200; This code expires in <strong>10 minutes</strong></p>
+        </div>
         <p style="color:#888;font-size:.82rem;">If you didn't request this, your account is safe — just ignore this email.</p>
       </div>
       <div style="background:#fff5f7;padding:1rem;text-align:center;font-size:.75rem;color:#aaa;border-top:1px solid #fce;">Smart Attendance System &copy; 2025</div>
+    </div>
+    """
+
+
+def build_pin_reset_email(full_name, otp_code):
+    """Build the HTML body for PIN reset OTP email (purple theme)."""
+    return f"""
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(102,126,234,.18);">
+      <div style="background:linear-gradient(135deg,#667eea,#764ba2);padding:2rem;text-align:center;color:#fff;">
+        <div style="width:56px;height:56px;background:rgba(255,255,255,.2);border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">&#128273;</div>
+        <h2 style="margin:0;font-size:1.4rem;">Reset Your PIN</h2>
+        <p style="opacity:.85;margin:.3rem 0 0;">Smart Attendance System</p>
+      </div>
+      <div style="padding:2rem;text-align:center;">
+        <p style="color:#555;font-size:.95rem;">Hello <strong>{full_name}</strong>,</p>
+        <p style="color:#555;font-size:.95rem;">We received a request to reset your User PIN. Use the verification code below:</p>
+        <div style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:2.2rem;font-weight:800;letter-spacing:10px;padding:1.1rem 2.5rem;border-radius:14px;display:inline-block;margin:1.2rem 0;box-shadow:0 4px 16px rgba(102,126,234,.3);">{otp_code}</div>
+        <div style="background:#f8f9ff;border:1px solid #e8ecff;border-radius:10px;padding:.8rem 1rem;margin:1rem auto;max-width:380px;">
+          <p style="color:#667eea;font-size:.82rem;margin:0;font-weight:600;">&#9200; This code expires in <strong>10 minutes</strong></p>
+        </div>
+        <p style="color:#888;font-size:.82rem;">If you didn't request this, your account is safe — just ignore this email.</p>
+      </div>
+      <div style="background:#f4f3ff;padding:1rem;text-align:center;font-size:.75rem;color:#aaa;border-top:1px solid #e8e6ff;">Smart Attendance System &copy; 2025</div>
+    </div>
+    """
+
+
+def build_welcome_email(full_name, email_id, password, role="Admin", user_id="", user_pin=""):
+    """Build HTML email sent after successful OTP verification (Admin welcome)."""
+    gradient = "linear-gradient(135deg,#f093fb,#f5576c)" if role == "Admin" else "linear-gradient(135deg,#667eea,#764ba2)"
+    icon = "&#128737;" if role == "Admin" else "&#128274;"
+    pin_section = ""
+    if user_id and user_pin:
+        pin_section = f"""
+        <div style="background:#f0fff4;border:1px solid #c6f6d5;border-radius:12px;padding:1.2rem;margin:1.2rem 0;">
+          <p style="color:#276749;font-size:.85rem;font-weight:700;margin:0 0 .6rem;"><i>&#128273;</i> Alternative Login (User ID &amp; PIN)</p>
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><td style="padding:8px 12px;color:#888;font-size:.85rem;font-weight:600;white-space:nowrap;">User ID</td>
+                <td style="padding:8px 12px;font-size:1.05rem;font-weight:800;color:#333;">{user_id}</td></tr>
+            <tr><td style="padding:8px 12px;color:#888;font-size:.85rem;font-weight:600;border-top:1px solid #e2e8f0;white-space:nowrap;">User PIN</td>
+                <td style="padding:8px 12px;font-size:1.3rem;font-weight:800;color:#333;letter-spacing:6px;border-top:1px solid #e2e8f0;">{user_pin}</td></tr>
+          </table>
+        </div>"""
+    return f"""
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.1);">
+      <div style="background:{gradient};padding:2rem;text-align:center;color:#fff;">
+        <div style="width:60px;height:60px;background:rgba(255,255,255,.2);border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:1.6rem;">{icon}</div>
+        <h2 style="margin:0;font-size:1.4rem;">Welcome to Smart Attendance!</h2>
+        <p style="opacity:.85;margin:.4rem 0 0;font-size:.9rem;">{role} Account Activated Successfully</p>
+      </div>
+      <div style="padding:2rem;">
+        <p style="color:#555;font-size:.95rem;">Hello <strong>{full_name}</strong>,</p>
+        <p style="color:#555;font-size:.95rem;">Your {role.lower()} account has been verified and is now active. Here are your login credentials:</p>
+        <div style="background:#f8f9ff;border:1px solid #e8ecff;border-radius:12px;padding:1.2rem;margin:1.2rem 0;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><td style="padding:8px 12px;color:#888;font-size:.85rem;font-weight:600;white-space:nowrap;">Email ID</td>
+                <td style="padding:8px 12px;font-size:1.05rem;font-weight:800;color:#333;">{email_id}</td></tr>
+            <tr><td style="padding:8px 12px;color:#888;font-size:.85rem;font-weight:600;border-top:1px solid #eef;white-space:nowrap;">Password</td>
+                <td style="padding:8px 12px;font-size:1.05rem;font-weight:800;color:#333;border-top:1px solid #eef;">{password}</td></tr>
+          </table>
+        </div>
+        {pin_section}
+        <p style="color:#e74c3c;font-size:.82rem;margin:.8rem 0;">&#9888; Please keep your credentials safe and do not share them with anyone.</p>
+        <p style="color:#888;font-size:.82rem;">You can now sign in using your email &amp; password, or your User ID &amp; PIN.</p>
+      </div>
+      <div style="background:#f8f8ff;padding:1rem;text-align:center;font-size:.75rem;color:#aaa;border-top:1px solid #eee;">Smart Attendance System &copy; 2025</div>
+    </div>
+    """
+
+
+def build_credentials_email(full_name, user_id, user_pin, role="Teacher", email="", department="", designation="", phone="", admin_name="", admin_email=""):
+    """Build HTML email with ALL login details sent when admin creates a teacher/staff account."""
+    role_color = "#667eea" if role == "Teacher" else "#f093fb" if role == "Staff" else "#06d6a0"
+    gradient = f"linear-gradient(135deg,{role_color},#764ba2)"
+    extra_rows = ""
+    if email:
+        extra_rows += f'<tr><td style="padding:8px 12px;color:#888;font-size:.85rem;font-weight:600;border-top:1px solid #eef;white-space:nowrap;">Email</td><td style="padding:8px 12px;font-size:.95rem;font-weight:700;color:#333;border-top:1px solid #eef;">{email}</td></tr>'
+    if department:
+        extra_rows += f'<tr><td style="padding:8px 12px;color:#888;font-size:.85rem;font-weight:600;border-top:1px solid #eef;white-space:nowrap;">Department</td><td style="padding:8px 12px;font-size:.95rem;font-weight:700;color:#333;border-top:1px solid #eef;">{department}</td></tr>'
+    if designation:
+        extra_rows += f'<tr><td style="padding:8px 12px;color:#888;font-size:.85rem;font-weight:600;border-top:1px solid #eef;white-space:nowrap;">Designation</td><td style="padding:8px 12px;font-size:.95rem;font-weight:700;color:#333;border-top:1px solid #eef;">{designation}</td></tr>'
+    if phone:
+        extra_rows += f'<tr><td style="padding:8px 12px;color:#888;font-size:.85rem;font-weight:600;border-top:1px solid #eef;white-space:nowrap;">Phone</td><td style="padding:8px 12px;font-size:.95rem;font-weight:700;color:#333;border-top:1px solid #eef;">{phone}</td></tr>'
+    admin_section = ""
+    if admin_name or admin_email:
+        admin_section = f"""
+        <div style="background:#f0f4ff;border:1px solid #d0d8f0;border-radius:10px;padding:.8rem 1rem;margin:1rem 0;">
+          <p style="color:#4a5568;font-size:.82rem;margin:0;"><strong>&#128188; Registered by:</strong> {admin_name or 'Admin'}</p>
+          {'<p style="color:#4a5568;font-size:.82rem;margin:.3rem 0 0;"><strong>Admin Email:</strong> ' + admin_email + '</p>' if admin_email else ''}
+          <p style="color:#888;font-size:.78rem;margin:.3rem 0 0;">For any changes to your Department or Designation, please contact your admin.</p>
+        </div>"""
+    return f"""
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.1);">
+      <div style="background:{gradient};padding:2rem;text-align:center;color:#fff;">
+        <div style="width:60px;height:60px;background:rgba(255,255,255,.2);border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:1.6rem;">&#128100;</div>
+        <h2 style="margin:0;font-size:1.4rem;">Your Account is Ready!</h2>
+        <p style="opacity:.85;margin:.4rem 0 0;font-size:.9rem;">Smart Attendance System — {role} Portal</p>
+      </div>
+      <div style="padding:2rem;">
+        <p style="color:#555;font-size:.95rem;">Hello <strong>{full_name}</strong>,</p>
+        <p style="color:#555;font-size:.95rem;">An account has been created for you on the Smart Attendance System. Here are your complete account details:</p>
+        <div style="background:#f8f9ff;border:1px solid #e8ecff;border-radius:12px;padding:1.2rem;margin:1.2rem 0;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><td style="padding:8px 12px;color:#888;font-size:.85rem;font-weight:600;white-space:nowrap;">Full Name</td>
+                <td style="padding:8px 12px;font-size:.95rem;font-weight:700;color:#333;">{full_name}</td></tr>
+            <tr><td style="padding:8px 12px;color:#888;font-size:.85rem;font-weight:600;border-top:1px solid #eef;white-space:nowrap;">User ID</td>
+                <td style="padding:8px 12px;font-size:1.1rem;font-weight:800;color:#333;letter-spacing:2px;border-top:1px solid #eef;">{user_id}</td></tr>
+            <tr><td style="padding:8px 12px;color:#888;font-size:.85rem;font-weight:600;border-top:1px solid #eef;white-space:nowrap;">User PIN</td>
+                <td style="padding:8px 12px;font-size:1.3rem;font-weight:800;color:#333;letter-spacing:6px;border-top:1px solid #eef;">{user_pin}</td></tr>
+            {extra_rows}
+          </table>
+        </div>
+        {admin_section}
+        <p style="color:#e74c3c;font-size:.82rem;margin:.8rem 0;">&#9888; Keep your PIN confidential. Do not share it with anyone.</p>
+        <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:.8rem 1rem;margin:1rem 0;">
+          <p style="color:#f57f17;font-size:.82rem;margin:0;"><strong>How to login:</strong> Go to the Teacher/Staff Portal &rarr; Enter your <strong>User ID</strong> and <strong>User PIN</strong> to sign in.</p>
+        </div>
+      </div>
+      <div style="background:#f8f8ff;padding:1rem;text-align:center;font-size:.75rem;color:#aaa;border-top:1px solid #eee;">Smart Attendance System &copy; 2025</div>
     </div>
     """
 
@@ -260,6 +389,16 @@ def init_db():
         ("teachers", "department", "ALTER TABLE teachers ADD COLUMN department TEXT DEFAULT ''"),
         ("teachers", "bio", "ALTER TABLE teachers ADD COLUMN bio TEXT DEFAULT ''"),
         ("teachers", "designation", "ALTER TABLE teachers ADD COLUMN designation TEXT DEFAULT ''"),
+        ("users", "registered_by", "ALTER TABLE users ADD COLUMN registered_by TEXT DEFAULT ''"),
+        ("users", "registered_by_role", "ALTER TABLE users ADD COLUMN registered_by_role TEXT DEFAULT ''"),
+        ("admins", "institution_type", "ALTER TABLE admins ADD COLUMN institution_type TEXT DEFAULT 'college'"),
+        ("email_verifications", "institution_type", "ALTER TABLE email_verifications ADD COLUMN institution_type TEXT DEFAULT 'college'"),
+        ("users", "is_active", "ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1"),
+        ("teachers", "user_pin", "ALTER TABLE teachers ADD COLUMN user_pin TEXT DEFAULT ''"),
+        ("admins", "user_pin", "ALTER TABLE admins ADD COLUMN user_pin TEXT DEFAULT ''"),
+        ("users", "registered_by_admin_id", "ALTER TABLE users ADD COLUMN registered_by_admin_id INTEGER DEFAULT 0"),
+        ("teachers", "registered_by_admin_id", "ALTER TABLE teachers ADD COLUMN registered_by_admin_id INTEGER DEFAULT 0"),
+        ("password_resets", "user_type", "ALTER TABLE password_resets ADD COLUMN user_type TEXT DEFAULT 'teacher'"),
     ]
     for table, col, sql in _migrations:
         try:
@@ -319,7 +458,39 @@ def init_auth_tables():
             conn.commit()
         except sqlite3.OperationalError:
             pass
+    # Add user_id column to teachers and admins tables
+    for table in ["teachers", "admins"]:
+        try:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN user_id TEXT DEFAULT ''")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
+        # Backfill existing rows that have no user_id
+        rows = conn.execute(f"SELECT id FROM {table} WHERE user_id IS NULL OR user_id = ''").fetchall()
+        prefix = "TCH" if table == "teachers" else "ADM"
+        for row in rows:
+            uid = f"{prefix}-{row['id']:04d}"
+            conn.execute(f"UPDATE {table} SET user_id = ? WHERE id = ?", (uid, row['id']))
+        if rows:
+            conn.commit()
     conn.close()
+
+
+def generate_user_id(prefix, conn, table):
+    """Auto-generate a unique user ID like TCH-0001, ADM-0001"""
+    result = conn.execute(
+        f"SELECT user_id FROM {table} WHERE user_id LIKE ? ORDER BY id DESC LIMIT 1",
+        (f"{prefix}-%",)
+    ).fetchone()
+    if result and result['user_id']:
+        try:
+            last_num = int(result['user_id'].split('-')[1])
+            return f"{prefix}-{last_num + 1:04d}"
+        except (ValueError, IndexError):
+            pass
+    # Fallback: count rows
+    count = conn.execute(f"SELECT COUNT(*) as c FROM {table}").fetchone()['c']
+    return f"{prefix}-{count + 1:04d}"
 
 
 init_auth_tables()
@@ -1199,9 +1370,18 @@ def instructions():
 
 
 @app.route("/capture", methods=["GET"])
+@app.route("/admin/capture", methods=["GET"], endpoint="admin_capture")
+@app.route("/teacher/capture", methods=["GET"], endpoint="teacher_capture")
 @any_login_required
 def capture():
-    return render_template("capture.html")
+    classes = []
+    if "teacher_id" in session:
+        conn = get_db_connection()
+        classes = conn.execute(
+            "SELECT id, name FROM classes WHERE teacher_id = ?", (session["teacher_id"],)
+        ).fetchall()
+        conn.close()
+    return render_template("capture.html", classes=classes)
 
 
 @app.route("/api/upload_capture", methods=["POST"])
@@ -1222,6 +1402,7 @@ def upload_capture():
         phone = (data.get("phone") or "").strip()
         role = (data.get("role") or "student").strip()
         notes = (data.get("notes") or "").strip()
+        user_pin_plain = (data.get("user_pin") or "").strip()
         images = data.get("images", [])
 
         # ── Validate required fields ──
@@ -1332,20 +1513,98 @@ def upload_capture():
                     phone TEXT,
                     role TEXT NOT NULL,
                     notes TEXT,
-                    created_at TEXT NOT NULL
+                    created_at TEXT NOT NULL,
+                    registered_by TEXT DEFAULT '',
+                    registered_by_role TEXT DEFAULT '',
+                    registered_by_admin_id INTEGER DEFAULT 0,
+                    is_active INTEGER DEFAULT 1
                 )"""
             )
+            # Determine who registered this user
+            reg_by = ''
+            reg_by_role = ''
+            reg_admin_id = 0
+            if 'admin_id' in session:
+                admin_row = conn.execute('SELECT full_name FROM admins WHERE id = ?', (session['admin_id'],)).fetchone()
+                reg_by = admin_row['full_name'] if admin_row else 'Admin'
+                reg_by_role = 'Admin'
+                reg_admin_id = session['admin_id']
+            elif 'teacher_id' in session:
+                teacher_row = conn.execute('SELECT full_name FROM teachers WHERE id = ?', (session['teacher_id'],)).fetchone()
+                reg_by = teacher_row['full_name'] if teacher_row else 'Teacher'
+                reg_by_role = 'Teacher'
+
             conn.execute(
                 """INSERT OR REPLACE INTO users
-                   (username, name, email, user_id, department, phone, role, notes, created_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (username, username, email, user_id, department, phone, role, notes, datetime.now().isoformat()),
+                   (username, name, email, user_id, department, phone, role, notes, created_at, registered_by, registered_by_role, registered_by_admin_id)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (username, username, email, user_id, department, phone, role, notes, datetime.now().isoformat(), reg_by, reg_by_role, reg_admin_id),
             )
+            # If class_id provided, add student to that class
+            class_id = data.get("class_id", "")
+            if class_id:
+                try:
+                    cid = int(class_id)
+                    if cid < 0:
+                        # Negative ID = admin_class; use the real admin_classes.id
+                        conn.execute(
+                            "INSERT OR IGNORE INTO class_students (class_id, student_name) VALUES (?, ?)",
+                            (-cid, username),
+                        )
+                    elif cid > 0 and 'teacher_id' in session:
+                        conn.execute(
+                            "INSERT OR IGNORE INTO class_students (class_id, student_name) VALUES (?, ?)",
+                            (cid, username),
+                        )
+                except Exception:
+                    pass
             conn.commit()
         except Exception as e:
             print(f"Database error: {e}")
         finally:
             conn.close()
+
+        # ── If admin registered a non-Student, create teacher account & send credentials ──
+        teacher_created = False
+        if 'admin_id' in session and role.lower() != 'student' and user_pin_plain and email:
+            if not user_pin_plain.isdigit() or len(user_pin_plain) < 4 or len(user_pin_plain) > 6:
+                pass  # skip if invalid PIN
+            else:
+                pin_hash = hashlib.sha256(user_pin_plain.encode()).hexdigest()
+                t_username = email.split("@")[0].lower().replace(" ", "").replace(".", "_")
+                conn = get_db_connection()
+                existing = conn.execute(
+                    "SELECT id FROM teachers WHERE username = ? OR email = ?", (t_username, email)
+                ).fetchone()
+                if not existing:
+                    try:
+                        conn.execute(
+                            """INSERT INTO teachers (username, password_hash, email, full_name, phone, department, designation, is_verified, user_pin, registered_by_admin_id)
+                               VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)""",
+                            (t_username, pin_hash, email, username, phone, department, role, pin_hash, session.get('admin_id', 0)),
+                        )
+                        new_t = conn.execute("SELECT id FROM teachers WHERE username = ?", (t_username,)).fetchone()
+                        teacher_uid = ""
+                        if new_t:
+                            teacher_uid = generate_user_id("TCH", conn, "teachers")
+                            conn.execute("UPDATE teachers SET user_id = ? WHERE id = ?", (teacher_uid, new_t['id']))
+                        conn.commit()
+                        teacher_created = True
+                        # Send credentials email with all details
+                        role_label = role if role in ("HOD", "Staff") else "Teacher"
+                        # Get admin info for the email
+                        admin_row = conn.execute('SELECT full_name, email FROM admins WHERE id = ?', (session.get('admin_id', 0),)).fetchone()
+                        a_name = admin_row['full_name'] if admin_row else ''
+                        a_email = admin_row['email'] if admin_row else ''
+                        cred_body = build_credentials_email(
+                            username, teacher_uid, user_pin_plain, role_label,
+                            email=email, department=department, designation=role,
+                            phone=phone, admin_name=a_name, admin_email=a_email
+                        )
+                        send_email(email, f"Your {APP_NAME} Account — Login Credentials", cred_body)
+                    except sqlite3.IntegrityError:
+                        pass
+                conn.close()
 
         return jsonify({
             "success": True,
@@ -1357,6 +1616,10 @@ def upload_capture():
                 "userId": user_id,
                 "department": department,
                 "role": role,
+                "phone": phone,
+                "notes": notes,
+                "registeredBy": reg_by,
+                "registeredByRole": reg_by_role,
             },
         }), 200
 
@@ -1367,6 +1630,8 @@ def upload_capture():
 
 
 @app.route("/recognize", methods=["GET"])
+@app.route("/admin/gate-scan", methods=["GET"], endpoint="admin_gate_scan")
+@app.route("/teacher/class-scan", methods=["GET"], endpoint="teacher_class_scan")
 @any_login_required
 def recognize():
     classes = []
@@ -1522,49 +1787,75 @@ def show_attendance():
 
 
 @app.route("/manage_users")
-@admin_login_required
+@app.route("/admin/users", endpoint="admin_users")
+@app.route("/teacher/users", endpoint="teacher_users")
+@any_login_required
 def manage_users():
     # Get all users from names.pkl
     users = get_all_users()
     
-    # Also get detailed user info from database
+    # Determine who is logged in
+    is_admin = 'admin_id' in session
+    viewer_name = ''
+    if is_admin:
+        conn_tmp = get_db_connection()
+        admin_row = conn_tmp.execute('SELECT full_name FROM admins WHERE id = ?', (session['admin_id'],)).fetchone()
+        viewer_name = admin_row['full_name'] if admin_row else ''
+        conn_tmp.close()
+    elif 'teacher_id' in session:
+        conn_tmp = get_db_connection()
+        teacher_row = conn_tmp.execute('SELECT full_name FROM teachers WHERE id = ?', (session['teacher_id'],)).fetchone()
+        viewer_name = teacher_row['full_name'] if teacher_row else ''
+        conn_tmp.close()
+
+    # Get detailed user info from database
     user_details = []
     conn = get_db_connection()
     for username in users:
         user_info = conn.execute(
-            "SELECT name, email, user_id, department, role FROM users WHERE username = ?",
+            "SELECT name, email, user_id, department, role, phone, notes, created_at, registered_by, registered_by_role FROM users WHERE username = ?",
             (username,)
         ).fetchone()
         if user_info:
+            # Teacher can only see users they registered
+            if not is_admin and user_info['registered_by'] != viewer_name:
+                continue
             user_details.append({
                 'username': username,
                 'name': user_info['name'] if user_info['name'] else username,
                 'email': user_info['email'],
                 'user_id': user_info['user_id'],
                 'department': user_info['department'],
-                'role': user_info['role']
+                'role': user_info['role'],
+                'phone': user_info['phone'] or '',
+                'notes': user_info['notes'] or '',
+                'created_at': user_info['created_at'] or '',
+                'registered_by': user_info['registered_by'] or '',
+                'registered_by_role': user_info['registered_by_role'] or '',
             })
         else:
-            user_details.append({
-                'username': username,
-                'name': username,
-                'email': None,
-                'user_id': None,
-                'department': None,
-                'role': None
-            })
+            # Unlinked users (no DB entry) — only show to admin
+            if is_admin:
+                user_details.append({
+                    'username': username,
+                    'name': username,
+                    'email': '', 'user_id': '', 'department': '', 'role': '',
+                    'phone': '', 'notes': '', 'created_at': '',
+                    'registered_by': '', 'registered_by_role': '',
+                })
     conn.close()
     
-    return render_template("manage_users.html", users=users, user_details=user_details)
+    return render_template("manage_users.html", users=users, user_details=user_details, is_admin=is_admin)
 
 
 @app.route("/delete_user/<username>", methods=["POST"])
 def delete_user_route(username):
+    target = 'admin_users' if 'admin_id' in session else 'teacher_users' if 'teacher_id' in session else 'manage_users'
     if delete_user(username):
         flash(f"User '{username}' has been deleted successfully.", "success")
-        return redirect(url_for("manage_users"))
+        return redirect(url_for(target))
     flash(f"Error deleting user '{username}'.", "danger")
-    return redirect(url_for("manage_users"))
+    return redirect(url_for(target))
 
 
 @app.route("/api/edit_user/<username>", methods=["POST"])
@@ -1619,6 +1910,7 @@ def edit_user_route(username):
 
 
 @app.route("/settings", methods=["GET", "POST"])
+@app.route("/admin/settings", methods=["GET", "POST"], endpoint="admin_settings")
 @admin_login_required
 def settings():
     if request.method == "POST":
@@ -1698,7 +1990,7 @@ def settings():
         }
         save_settings(new_settings)
         flash("Settings saved successfully!", "success")
-        return redirect(url_for("settings"))
+        return redirect(url_for("admin_settings"))
 
     current_settings = load_settings()
     
@@ -1716,6 +2008,175 @@ def settings():
     }
     
     return render_template("settings.html", settings=current_settings, sys_stats=sys_stats)
+
+
+# ── Admin Class Management API ──
+@app.route("/api/admin/classes", methods=["GET"])
+@admin_login_required
+def api_admin_classes():
+    """Get all admin-managed classes with assignment info."""
+    conn = get_db_connection()
+    classes = conn.execute(
+        "SELECT * FROM admin_classes ORDER BY institution_type, name"
+    ).fetchall()
+    result = []
+    for c in classes:
+        teachers = conn.execute(
+            """SELECT t.id, t.full_name, t.user_id, t.department, t.designation
+               FROM teacher_class_assignments tca
+               JOIN teachers t ON t.id = tca.teacher_id
+               WHERE tca.admin_class_id = ?""",
+            (c["id"],),
+        ).fetchall()
+        result.append({
+            "id": c["id"],
+            "name": c["name"],
+            "institution_type": c["institution_type"],
+            "department": c["department"] or "",
+            "description": c["description"] or "",
+            "teachers": [{"id": t["id"], "name": t["full_name"], "user_id": t["user_id"] or "",
+                          "department": t["department"] or "", "designation": t["designation"] or ""} for t in teachers],
+        })
+    conn.close()
+    return jsonify({"success": True, "classes": result})
+
+
+@app.route("/api/admin/classes", methods=["POST"])
+@admin_login_required
+def api_admin_classes_create():
+    """Create a new admin-managed class."""
+    data = request.get_json()
+    name = (data.get("name") or "").strip()
+    inst_type = (data.get("institution_type") or "college").strip().lower()
+    department = (data.get("department") or "").strip()
+    description = (data.get("description") or "").strip()
+
+    if not name:
+        return jsonify({"success": False, "message": "Class name is required"}), 400
+    if inst_type not in ("school", "college"):
+        inst_type = "college"
+
+    conn = get_db_connection()
+    conn.execute(
+        "INSERT INTO admin_classes (name, institution_type, department, description) VALUES (?, ?, ?, ?)",
+        (name, inst_type, department, description),
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "message": f"Class '{name}' created"})
+
+
+@app.route("/api/admin/classes/<int:class_id>", methods=["DELETE"])
+@admin_login_required
+def api_admin_classes_delete(class_id):
+    """Delete an admin-managed class."""
+    conn = get_db_connection()
+    conn.execute("DELETE FROM teacher_class_assignments WHERE admin_class_id = ?", (class_id,))
+    conn.execute("DELETE FROM admin_classes WHERE id = ?", (class_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "message": "Class deleted"})
+
+
+@app.route("/api/admin/classes/<int:class_id>/assign", methods=["POST"])
+@admin_login_required
+def api_admin_class_assign(class_id):
+    """Assign a teacher to an admin-managed class."""
+    data = request.get_json()
+    teacher_id = data.get("teacher_id")
+    if not teacher_id:
+        return jsonify({"success": False, "message": "Teacher ID is required"}), 400
+
+    conn = get_db_connection()
+    # Verify class exists
+    cls = conn.execute("SELECT id, institution_type FROM admin_classes WHERE id = ?", (class_id,)).fetchone()
+    if not cls:
+        conn.close()
+        return jsonify({"success": False, "message": "Class not found"}), 404
+
+    # Verify teacher exists and get designation
+    teacher = conn.execute("SELECT id, designation FROM teachers WHERE id = ?", (teacher_id,)).fetchone()
+    if not teacher:
+        conn.close()
+        return jsonify({"success": False, "message": "Teacher not found"}), 404
+
+    # For college: allow HOD and Teacher. For school: allow Teacher only.
+    designation = (teacher["designation"] or "").strip().lower()
+    if cls["institution_type"] == "school" and designation == "hod":
+        conn.close()
+        return jsonify({"success": False, "message": "School classes can only be assigned to Teachers"}), 400
+
+    try:
+        conn.execute(
+            "INSERT INTO teacher_class_assignments (admin_class_id, teacher_id) VALUES (?, ?)",
+            (class_id, int(teacher_id)),
+        )
+        conn.commit()
+    except sqlite3.IntegrityError:
+        conn.close()
+        return jsonify({"success": False, "message": "Teacher already assigned to this class"}), 409
+    conn.close()
+    return jsonify({"success": True, "message": "Teacher assigned successfully"})
+
+
+@app.route("/api/admin/classes/<int:class_id>/unassign/<int:teacher_id>", methods=["DELETE"])
+@admin_login_required
+def api_admin_class_unassign(class_id, teacher_id):
+    """Remove a teacher from an admin-managed class."""
+    conn = get_db_connection()
+    conn.execute(
+        "DELETE FROM teacher_class_assignments WHERE admin_class_id = ? AND teacher_id = ?",
+        (class_id, teacher_id),
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "message": "Teacher unassigned"})
+
+
+@app.route("/api/admin/teachers", methods=["GET"])
+@admin_login_required
+def api_admin_teachers_list():
+    """Get all teachers for assignment dropdown."""
+    conn = get_db_connection()
+    teachers = conn.execute(
+        "SELECT id, full_name, user_id, department, designation FROM teachers ORDER BY full_name"
+    ).fetchall()
+    conn.close()
+    return jsonify({
+        "success": True,
+        "teachers": [{"id": t["id"], "name": t["full_name"], "user_id": t["user_id"] or "",
+                       "department": t["department"] or "", "designation": t["designation"] or ""} for t in teachers],
+    })
+
+
+@app.route("/api/classes/for_capture", methods=["GET"])
+@any_login_required
+def api_classes_for_capture():
+    """Get classes available for the current user on the capture page."""
+    conn = get_db_connection()
+    classes = []
+    if "teacher_id" in session:
+        # Teacher's own classes
+        own = conn.execute(
+            "SELECT id, name, 'own' as source FROM classes WHERE teacher_id = ?",
+            (session["teacher_id"],),
+        ).fetchall()
+        # Admin-assigned classes
+        assigned = conn.execute(
+            """SELECT ac.id, ac.name, 'assigned' as source
+               FROM admin_classes ac
+               JOIN teacher_class_assignments tca ON tca.admin_class_id = ac.id
+               WHERE tca.teacher_id = ?""",
+            (session["teacher_id"],),
+        ).fetchall()
+        classes = [{"id": r["id"], "name": r["name"], "source": r["source"]} for r in own]
+        classes += [{"id": -r["id"], "name": r["name"] + " ★", "source": r["source"]} for r in assigned]
+    elif "admin_id" in session:
+        # All admin-managed classes
+        rows = conn.execute("SELECT id, name FROM admin_classes ORDER BY name").fetchall()
+        classes = [{"id": -r["id"], "name": r["name"], "source": "admin"} for r in rows]
+    conn.close()
+    return jsonify({"success": True, "classes": classes})
 
 
 # API Routes for Real-time Face Recognition
@@ -1936,7 +2397,9 @@ def get_recognized_users():
 
 
 @app.route("/export_attendance", methods=["GET", "POST"])
-@admin_login_required
+@app.route("/admin/export", methods=["GET", "POST"], endpoint="admin_export")
+@app.route("/teacher/export-data", methods=["GET", "POST"], endpoint="teacher_export")
+@any_login_required
 def export_attendance():
     if request.method == "POST":
         import io, json as jsonlib
@@ -1952,6 +2415,13 @@ def export_attendance():
         
         conn = get_db_connection()
         
+        # Scope filter for teacher vs admin
+        scope_clause = ""
+        scope_params = []
+        if "teacher_id" in session and "admin_id" not in session:
+            scope_clause = " AND ar.teacher_id = ?"
+            scope_params = [session["teacher_id"]]
+        
         # Build query with proper user details
         if deduplicate:
             query = """
@@ -1960,7 +2430,7 @@ def export_attendance():
                 FROM attendance_records ar
                 LEFT JOIN users u ON ar.student_name = u.username
                 WHERE ar.student_name != 'Unknown' AND ar.student_name != 'Error'
-            """
+            """ + scope_clause
         else:
             query = """
                 SELECT ar.student_name, ar.date, ar.time, ar.status,
@@ -1968,8 +2438,8 @@ def export_attendance():
                 FROM attendance_records ar
                 LEFT JOIN users u ON ar.student_name = u.username
                 WHERE ar.student_name != 'Unknown' AND ar.student_name != 'Error'
-            """
-        params = []
+            """ + scope_clause
+        params = list(scope_params)
         
         # Date range filtering — convert YYYY-MM-DD inputs to DD-MM-YYYY for DB
         if start_date:
@@ -2093,11 +2563,23 @@ def export_attendance():
         
         else:
             flash("Only CSV and JSON formats are supported.", "info")
-            return redirect(url_for("export_attendance"))
+            export_target = 'admin_export' if 'admin_id' in session else 'teacher_export' if 'teacher_id' in session else 'export_attendance'
+            return redirect(url_for(export_target))
     
     # GET — show the export form with stats and filter options
     conn = get_db_connection()
-    total_records = conn.execute("SELECT COUNT(*) as count FROM attendance_records WHERE student_name != 'Unknown' AND student_name != 'Error'").fetchone()['count']
+    
+    # Scope queries for teacher vs admin
+    scope_where = ""
+    scope_params_get = []
+    if "teacher_id" in session and "admin_id" not in session:
+        scope_where = " AND ar.teacher_id = ?"
+        scope_params_get = [session["teacher_id"]]
+    
+    total_records = conn.execute(
+        "SELECT COUNT(*) as count FROM attendance_records ar WHERE ar.student_name != 'Unknown' AND ar.student_name != 'Error'" + scope_where,
+        scope_params_get
+    ).fetchone()['count']
     
     # Get departments for filter
     all_depts = conn.execute(
@@ -2107,32 +2589,56 @@ def export_attendance():
     
     # Get date range
     date_range = conn.execute(
-        "SELECT MIN(date) as earliest, MAX(date) as latest FROM attendance_records"
+        "SELECT MIN(ar.date) as earliest, MAX(ar.date) as latest FROM attendance_records ar WHERE 1=1" + scope_where,
+        scope_params_get
     ).fetchone()
     
     # Get unique students count
     unique_count = conn.execute(
-        "SELECT COUNT(DISTINCT student_name) as count FROM attendance_records WHERE student_name != 'Unknown' AND student_name != 'Error'"
+        "SELECT COUNT(DISTINCT ar.student_name) as count FROM attendance_records ar WHERE ar.student_name != 'Unknown' AND ar.student_name != 'Error'" + scope_where,
+        scope_params_get
     ).fetchone()['count']
     
     # Get today's count
     today = datetime.now().strftime("%d-%m-%Y")
     today_count = conn.execute(
-        "SELECT COUNT(DISTINCT student_name) as count FROM attendance_records WHERE date = ? AND student_name != 'Unknown'", (today,)
+        "SELECT COUNT(DISTINCT ar.student_name) as count FROM attendance_records ar WHERE ar.date = ? AND ar.student_name != 'Unknown'" + scope_where,
+        [today] + scope_params_get
     ).fetchone()['count']
     
     conn.close()
     
+    # Total users count (scoped for teacher)
+    if "teacher_id" in session and "admin_id" not in session:
+        conn_u = get_db_connection()
+        teacher_row = conn_u.execute('SELECT full_name FROM teachers WHERE id = ?', (session['teacher_id'],)).fetchone()
+        teacher_name = teacher_row['full_name'] if teacher_row else ''
+        total_users_count = conn_u.execute(
+            "SELECT COUNT(*) as count FROM users WHERE registered_by = ?", (teacher_name,)
+        ).fetchone()['count']
+        conn_u.close()
+    else:
+        total_users_count = len(get_all_users())
+    
     stats = {
         'total_records': total_records,
-        'total_users': len(get_all_users()),
+        'total_users': total_users_count,
         'unique_recorded': unique_count,
         'today_count': today_count,
         'earliest_date': date_range['earliest'] if date_range else None,
         'latest_date': date_range['latest'] if date_range else None,
     }
     
-    return render_template("export_attendance.html", stats=stats, departments=departments)
+    # Get classes for teacher portal
+    classes = []
+    if "teacher_id" in session and "admin_id" not in session:
+        conn2 = get_db_connection()
+        classes = conn2.execute(
+            "SELECT id, name FROM classes WHERE teacher_id = ?", (session["teacher_id"],)
+        ).fetchall()
+        conn2.close()
+    
+    return render_template("export_attendance.html", stats=stats, departments=departments, classes=classes)
 
 
 # API endpoint to get departments list (used by multiple pages)
@@ -2144,6 +2650,163 @@ def get_departments():
     ).fetchall()
     conn.close()
     return jsonify({'departments': [d['department'] for d in depts]})
+
+
+# Auto-generate next User/Staff ID based on role
+@app.route("/api/next_user_id")
+@any_login_required
+def api_next_user_id():
+    """Generate next user ID based on role: STU-XXXX, STF-XXXX, TCH-XXXX, etc."""
+    role = request.args.get("role", "Student").strip()
+    prefix_map = {"Student": "STU", "Teacher": "TCH", "Staff": "STF", "Admin": "ADM"}
+    prefix = prefix_map.get(role, "USR")
+
+    conn = get_db_connection()
+    result = conn.execute(
+        "SELECT user_id FROM users WHERE user_id LIKE ? ORDER BY id DESC LIMIT 1",
+        (f"{prefix}-%",)
+    ).fetchone()
+    if result and result['user_id']:
+        try:
+            last_num = int(result['user_id'].split('-')[1])
+            next_id = f"{prefix}-{last_num + 1:04d}"
+        except (ValueError, IndexError):
+            count = conn.execute("SELECT COUNT(*) as c FROM users WHERE user_id LIKE ?", (f"{prefix}-%",)).fetchone()['c']
+            next_id = f"{prefix}-{count + 1:04d}"
+    else:
+        next_id = f"{prefix}-0001"
+    conn.close()
+    return jsonify({"user_id": next_id})
+
+
+# ── Manage Users API (for settings page) ──
+@app.route("/api/admin/all_users", methods=["GET"])
+@admin_login_required
+def api_admin_all_users():
+    """Get all registered users (from users table) for management UI."""
+    conn = get_db_connection()
+    rows = conn.execute(
+        "SELECT id, username, name, email, user_id, department, phone, role, notes, created_at, registered_by, registered_by_role, is_active FROM users ORDER BY id DESC"
+    ).fetchall()
+    conn.close()
+    users = []
+    for r in rows:
+        is_active = r["is_active"] if "is_active" in r.keys() else 1
+        users.append({
+            "id": r["id"], "username": r["username"], "name": r["name"],
+            "email": r["email"], "user_id": r["user_id"], "department": r["department"],
+            "phone": r["phone"] or "", "role": r["role"], "notes": r["notes"] or "",
+            "created_at": r["created_at"] or "", "registered_by": r["registered_by"] or "",
+            "registered_by_role": r["registered_by_role"] or "",
+            "is_active": is_active,
+        })
+    return jsonify({"success": True, "users": users})
+
+
+@app.route("/api/admin/users/<int:user_id>/update", methods=["POST"])
+@admin_login_required
+def api_admin_update_user(user_id):
+    """Update a registered user's details."""
+    data = request.get_json()
+    name = (data.get("name") or "").strip()
+    email = (data.get("email") or "").strip()
+    department = (data.get("department") or "").strip()
+    phone = (data.get("phone") or "").strip()
+    role = (data.get("role") or "").strip()
+    notes = (data.get("notes") or "").strip()
+    new_user_id = (data.get("user_id") or "").strip()
+
+    if not name or not email:
+        return jsonify({"success": False, "message": "Name and email are required"}), 400
+
+    conn = get_db_connection()
+    existing = conn.execute("SELECT id FROM users WHERE id = ?", (user_id,)).fetchone()
+    if not existing:
+        conn.close()
+        return jsonify({"success": False, "message": "User not found"}), 404
+
+    # Check user_id uniqueness (exclude self)
+    if new_user_id:
+        dup = conn.execute("SELECT id FROM users WHERE user_id = ? AND id != ?", (new_user_id, user_id)).fetchone()
+        if dup:
+            conn.close()
+            return jsonify({"success": False, "message": "User ID already in use"}), 409
+
+    conn.execute(
+        """UPDATE users SET name = ?, email = ?, department = ?, phone = ?,
+           role = ?, notes = ?, user_id = ? WHERE id = ?""",
+        (name, email, department, phone, role, notes, new_user_id, user_id),
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "message": "User updated successfully"})
+
+
+@app.route("/api/admin/users/<int:user_id>/toggle_active", methods=["POST"])
+@admin_login_required
+def api_admin_toggle_active(user_id):
+    """Toggle active/inactive status for a user."""
+    conn = get_db_connection()
+    user = conn.execute("SELECT id, is_active FROM users WHERE id = ?", (user_id,)).fetchone()
+    if not user:
+        conn.close()
+        return jsonify({"success": False, "message": "User not found"}), 404
+    new_status = 0 if user["is_active"] else 1
+    conn.execute("UPDATE users SET is_active = ? WHERE id = ?", (new_status, user_id))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "is_active": new_status, "message": "User " + ("activated" if new_status else "deactivated")})
+
+
+@app.route("/api/admin/users/<int:user_id>/delete", methods=["DELETE"])
+@admin_login_required
+def api_admin_delete_user(user_id):
+    """Delete a registered user from the database and remove their face data."""
+    conn = get_db_connection()
+    user = conn.execute("SELECT id, username, name FROM users WHERE id = ?", (user_id,)).fetchone()
+    if not user:
+        conn.close()
+        return jsonify({"success": False, "message": "User not found"}), 404
+
+    username = user["username"]
+    # Remove from users table
+    conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    # Remove from class_students
+    conn.execute("DELETE FROM class_students WHERE student_name = ?", (username,))
+    conn.commit()
+    conn.close()
+
+    # Remove from face data (names.pkl and faces_data.pkl)
+    try:
+        if os.path.exists("data/names.pkl") and os.path.exists("data/faces_data.pkl"):
+            with open("data/names.pkl", "rb") as f:
+                names = pickle.load(f)
+            with open("data/faces_data.pkl", "rb") as f:
+                faces = pickle.load(f)
+            # Filter out this user's data
+            indices = [i for i, n in enumerate(names) if n != username]
+            if indices:
+                new_names = [names[i] for i in indices]
+                new_faces = faces[indices]
+                with open("data/names.pkl", "wb") as f:
+                    pickle.dump(new_names, f)
+                with open("data/faces_data.pkl", "wb") as f:
+                    pickle.dump(new_faces, f)
+                # Retrain model
+                n_neighbors = min(5, len(new_faces))
+                knn = KNeighborsClassifier(n_neighbors=n_neighbors)
+                knn.fit(new_faces.reshape(new_faces.shape[0], -1), new_names)
+                with open("data/face_recognizer.pkl", "wb") as f:
+                    pickle.dump(knn, f)
+            else:
+                # No users left, remove files
+                for fp in ["data/names.pkl", "data/faces_data.pkl", "data/face_recognizer.pkl"]:
+                    if os.path.exists(fp):
+                        os.remove(fp)
+    except Exception as e:
+        print(f"Error removing face data for {username}: {e}")
+
+    return jsonify({"success": True, "message": f"User '{username}' deleted successfully"})
 
 
 # Combined API for dropdown options — merges settings + database
@@ -2242,68 +2905,9 @@ def export_preview():
 # Teacher authentication routes
 @app.route("/auth/register", methods=["GET", "POST"])
 def teacher_register():
-    if request.method == "POST":
-        username = request.form["username"].strip()
-        password = request.form["password"]
-        email = request.form["email"].strip()
-        full_name = request.form["full_name"].strip()
-
-        if not username or not password or not email or not full_name:
-            flash("All fields are required.", "danger")
-            return render_template("auth/register.html")
-
-        if len(password) < 6:
-            flash("Password must be at least 6 characters.", "danger")
-            return render_template("auth/register.html")
-
-        # Check if username or email already exists
-        conn = get_db_connection()
-        existing = conn.execute(
-            "SELECT id FROM teachers WHERE username = ? OR email = ?",
-            (username, email),
-        ).fetchone()
-        if existing:
-            conn.close()
-            flash("Username or email already exists.", "danger")
-            return render_template("auth/register.html")
-
-        # Hash the password
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
-
-        # Generate OTP
-        otp_code = generate_otp()
-        expires_at = (datetime.now() + timedelta(minutes=10)).strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
-
-        # Delete any previous pending verifications for the same email
-        conn.execute("DELETE FROM email_verifications WHERE email = ?", (email,))
-
-        # Store pending registration
-        conn.execute(
-            """INSERT INTO email_verifications
-               (email, username, password_hash, full_name, otp_code, expires_at)
-               VALUES (?, ?, ?, ?, ?, ?)""",
-            (email, username, password_hash, full_name, otp_code, expires_at),
-        )
-        conn.commit()
-        conn.close()
-
-        # Send verification email
-        email_body = build_verification_email(full_name, otp_code)
-        sent = send_email(email, f"Verify Your Email — {APP_NAME}", email_body)
-
-        if sent:
-            session["pending_verify_email"] = email
-            flash("A verification code has been sent to your email.", "info")
-            return redirect(url_for("verify_email"))
-        else:
-            flash(
-                "Failed to send verification email. Please try again.", "danger"
-            )
-            return render_template("auth/register.html")
-
-    return render_template("auth/register.html")
+    # Teacher self-signup is disabled — only admin can create teacher accounts
+    flash("Teacher accounts are created by the admin. Please contact your administrator.", "info")
+    return redirect(url_for("teacher_login"))
 
 
 @app.route("/auth/verify", methods=["GET", "POST"])
@@ -2352,6 +2956,16 @@ def verify_email():
                     record["full_name"],
                 ),
             )
+            # Auto-generate user_id for the new teacher
+            new_teacher = conn.execute(
+                "SELECT id FROM teachers WHERE username = ?", (record["username"],)
+            ).fetchone()
+            if new_teacher:
+                teacher_user_id = generate_user_id("TCH", conn, "teachers")
+                conn.execute(
+                    "UPDATE teachers SET user_id = ? WHERE id = ?",
+                    (teacher_user_id, new_teacher["id"]),
+                )
             # Mark verification as used
             conn.execute(
                 "UPDATE email_verifications SET verified = 1 WHERE id = ?",
@@ -2359,7 +2973,8 @@ def verify_email():
             )
             conn.commit()
             session.pop("pending_verify_email", None)
-            flash("Email verified! Your account is active. Please log in.", "success")
+            uid_msg = f" Your User ID is: {teacher_user_id}" if new_teacher else ""
+            flash(f"Email verified! Your account is active.{uid_msg} Please log in.", "success")
             return redirect(url_for("teacher_login"))
         except sqlite3.IntegrityError:
             flash("Username or email already registered.", "danger")
@@ -2420,71 +3035,89 @@ def forgot_password():
             return render_template("auth/forgot_password.html")
 
         conn = get_db_connection()
-        teacher = conn.execute(
-            "SELECT * FROM teachers WHERE email = ?", (email,)
-        ).fetchone()
+        teacher = conn.execute("SELECT * FROM teachers WHERE email = ?", (email,)).fetchone()
+        admin = conn.execute("SELECT * FROM admins WHERE email = ?", (email,)).fetchone()
 
-        if not teacher:
+        if not teacher and not admin:
             conn.close()
-            # Don't reveal if email exists or not — show same message
-            flash(
-                "If an account with that email exists, a reset link has been sent.",
-                "info",
-            )
+            flash("If an account with that email exists, a verification code has been sent.", "info")
             return render_template("auth/forgot_password.html")
 
-        # Generate reset token
-        token = generate_token()
-        expires_at = (datetime.now() + timedelta(minutes=30)).strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
+        user_id = teacher["id"] if teacher else admin["id"]
+        user_type = "teacher" if teacher else "admin"
+        user_name = teacher["full_name"] if teacher else admin["full_name"]
 
-        # Invalidate any previous tokens for this teacher
-        conn.execute(
-            "UPDATE password_resets SET used = 1 WHERE teacher_id = ? AND used = 0",
-            (teacher["id"],),
-        )
+        # Generate 5-digit OTP
+        otp = generate_otp(5)
+        otp_hash = hashlib.sha256(otp.encode()).hexdigest()
+        expires_at = (datetime.now() + timedelta(minutes=10)).strftime("%Y-%m-%d %H:%M:%S")
 
-        conn.execute(
-            "INSERT INTO password_resets (teacher_id, token, expires_at) VALUES (?, ?, ?)",
-            (teacher["id"], token, expires_at),
-        )
+        # Invalidate previous tokens
+        conn.execute("UPDATE password_resets SET used = 1 WHERE teacher_id = ? AND user_type = ? AND used = 0", (user_id, user_type))
+        conn.execute("INSERT INTO password_resets (teacher_id, token, expires_at, user_type) VALUES (?, ?, ?, ?)", (user_id, otp_hash, expires_at, user_type))
         conn.commit()
         conn.close()
 
-        # Build reset link
-        reset_link = request.host_url.rstrip("/") + url_for(
-            "reset_password", token=token
-        )
-        email_body = build_reset_email(teacher["full_name"], reset_link)
-        send_email(email, f"Password Reset — {APP_NAME}", email_body)
+        # Store in session for verification
+        session["pw_reset_email"] = email
+        session["pw_reset_user_id"] = user_id
+        session["pw_reset_user_type"] = user_type
 
-        flash(
-            "If an account with that email exists, a reset link has been sent.",
-            "info",
-        )
-        return render_template("auth/forgot_password.html")
+        # Send OTP email
+        email_body = build_reset_email(user_name, otp)
+        send_email(email, f"Password Reset Code — {APP_NAME}", email_body)
+
+        flash("A 5-digit verification code has been sent to your email.", "info")
+        # Mask email for display
+        parts = email.split("@")
+        masked = parts[0][:2] + "***@" + parts[1] if len(parts) == 2 else email
+        return render_template("auth/verify_password_otp.html", masked_email=masked, raw_email=email)
 
     return render_template("auth/forgot_password.html")
 
 
-@app.route("/auth/reset-password/<token>", methods=["GET", "POST"])
-def reset_password(token):
+@app.route("/auth/verify-password-otp", methods=["POST"])
+def verify_password_otp():
+    otp = request.form.get("otp", "").strip()
+    email = session.get("pw_reset_email", "")
+    user_id = session.get("pw_reset_user_id")
+    user_type = session.get("pw_reset_user_type", "teacher")
+
+    if not otp or not user_id:
+        flash("Session expired. Please start again.", "danger")
+        return redirect(url_for("forgot_password"))
+
+    otp_hash = hashlib.sha256(otp.encode()).hexdigest()
     conn = get_db_connection()
     record = conn.execute(
-        "SELECT * FROM password_resets WHERE token = ? AND used = 0", (token,)
+        "SELECT * FROM password_resets WHERE teacher_id = ? AND user_type = ? AND token = ? AND used = 0",
+        (user_id, user_type, otp_hash),
     ).fetchone()
 
     if not record:
         conn.close()
-        flash("Invalid or expired reset link.", "danger")
-        return redirect(url_for("forgot_password"))
+        flash("Invalid verification code. Please try again.", "danger")
+        parts = email.split("@")
+        masked = parts[0][:2] + "***@" + parts[1] if len(parts) == 2 else email
+        return render_template("auth/verify_password_otp.html", masked_email=masked, raw_email=email)
 
-    # Check expiry
     expires = datetime.strptime(record["expires_at"], "%Y-%m-%d %H:%M:%S")
     if datetime.now() > expires:
         conn.close()
-        flash("This reset link has expired. Please request a new one.", "danger")
+        flash("Verification code has expired. Please request a new one.", "danger")
+        return redirect(url_for("forgot_password"))
+
+    conn.close()
+
+    # OTP verified — allow password reset
+    session["pw_reset_verified"] = True
+    return render_template("auth/reset_password.html")
+
+
+@app.route("/auth/reset-password", methods=["GET", "POST"])
+def reset_password():
+    if not session.get("pw_reset_verified"):
+        flash("Please verify your email first.", "danger")
         return redirect(url_for("forgot_password"))
 
     if request.method == "POST":
@@ -2493,73 +3126,254 @@ def reset_password(token):
 
         if len(new_password) < 6:
             flash("Password must be at least 6 characters.", "danger")
-            return render_template("auth/reset_password.html", token=token)
+            return render_template("auth/reset_password.html")
 
         if new_password != confirm_password:
             flash("Passwords do not match.", "danger")
-            return render_template("auth/reset_password.html", token=token)
+            return render_template("auth/reset_password.html")
 
-        # Update password
+        user_id = session.get("pw_reset_user_id")
+        user_type = session.get("pw_reset_user_type", "teacher")
+
         new_hash = hashlib.sha256(new_password.encode()).hexdigest()
-        conn.execute(
-            "UPDATE teachers SET password_hash = ? WHERE id = ?",
-            (new_hash, record["teacher_id"]),
-        )
-        conn.execute(
-            "UPDATE password_resets SET used = 1 WHERE id = ?", (record["id"],)
-        )
+        table = "admins" if user_type == "admin" else "teachers"
+        conn = get_db_connection()
+        conn.execute(f"UPDATE {table} SET password_hash = ? WHERE id = ?", (new_hash, user_id))
+        conn.execute("UPDATE password_resets SET used = 1 WHERE teacher_id = ? AND user_type = ? AND used = 0", (user_id, user_type))
         conn.commit()
         conn.close()
 
+        # Clear session
+        for k in ("pw_reset_email", "pw_reset_user_id", "pw_reset_user_type", "pw_reset_verified"):
+            session.pop(k, None)
+
         flash("Password reset successfully! Please log in.", "success")
-        return redirect(url_for("teacher_login"))
+        return redirect(url_for("admin_login"))
+
+    return render_template("auth/reset_password.html")
+
+
+# ── Forgot PIN flow (OTP-based) ──
+@app.route("/auth/forgot-pin", methods=["GET", "POST"])
+def forgot_pin():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        if not email:
+            flash("Please enter your email address.", "danger")
+            return render_template("auth/forgot_pin.html")
+
+        conn = get_db_connection()
+        teacher = conn.execute("SELECT * FROM teachers WHERE email = ?", (email,)).fetchone()
+        admin = conn.execute("SELECT * FROM admins WHERE email = ?", (email,)).fetchone()
+
+        if not teacher and not admin:
+            conn.close()
+            flash("If an account with that email exists, a verification code has been sent.", "info")
+            return render_template("auth/forgot_pin.html")
+
+        user_id = teacher["id"] if teacher else admin["id"]
+        user_type = "teacher" if teacher else "admin"
+        user_name = teacher["full_name"] if teacher else admin["full_name"]
+
+        # Generate 5-digit OTP
+        otp = generate_otp(5)
+        otp_hash = hashlib.sha256(otp.encode()).hexdigest()
+        expires_at = (datetime.now() + timedelta(minutes=10)).strftime("%Y-%m-%d %H:%M:%S")
+
+        conn.execute("UPDATE password_resets SET used = 1 WHERE teacher_id = ? AND user_type = ? AND used = 0", (user_id, user_type))
+        conn.execute("INSERT INTO password_resets (teacher_id, token, expires_at, user_type) VALUES (?, ?, ?, ?)", (user_id, otp_hash, expires_at, user_type))
+        conn.commit()
+        conn.close()
+
+        session["pin_reset_email"] = email
+        session["pin_reset_user_id"] = user_id
+        session["pin_reset_user_type"] = user_type
+
+        email_body = build_pin_reset_email(user_name, otp)
+        send_email(email, f"PIN Reset Code — {APP_NAME}", email_body)
+
+        flash("A 5-digit verification code has been sent to your email.", "info")
+        parts = email.split("@")
+        masked = parts[0][:2] + "***@" + parts[1] if len(parts) == 2 else email
+        return render_template("auth/verify_pin_otp.html", masked_email=masked, raw_email=email)
+
+    return render_template("auth/forgot_pin.html")
+
+
+@app.route("/auth/verify-pin-otp", methods=["POST"])
+def verify_pin_otp():
+    otp = request.form.get("otp", "").strip()
+    email = session.get("pin_reset_email", "")
+    user_id = session.get("pin_reset_user_id")
+    user_type = session.get("pin_reset_user_type", "teacher")
+
+    if not otp or not user_id:
+        flash("Session expired. Please start again.", "danger")
+        return redirect(url_for("forgot_pin"))
+
+    otp_hash = hashlib.sha256(otp.encode()).hexdigest()
+    conn = get_db_connection()
+    record = conn.execute(
+        "SELECT * FROM password_resets WHERE teacher_id = ? AND user_type = ? AND token = ? AND used = 0",
+        (user_id, user_type, otp_hash),
+    ).fetchone()
+
+    if not record:
+        conn.close()
+        flash("Invalid verification code. Please try again.", "danger")
+        parts = email.split("@")
+        masked = parts[0][:2] + "***@" + parts[1] if len(parts) == 2 else email
+        return render_template("auth/verify_pin_otp.html", masked_email=masked, raw_email=email)
+
+    expires = datetime.strptime(record["expires_at"], "%Y-%m-%d %H:%M:%S")
+    if datetime.now() > expires:
+        conn.close()
+        flash("Verification code has expired. Please request a new one.", "danger")
+        return redirect(url_for("forgot_pin"))
 
     conn.close()
-    return render_template("auth/reset_password.html", token=token)
+
+    session["pin_reset_verified"] = True
+    return render_template("auth/reset_pin.html")
 
 
-@app.route("/auth/login", methods=["GET", "POST"])
+@app.route("/auth/reset-pin", methods=["GET", "POST"])
+def reset_pin():
+    if not session.get("pin_reset_verified"):
+        flash("Please verify your email first.", "danger")
+        return redirect(url_for("forgot_pin"))
+
+    if request.method == "POST":
+        new_pin = request.form.get("new_pin", "").strip()
+        confirm_pin = request.form.get("confirm_pin", "").strip()
+
+        if not new_pin.isdigit() or len(new_pin) < 4 or len(new_pin) > 6:
+            flash("PIN must be 4-6 digits.", "danger")
+            return render_template("auth/reset_pin.html")
+
+        if new_pin != confirm_pin:
+            flash("PINs do not match.", "danger")
+            return render_template("auth/reset_pin.html")
+
+        user_id = session.get("pin_reset_user_id")
+        user_type = session.get("pin_reset_user_type", "teacher")
+
+        new_hash = hashlib.sha256(new_pin.encode()).hexdigest()
+        table = "admins" if user_type == "admin" else "teachers"
+        conn = get_db_connection()
+        conn.execute(f"UPDATE {table} SET user_pin = ? WHERE id = ?", (new_hash, user_id))
+        conn.execute("UPDATE password_resets SET used = 1 WHERE teacher_id = ? AND user_type = ? AND used = 0", (user_id, user_type))
+        conn.commit()
+        conn.close()
+
+        for k in ("pin_reset_email", "pin_reset_user_id", "pin_reset_user_type", "pin_reset_verified"):
+            session.pop(k, None)
+
+        flash("PIN reset successfully! Please log in.", "success")
+        return redirect(url_for("teacher_login"))
+
+    return render_template("auth/reset_pin.html")
+
+
+@app.route("/auth/pin", methods=["GET", "POST"])
 def teacher_login():
-    # If already logged in, redirect to dashboard
+    # If already logged in, redirect to appropriate dashboard
+    if "admin_id" in session:
+        return redirect(url_for("admin_dashboard"))
     if "teacher_id" in session:
         return redirect(url_for("teacher_dashboard"))
 
+    # Get pending admin from email+password step
+    pending_admin_id = session.get("pending_pin_admin_id")
+
     if request.method == "POST":
-        username = request.form.get("username", "").strip()
+        user_id_input = request.form.get("user_id", "").strip()
         password = request.form.get("password", "")
         remember = request.form.get("remember") == "1"
 
-        if not username or not password:
-            flash("Please enter both username and password.", "danger")
+        if not user_id_input or not password:
+            flash("Please enter both User ID and User PIN.", "danger")
             return render_template("auth/login.html")
 
-        # Hash the password for comparison
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        # Hash the PIN for comparison
+        pin_hash = hashlib.sha256(password.encode()).hexdigest()
 
         conn = get_db_connection()
         teacher = conn.execute(
-            "SELECT * FROM teachers WHERE username = ?", (username,)
+            "SELECT * FROM teachers WHERE user_id = ?", (user_id_input,)
         ).fetchone()
         conn.close()
 
-        if teacher and teacher["password_hash"] == password_hash:
-            # Check if email is verified (for new accounts)
-            is_verified = teacher["is_verified"] if "is_verified" in teacher.keys() else 1
-            if not is_verified:
-                flash("Please verify your email before logging in.", "warning")
-                return render_template("auth/login.html")
+        if teacher:
+            # If admin did email+password first, only allow their own teachers/staff
+            if pending_admin_id:
+                teacher_admin_id = teacher["registered_by_admin_id"] if "registered_by_admin_id" in teacher.keys() else 0
+                if teacher_admin_id and teacher_admin_id != pending_admin_id:
+                    flash("This user does not belong to your admin account.", "danger")
+                    return render_template("auth/login.html")
 
-            # Create session
-            session["teacher_id"] = teacher["id"]
-            session["teacher_name"] = teacher["full_name"]
-            session["teacher_username"] = teacher["username"]
-            session["teacher_profile_image"] = teacher["profile_image"] if "profile_image" in teacher.keys() else ""
-            session.permanent = remember  # Remember me: persistent session
+            # Check user_pin first, fall back to password_hash for legacy accounts
+            stored_pin = teacher["user_pin"] if "user_pin" in teacher.keys() else ""
+            if (stored_pin and stored_pin == pin_hash) or (not stored_pin and teacher["password_hash"] == pin_hash):
+                # Check if email is verified (for new accounts)
+                is_verified = teacher["is_verified"] if "is_verified" in teacher.keys() else 1
+                if not is_verified:
+                    flash("Please verify your email before logging in.", "warning")
+                    return render_template("auth/login.html")
 
-            flash(f'Welcome back, {teacher["full_name"]}!', "success")
-            return redirect(url_for("teacher_dashboard"))
+                # Clear pending admin state
+                session.pop("pending_pin_admin_id", None)
+                session.pop("pending_pin_admin_name", None)
+                session.pop("pending_pin_admin_username", None)
+                session.pop("pending_pin_admin_image", None)
+                session.pop("pending_pin_remember", None)
+
+                # Create session
+                session["teacher_id"] = teacher["id"]
+                session["teacher_name"] = teacher["full_name"]
+                session["teacher_username"] = teacher["username"]
+                session["teacher_profile_image"] = teacher["profile_image"] if "profile_image" in teacher.keys() else ""
+                session.permanent = remember
+
+                flash(f'Welcome back, {teacher["full_name"]}!', "success")
+                return redirect(url_for("teacher_dashboard"))
+            else:
+                flash("Invalid User ID or User PIN.", "danger")
         else:
-            flash("Invalid username or password.", "danger")
+            # Check admins table by user_id + user_pin
+            conn = get_db_connection()
+            admin = conn.execute(
+                "SELECT * FROM admins WHERE user_id = ?", (user_id_input,)
+            ).fetchone()
+            conn.close()
+
+            if admin:
+                # If admin did email+password first, only allow their own admin account
+                if pending_admin_id and admin["id"] != pending_admin_id:
+                    flash("This admin account does not match your login.", "danger")
+                    return render_template("auth/login.html")
+
+                stored_pin = admin["user_pin"] if "user_pin" in admin.keys() else ""
+                if stored_pin and stored_pin == pin_hash:
+                    # Clear any pending state
+                    session.pop("pending_pin_admin_id", None)
+                    session.pop("pending_pin_admin_name", None)
+                    session.pop("pending_pin_admin_username", None)
+                    session.pop("pending_pin_admin_image", None)
+                    pending_remember = session.pop("pending_pin_remember", None)
+
+                    session["admin_id"] = admin["id"]
+                    session["admin_name"] = admin["full_name"]
+                    session["admin_username"] = admin["username"]
+                    session["admin_profile_image"] = admin["profile_image"] if "profile_image" in admin.keys() else ""
+                    session.permanent = pending_remember if pending_remember is not None else remember
+
+                    flash(f'Welcome back, {admin["full_name"]}!', "success")
+                    return redirect(url_for("admin_dashboard"))
+                else:
+                    flash("Invalid User ID or User PIN.", "danger")
+            else:
+                flash("Invalid User ID or User PIN.", "danger")
 
     return render_template("auth/login.html")
 
@@ -2583,35 +3397,116 @@ def admin_login():
         return redirect(url_for("admin_dashboard"))
 
     if request.method == "POST":
-        username = request.form.get("username", "").strip()
+        email_input = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
         remember = request.form.get("remember") == "1"
 
-        if not username or not password:
-            flash("Please enter both username and password.", "danger")
+        if not email_input or not password:
+            flash("Please enter both Email ID and password.", "danger")
             return render_template("auth/admin_login.html")
 
         password_hash = hashlib.sha256(password.encode()).hexdigest()
 
         conn = get_db_connection()
         admin = conn.execute(
-            "SELECT * FROM admins WHERE username = ?", (username,)
+            "SELECT * FROM admins WHERE email = ?", (email_input,)
         ).fetchone()
         conn.close()
 
         if admin and admin["password_hash"] == password_hash:
-            session["admin_id"] = admin["id"]
-            session["admin_name"] = admin["full_name"]
-            session["admin_username"] = admin["username"]
-            session["admin_profile_image"] = admin["profile_image"] if "profile_image" in admin.keys() else ""
-            session.permanent = remember
+            # Don't set admin_id yet — store pending state for PIN verification
+            session["pending_pin_admin_id"] = admin["id"]
+            session["pending_pin_admin_name"] = admin["full_name"]
+            session["pending_pin_admin_username"] = admin["username"]
+            session["pending_pin_admin_image"] = admin["profile_image"] if "profile_image" in admin.keys() else ""
+            session["pending_pin_remember"] = remember
 
-            flash(f'Welcome, {admin["full_name"]}!', "success")
-            return redirect(url_for("admin_dashboard"))
+            flash(f'Welcome, {admin["full_name"]}! Now verify with your User ID & PIN.', "success")
+            return redirect(url_for("teacher_login"))
         else:
-            flash("Invalid username or password.", "danger")
+            flash("Invalid email or password.", "danger")
 
     return render_template("auth/admin_login.html")
+
+
+# ── Admin Create Teacher Account ──
+@app.route("/api/admin/create_teacher", methods=["POST"])
+@admin_login_required
+def admin_create_teacher():
+    """Admin creates a teacher/staff account directly (no email verification needed).
+    Admin sets a 4-6 digit User PIN, or it is auto-generated. Emails credentials to the teacher/staff."""
+    data = request.get_json()
+    full_name = (data.get("full_name") or "").strip()
+    email = (data.get("email") or "").strip()
+    phone = (data.get("phone") or "").strip()
+    department = (data.get("department") or "").strip()
+    designation = (data.get("designation") or "").strip()
+    custom_pin = (data.get("user_pin") or "").strip()
+
+    if not full_name or not email:
+        return jsonify({"success": False, "message": "Full name and email are required"}), 400
+    if "@" not in email:
+        return jsonify({"success": False, "message": "Valid email is required"}), 400
+
+    # Validate custom PIN if provided
+    if custom_pin:
+        if not custom_pin.isdigit() or len(custom_pin) < 4 or len(custom_pin) > 6:
+            return jsonify({"success": False, "message": "PIN must be 4-6 digits"}), 400
+        user_pin_plain = custom_pin
+    else:
+        user_pin_plain = generate_otp(6)
+
+    username = email.split("@")[0].lower().replace(" ", "").replace(".", "_")
+
+    user_pin_hash = hashlib.sha256(user_pin_plain.encode()).hexdigest()
+
+    conn = get_db_connection()
+    existing = conn.execute(
+        "SELECT id FROM teachers WHERE username = ? OR email = ?", (username, email)
+    ).fetchone()
+    if existing:
+        conn.close()
+        return jsonify({"success": False, "message": "A teacher/staff with this email already exists"}), 409
+
+    try:
+        conn.execute(
+            """INSERT INTO teachers (username, password_hash, email, full_name, phone, department, designation, is_verified, user_pin, registered_by_admin_id)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)""",
+            (username, user_pin_hash, email, full_name, phone, department, designation, user_pin_hash, session.get("admin_id", 0)),
+        )
+        new_teacher = conn.execute("SELECT id FROM teachers WHERE username = ?", (username,)).fetchone()
+        teacher_user_id = ""
+        if new_teacher:
+            teacher_user_id = generate_user_id("TCH", conn, "teachers")
+            conn.execute("UPDATE teachers SET user_id = ? WHERE id = ?", (teacher_user_id, new_teacher["id"]))
+        conn.commit()
+        conn.close()
+
+        # Send credentials email to teacher/staff with ALL details
+        role_label = designation if designation in ("HOD", "Staff") else "Teacher"
+        admin_id = session.get("admin_id", 0)
+        admin_row = get_db_connection().execute("SELECT full_name, email FROM admins WHERE id = ?", (admin_id,)).fetchone()
+        adm_name = admin_row["full_name"] if admin_row else ""
+        adm_email = admin_row["email"] if admin_row else ""
+        cred_body = build_credentials_email(
+            full_name, teacher_user_id, user_pin_plain, role_label,
+            email=email, department=department, designation=designation,
+            phone=phone, admin_name=adm_name, admin_email=adm_email,
+        )
+        send_email(email, f"Your {APP_NAME} Account — Login Credentials", cred_body)
+
+        return jsonify({
+            "success": True,
+            "message": f"Account created for {full_name}. Credentials sent to {email}.",
+            "user_id": teacher_user_id,
+            "teacher": {
+                "name": full_name, "email": email, "user_id": teacher_user_id,
+                "phone": phone, "department": department, "designation": designation,
+            },
+        })
+    except sqlite3.IntegrityError:
+        conn.close()
+        return jsonify({"success": False, "message": "Username or email already exists"}), 409
 
 
 @app.route("/admin/register", methods=["GET", "POST"])
@@ -2620,19 +3515,27 @@ def admin_register():
         return redirect(url_for("admin_dashboard"))
 
     if request.method == "POST":
-        username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
         email = request.form.get("email", "").strip()
         full_name = request.form.get("full_name", "").strip()
         college_name = request.form.get("college_name", "").strip()
         phone = request.form.get("phone", "").strip()
+        institution_type = request.form.get("institution_type", "college").strip()
+        user_pin = request.form.get("user_pin", "").strip()
 
-        if not username or not password or not email or not full_name:
+        # Auto-generate username from email
+        username = email.split("@")[0].lower().replace(" ", "").replace(".", "_")
+
+        if not password or not email or not full_name or not user_pin:
             flash("All required fields must be filled.", "danger")
             return render_template("auth/admin_register.html")
 
         if len(password) < 6:
             flash("Password must be at least 6 characters.", "danger")
+            return render_template("auth/admin_register.html")
+
+        if not user_pin.isdigit() or len(user_pin) < 4 or len(user_pin) > 6:
+            flash("User PIN must be 4-6 digits.", "danger")
             return render_template("auth/admin_register.html")
 
         conn = get_db_connection()
@@ -2659,9 +3562,9 @@ def admin_register():
         # Store pending registration
         conn.execute(
             """INSERT INTO email_verifications
-               (email, username, password_hash, full_name, otp_code, expires_at, user_type, college_name, phone)
-               VALUES (?, ?, ?, ?, ?, ?, 'admin', ?, ?)""",
-            (email, username, password_hash, full_name, otp_code, expires_at, college_name, phone),
+               (email, username, password_hash, full_name, otp_code, expires_at, user_type, college_name, phone, institution_type)
+               VALUES (?, ?, ?, ?, ?, ?, 'admin', ?, ?, ?)""",
+            (email, username, password_hash, full_name, otp_code, expires_at, college_name, phone, institution_type),
         )
         conn.commit()
         conn.close()
@@ -2672,6 +3575,8 @@ def admin_register():
 
         if sent:
             session["pending_admin_verify_email"] = email
+            session["pending_admin_password"] = password
+            session["pending_admin_pin"] = user_pin
             flash("A verification code has been sent to your email.", "info")
             return redirect(url_for("admin_verify_email"))
         else:
@@ -2719,9 +3624,14 @@ def admin_verify_email():
 
         # OTP valid — create the admin account
         try:
+            inst_type = ""
+            try:
+                inst_type = record["institution_type"] or "college"
+            except (IndexError, KeyError):
+                inst_type = "college"
             conn.execute(
-                """INSERT INTO admins (username, password_hash, email, full_name, college_name, phone)
-                   VALUES (?, ?, ?, ?, ?, ?)""",
+                """INSERT INTO admins (username, password_hash, email, full_name, college_name, phone, institution_type)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
                 (
                     record["username"],
                     record["password_hash"],
@@ -2729,15 +3639,38 @@ def admin_verify_email():
                     record["full_name"],
                     record["college_name"] or "",
                     record["phone"] or "",
+                    inst_type,
                 ),
             )
+            # Auto-generate user_id for the new admin
+            new_admin = conn.execute(
+                "SELECT id FROM admins WHERE username = ?", (record["username"],)
+            ).fetchone()
+            if new_admin:
+                admin_user_id = generate_user_id("ADM", conn, "admins")
+                # Use the PIN set by admin during registration
+                admin_pin_plain = session.get("pending_admin_pin", "") or generate_otp(6)
+                admin_pin_hash = hashlib.sha256(admin_pin_plain.encode()).hexdigest()
+                conn.execute(
+                    "UPDATE admins SET user_id = ?, user_pin = ? WHERE id = ?",
+                    (admin_user_id, admin_pin_hash, new_admin["id"]),
+                )
             conn.execute(
                 "UPDATE email_verifications SET verified = 1 WHERE id = ?",
                 (record["id"],),
             )
             conn.commit()
+            # Send welcome email with credentials (email ID + password + User ID + PIN)
+            plain_password = session.pop("pending_admin_password", "")
+            session.pop("pending_admin_pin", None)
+            if plain_password:
+                welcome_body = build_welcome_email(record["full_name"], record["email"], plain_password, "Admin",
+                                                   user_id=admin_user_id if new_admin else "",
+                                                   user_pin=admin_pin_plain if new_admin else "")
+                send_email(record["email"], f"Welcome to {APP_NAME} — Your Admin Credentials", welcome_body)
             session.pop("pending_admin_verify_email", None)
-            flash("Email verified! Your admin account is active. Please sign in.", "success")
+            uid_msg = f" Your User ID is: {admin_user_id}" if new_admin else ""
+            flash(f"Email verified! Your admin account is active.{uid_msg} Please sign in.", "success")
             return redirect(url_for("admin_login"))
         except sqlite3.IntegrityError:
             flash("Username or email already registered.", "danger")
@@ -2809,20 +3742,23 @@ def admin_dashboard():
     conn = get_db_connection()
     today = datetime.now().strftime("%d-%m-%Y")
 
-    # All registered users (students, teachers, staff)
-    all_users = conn.execute("SELECT * FROM users ORDER BY name").fetchall()
+    # Only users registered by THIS admin
+    all_users = conn.execute(
+        "SELECT * FROM users WHERE registered_by_admin_id = ? ORDER BY name",
+        (admin_id,)
+    ).fetchall()
 
-    # Today's gate attendance
+    # Today's gate attendance recorded by THIS admin
     gate_attendance = conn.execute(
         "SELECT ar.*, u.user_id, u.department, u.email, u.role, u.phone "
         "FROM attendance_records ar "
         "LEFT JOIN users u ON ar.student_name = u.username "
-        "WHERE ar.date = ? AND ar.attendance_type = 'gate' "
+        "WHERE ar.date = ? AND ar.attendance_type = 'gate' AND ar.admin_id = ? "
         "ORDER BY ar.time DESC",
-        (today,)
+        (today, admin_id)
     ).fetchall()
 
-    # Today's class attendance (from all teachers)
+    # Today's class attendance (from all teachers — class data is teacher-managed)
     class_attendance = conn.execute(
         "SELECT ar.*, u.user_id, u.department, u.email, u.role, c.name as class_name, t.full_name as teacher_name "
         "FROM attendance_records ar "
@@ -2841,12 +3777,40 @@ def admin_dashboard():
     total_staff = len([u for u in all_users if u["role"] in ("Staff", "Admin")])
     gate_count = len(gate_attendance)
     class_count = len(class_attendance)
+    
+    # Total admins
+    total_admins = conn.execute("SELECT COUNT(*) FROM admins").fetchone()[0]
+    
+    # Week attendance stats (last 7 days) — gate filtered by this admin
+    week_stats = []
+    for i in range(6, -1, -1):
+        day = (datetime.now() - timedelta(days=i)).strftime("%d-%m-%Y")
+        day_label = (datetime.now() - timedelta(days=i)).strftime("%a")
+        day_gate = conn.execute(
+            "SELECT COUNT(*) FROM attendance_records WHERE date = ? AND attendance_type = 'gate' AND admin_id = ?", (day, admin_id)
+        ).fetchone()[0]
+        day_class = conn.execute(
+            "SELECT COUNT(*) FROM attendance_records WHERE date = ? AND attendance_type = 'class'", (day,)
+        ).fetchone()[0]
+        week_stats.append({"label": day_label, "date": day, "gate": day_gate, "class": day_class})
+    
+    # Total all-time records by this admin (gate) + all class records
+    total_records = conn.execute(
+        "SELECT COUNT(*) FROM attendance_records WHERE (attendance_type = 'gate' AND admin_id = ?) OR attendance_type = 'class'",
+        (admin_id,)
+    ).fetchone()[0]
 
     # Department-wise gate attendance
     dept_stats = {}
     for rec in gate_attendance:
         dept = rec["department"] or "Unknown"
         dept_stats[dept] = dept_stats.get(dept, 0) + 1
+    
+    # Role-wise user breakdown
+    role_stats = {}
+    for u in all_users:
+        role = u["role"] or "Unknown"
+        role_stats[role] = role_stats.get(role, 0) + 1
 
     conn.close()
 
@@ -2859,9 +3823,13 @@ def admin_dashboard():
         total_students=total_students,
         total_teachers=total_teachers_count,
         total_staff=total_staff,
+        total_admins=total_admins,
         gate_count=gate_count,
         class_count=class_count,
+        total_records=total_records,
         dept_stats=dept_stats,
+        role_stats=role_stats,
+        week_stats=week_stats,
         today=today,
     )
 
@@ -2896,19 +3864,27 @@ def admin_attendance():
     conn = get_db_connection()
     today = datetime.now().strftime("%d-%m-%Y")
 
+    # Default to today's records
     records = conn.execute(
         "SELECT ar.*, u.user_id, u.department, u.email, u.role, u.phone, "
-        "c.name as class_name, t.full_name as teacher_name "
+        "u.registered_by, c.name as class_name, t.full_name as teacher_name "
         "FROM attendance_records ar "
         "LEFT JOIN users u ON ar.student_name = u.username "
         "LEFT JOIN classes c ON ar.class_id = c.id "
         "LEFT JOIN teachers t ON ar.teacher_id = t.id "
-        "ORDER BY ar.date DESC, ar.time DESC "
-        "LIMIT 500"
+        "WHERE ar.date = ? "
+        "ORDER BY ar.time DESC",
+        (today,)
     ).fetchall()
 
+    departments = conn.execute(
+        "SELECT DISTINCT department FROM users WHERE department IS NOT NULL AND department != '' ORDER BY department"
+    ).fetchall()
+    departments = [d['department'] for d in departments]
+
     conn.close()
-    return render_template("admin/attendance.html", records=records, today=today)
+    today_html = datetime.now().strftime("%Y-%m-%d")
+    return render_template("admin/attendance.html", records=records, today=today, today_html=today_html, departments=departments)
 
 
 @app.route("/admin/attendance/filter", methods=["POST"])
@@ -2922,7 +3898,7 @@ def admin_filter_attendance():
 
     query = (
         "SELECT ar.*, u.user_id, u.department, u.email, u.role, u.phone, "
-        "c.name as class_name, t.full_name as teacher_name "
+        "u.registered_by, c.name as class_name, t.full_name as teacher_name "
         "FROM attendance_records ar "
         "LEFT JOIN users u ON ar.student_name = u.username "
         "LEFT JOIN classes c ON ar.class_id = c.id "
@@ -2963,6 +3939,8 @@ def admin_filter_attendance():
                 "department": r["department"] or "",
                 "email": r["email"] or "",
                 "role": r["role"] or "",
+                "phone": r["phone"] or "",
+                "registered_by": r["registered_by"] or "",
                 "class_name": r["class_name"] or "",
                 "teacher_name": r["teacher_name"] or "",
             }
@@ -3010,6 +3988,33 @@ def teacher_dashboard():
     today_attendance_count = len(recent_attendance)
     attendance_rate = round((today_attendance_count / students_count) * 100, 1) if students_count > 0 else 0
 
+    # Get total attendance records for this teacher
+    total_records = conn.execute(
+        "SELECT COUNT(*) as count FROM attendance_records WHERE teacher_id = ?",
+        (teacher_id,)
+    ).fetchone()['count']
+
+    # Get per-class attendance stats for today
+    class_stats = conn.execute(
+        """SELECT c.name, COUNT(ar.id) as count
+           FROM classes c
+           LEFT JOIN attendance_records ar ON ar.class_id = c.id AND ar.date = ?
+           WHERE c.teacher_id = ?
+           GROUP BY c.id ORDER BY count DESC""",
+        (today, teacher_id)
+    ).fetchall()
+
+    # Get weekly attendance trend (last 7 days)
+    week_stats = []
+    for i in range(6, -1, -1):
+        d = datetime.now() - timedelta(days=i)
+        dstr = d.strftime("%d-%m-%Y")
+        cnt = conn.execute(
+            "SELECT COUNT(*) as count FROM attendance_records WHERE teacher_id = ? AND date = ?",
+            (teacher_id, dstr)
+        ).fetchone()['count']
+        week_stats.append({"day": d.strftime("%a"), "date": dstr, "count": cnt})
+
     conn.close()
 
     return render_template(
@@ -3017,7 +4022,10 @@ def teacher_dashboard():
         classes=classes, 
         recent_attendance=recent_attendance,
         students_count=students_count,
-        attendance_rate=attendance_rate
+        attendance_rate=attendance_rate,
+        total_records=total_records,
+        class_stats=class_stats,
+        week_stats=week_stats
     )
 
 
@@ -3034,9 +4042,12 @@ def teacher_profile():
         full_name = request.form.get("full_name", "").strip()
         email = request.form.get("email", "").strip()
         phone = request.form.get("phone", "").strip()
-        department = request.form.get("department", "").strip()
-        designation = request.form.get("designation", "").strip()
         bio = request.form.get("bio", "").strip()
+
+        # Department & Designation are admin-controlled — keep existing values
+        teacher_row = conn.execute("SELECT department, designation FROM teachers WHERE id = ?", (teacher_id,)).fetchone()
+        department = teacher_row["department"] if teacher_row else ""
+        designation = teacher_row["designation"] if teacher_row else ""
 
         if not full_name or not email:
             flash("Name and email are required.", "danger")
@@ -3097,6 +4108,82 @@ def teacher_remove_image():
     return redirect(url_for("teacher_profile"))
 
 
+@app.route("/api/teacher/contact_admin", methods=["POST"])
+@teacher_login_required
+def teacher_contact_admin():
+    """Teacher sends a help request email to their admin."""
+    data = request.get_json()
+    message = (data.get("message") or "").strip()
+    if not message:
+        return jsonify({"success": False, "message": "Message is required"}), 400
+
+    teacher_id = session["teacher_id"]
+    conn = get_db_connection()
+    teacher = conn.execute("SELECT * FROM teachers WHERE id = ?", (teacher_id,)).fetchone()
+    if not teacher:
+        conn.close()
+        return jsonify({"success": False, "message": "Teacher not found"}), 404
+
+    # Find the admin who registered this teacher
+    admin_id = teacher["registered_by_admin_id"] if "registered_by_admin_id" in teacher.keys() else 0
+    admin = None
+    if admin_id:
+        admin = conn.execute("SELECT full_name, email FROM admins WHERE id = ?", (admin_id,)).fetchone()
+    if not admin:
+        # Fallback: find any admin
+        admin = conn.execute("SELECT full_name, email FROM admins ORDER BY id LIMIT 1").fetchone()
+    conn.close()
+
+    if not admin:
+        return jsonify({"success": False, "message": "No admin found to contact"}), 404
+
+    admin_email_addr = admin["email"]
+    teacher_name = teacher["full_name"]
+    teacher_email = teacher["email"]
+    teacher_dept = teacher["department"] if "department" in teacher.keys() else ""
+    teacher_desig = teacher["designation"] if "designation" in teacher.keys() else ""
+    teacher_uid = teacher["user_id"] if "user_id" in teacher.keys() else ""
+
+    email_body = f"""
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.1);">
+      <div style="background:linear-gradient(135deg,#667eea,#764ba2);padding:2rem;text-align:center;color:#fff;">
+        <div style="width:60px;height:60px;background:rgba(255,255,255,.2);border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:1.6rem;">&#128172;</div>
+        <h2 style="margin:0;font-size:1.4rem;">Help Request from Teacher</h2>
+        <p style="opacity:.85;margin:.4rem 0 0;font-size:.9rem;">Smart Attendance System</p>
+      </div>
+      <div style="padding:2rem;">
+        <p style="color:#555;font-size:.95rem;">Hello <strong>{admin['full_name']}</strong>,</p>
+        <p style="color:#555;font-size:.95rem;">A teacher has sent you a request:</p>
+        <div style="background:#f8f9ff;border:1px solid #e8ecff;border-radius:12px;padding:1.2rem;margin:1.2rem 0;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><td style="padding:6px 12px;color:#888;font-size:.85rem;font-weight:600;">Name</td>
+                <td style="padding:6px 12px;font-weight:700;color:#333;">{teacher_name}</td></tr>
+            <tr><td style="padding:6px 12px;color:#888;font-size:.85rem;font-weight:600;border-top:1px solid #eef;">Email</td>
+                <td style="padding:6px 12px;color:#333;border-top:1px solid #eef;">{teacher_email}</td></tr>
+            <tr><td style="padding:6px 12px;color:#888;font-size:.85rem;font-weight:600;border-top:1px solid #eef;">User ID</td>
+                <td style="padding:6px 12px;color:#333;border-top:1px solid #eef;">{teacher_uid}</td></tr>
+            <tr><td style="padding:6px 12px;color:#888;font-size:.85rem;font-weight:600;border-top:1px solid #eef;">Department</td>
+                <td style="padding:6px 12px;color:#333;border-top:1px solid #eef;">{teacher_dept}</td></tr>
+            <tr><td style="padding:6px 12px;color:#888;font-size:.85rem;font-weight:600;border-top:1px solid #eef;">Designation</td>
+                <td style="padding:6px 12px;color:#333;border-top:1px solid #eef;">{teacher_desig}</td></tr>
+          </table>
+        </div>
+        <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:1rem;margin:1rem 0;">
+          <p style="color:#333;font-size:.92rem;margin:0;"><strong>Message:</strong></p>
+          <p style="color:#555;font-size:.92rem;margin:.4rem 0 0;">{message}</p>
+        </div>
+        <p style="color:#888;font-size:.82rem;">You can reply directly to this teacher at <a href="mailto:{teacher_email}" style="color:#667eea;">{teacher_email}</a></p>
+      </div>
+      <div style="background:#f8f8ff;padding:1rem;text-align:center;font-size:.75rem;color:#aaa;border-top:1px solid #eee;">Smart Attendance System &copy; 2025</div>
+    </div>
+    """
+    sent = send_email(admin_email_addr, f"Help Request from {teacher_name} — {APP_NAME}", email_body)
+    if sent:
+        return jsonify({"success": True, "message": f"Your request has been sent to the admin ({admin['full_name']}). They will contact you via email."})
+    else:
+        return jsonify({"success": False, "message": "Failed to send email. Please try again later."}), 500
+
+
 # ═══════════════════════════════════════════
 # Admin Profile Routes
 # ═══════════════════════════════════════════
@@ -3113,6 +4200,7 @@ def admin_profile():
         college_name = request.form.get("college_name", "").strip()
         designation = request.form.get("designation", "").strip()
         bio = request.form.get("bio", "").strip()
+        institution_type = request.form.get("institution_type", "").strip()
 
         if not full_name or not email:
             flash("Name and email are required.", "danger")
@@ -3141,8 +4229,8 @@ def admin_profile():
 
         conn.execute(
             """UPDATE admins SET full_name = ?, email = ?, phone = ?, college_name = ?,
-               designation = ?, bio = ? WHERE id = ?""",
-            (full_name, email, phone, college_name, designation, bio, admin_id),
+               designation = ?, bio = ?, institution_type = ? WHERE id = ?""",
+            (full_name, email, phone, college_name, designation, bio, institution_type, admin_id),
         )
         conn.commit()
 
@@ -3978,11 +5066,18 @@ def store_attendance_in_db(student_name, date, time_str, class_id=None):
         # Set default values
         status = "Present"
         teacher_id = None
+        admin_id = None
+        attendance_type = "gate"  # default
 
-        # If a teacher is logged in, use their ID
-        if "teacher_id" in session:
+        # Determine who is logged in and set attendance_type accordingly
+        if "admin_id" in session and "teacher_id" not in session:
+            admin_id = session["admin_id"]
+            attendance_type = "gate"
+            print(f"Using admin ID {admin_id} from session — gate attendance")
+        elif "teacher_id" in session:
             teacher_id = session["teacher_id"]
-            print(f"Using teacher ID {teacher_id} from session")
+            attendance_type = "class"
+            print(f"Using teacher ID {teacher_id} from session — class attendance")
 
             # Look for class_id if not provided and teacher is logged in
             if class_id is None and student_name:
@@ -4000,10 +5095,10 @@ def store_attendance_in_db(student_name, date, time_str, class_id=None):
                     print(f"Found class {class_id} for student {student_name}")
                 conn.close()
         else:
-            # If no teacher is logged in, use a default teacher ID of 1
+            # If no one is logged in, use a default teacher ID of 1
             teacher_id = 1
             print(
-                f"No teacher logged in, using default teacher ID 1 for {student_name}"
+                f"No user logged in, using default teacher ID 1 for {student_name}"
             )
 
         # Make sure we have a valid teacher_id
@@ -4042,13 +5137,13 @@ def store_attendance_in_db(student_name, date, time_str, class_id=None):
 
         # Debug the SQL command we're about to execute
         print(
-            f"Executing INSERT with values: ({student_name}, {class_id}, {teacher_id}, {date}, {time_str}, {status})"
+            f"Executing INSERT with values: ({student_name}, {class_id}, {teacher_id}, {admin_id}, {date}, {time_str}, {status}, {attendance_type})"
         )
 
-        # Insert the attendance record
+        # Insert the attendance record with proper attendance_type and admin_id
         conn.execute(
-            "INSERT INTO attendance_records (student_name, class_id, teacher_id, date, time, status) VALUES (?, ?, ?, ?, ?, ?)",
-            (student_name, class_id, teacher_id, date, time_str, status),
+            "INSERT INTO attendance_records (student_name, class_id, teacher_id, admin_id, date, time, status, attendance_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (student_name, class_id, teacher_id, admin_id, date, time_str, status, attendance_type),
         )
         conn.commit()
 

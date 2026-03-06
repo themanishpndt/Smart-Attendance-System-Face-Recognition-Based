@@ -168,15 +168,13 @@
             <input type="file" name="profile_image" id="profileImageInput" accept="image/*" style="display:none;">
           </div>
           <div style="font-weight:700;font-size:1.1rem;margin-top:.3rem;">{{ admin.full_name }}</div>
-          <div style="font-size:.82rem;color:var(--text2);">@{{ admin.username }}</div>
+          <div style="font-size:.82rem;color:var(--text2);"><i class="fas fa-id-badge" style="font-size:.72rem;"></i> {{ admin.user_id or 'N/A' }}</div>
           <div class="avatar-actions">
             <label for="profileImageInput" class="btn-sm btn-upload"><i class="fas fa-upload"></i> Upload Photo</label>
             {% if admin.profile_image %}
-            <form method="POST" action="{{ url_for('admin_remove_image') }}" style="display:inline;">
-              <button type="submit" class="btn-sm btn-remove" onclick="return confirm('Remove profile image?')">
-                <i class="fas fa-trash-alt"></i> Remove
-              </button>
-            </form>
+            <button type="button" class="btn-sm btn-remove" onclick="if(confirm('Remove profile image?')){var f=document.createElement('form');f.method='POST';f.action='{{ url_for('admin_remove_image') }}';document.body.appendChild(f);f.submit();}">
+              <i class="fas fa-trash-alt"></i> Remove
+            </button>
             {% endif %}
           </div>
         </div>
@@ -189,8 +187,8 @@
             <input type="text" name="full_name" class="fi" value="{{ admin.full_name }}" required>
           </div>
           <div class="form-group">
-            <label><i class="fas fa-at"></i> Username</label>
-            <input type="text" class="fi" value="{{ admin.username }}" readonly>
+            <label><i class="fas fa-id-badge"></i> User ID</label>
+            <input type="text" class="fi" value="{{ admin.user_id or 'N/A' }}" readonly>
           </div>
           <div class="form-group">
             <label><i class="fas fa-envelope"></i> Email Address</label>
@@ -208,6 +206,17 @@
           <div class="form-group">
             <label><i class="fas fa-university"></i> College / Institution</label>
             <input type="text" name="college_name" class="fi" value="{{ admin.college_name or '' }}" placeholder="Enter college name">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-landmark"></i> Institution Type</label>
+            <select name="institution_type" class="fi">
+              {% set current_type = admin.institution_type or 'college' %}
+              <option value="college" {{ 'selected' if current_type == 'college' }}>College</option>
+              <option value="school" {{ 'selected' if current_type == 'school' }}>School</option>
+              <option value="university" {{ 'selected' if current_type == 'university' }}>University</option>
+              <option value="institute" {{ 'selected' if current_type == 'institute' }}>Institute</option>
+              <option value="other" {{ 'selected' if current_type == 'other' }}>Other</option>
+            </select>
           </div>
           <div class="form-group">
             <label><i class="fas fa-id-badge"></i> Designation</label>

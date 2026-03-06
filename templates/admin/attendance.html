@@ -38,6 +38,7 @@
   </div>
   <h1><i class="fas fa-clipboard-list"></i> Attendance History</h1>
   <p>View and filter all attendance records across gate and classroom</p>
+  <span class="date-badge" style="display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:20px;background:rgba(255,255,255,.2);font-size:.78rem;font-weight:700;margin-top:.6rem;"><i class="fas fa-calendar-day"></i> Showing: {{ today }}</span>
 </div>
 
 <!-- Filters -->
@@ -46,7 +47,7 @@
     <div class="filter-bar">
       <div class="fg">
         <label><i class="fas fa-calendar-day"></i> Date</label>
-        <input type="date" class="fi" id="filterDate">
+        <input type="date" class="fi" id="filterDate" value="{{ today_html }}">
       </div>
       <div class="fg">
         <label><i class="fas fa-tag"></i> Type</label>
@@ -58,15 +59,14 @@
       </div>
       <div class="fg">
         <label><i class="fas fa-building"></i> Department</label>
-        <input type="text" class="fi" id="filterDept" placeholder="e.g. CSE, ECE...">
+        <select class="fi" id="filterDept">
+          <option value="">All Departments</option>
+        </select>
       </div>
       <div class="fg">
         <label><i class="fas fa-user-tag"></i> Role</label>
         <select class="fi" id="filterRole">
           <option value="">All Roles</option>
-          <option value="Student">Student</option>
-          <option value="Teacher">Teacher</option>
-          <option value="Staff">Staff</option>
         </select>
       </div>
       <div>
@@ -92,12 +92,20 @@
       <div style="overflow-x:auto;">
         <table class="modern-table" id="recordsTable">
           <thead><tr>
-            <th>Name</th><th>Type</th><th>Role</th><th>Department</th><th>Class</th><th>Teacher</th><th>Date</th><th>Time</th><th>Status</th>
+            <th>Name</th><th>User ID</th><th>Type</th><th>Role</th><th>Department</th><th>Class</th><th>Teacher</th><th>Date</th><th>Time</th><th>Status</th>
           </tr></thead>
           <tbody>
             {% for r in records %}
-            <tr>
+            <tr style="cursor:pointer;" onclick="showAdminDetail(this)"
+                data-name="{{ r.student_name }}" data-uid="{{ r.user_id or '' }}"
+                data-dept="{{ r.department or '' }}" data-email="{{ r.email or '' }}"
+                data-role="{{ r.role or '' }}" data-phone="{{ r.phone or '' }}"
+                data-class="{{ r.class_name or '' }}" data-teacher="{{ r.teacher_name or '' }}"
+                data-type="{{ r.attendance_type if r.attendance_type else 'gate' }}"
+                data-registeredby="{{ r.registered_by or '' }}"
+                data-date="{{ r.date }}" data-time="{{ r.time }}" data-status="{{ r.status }}">
               <td><strong>{{ r.student_name }}</strong></td>
+              <td><span style="font-size:.75rem;color:var(--text2);">{{ r.user_id or '—' }}</span></td>
               <td>
                 {% set atype = r.attendance_type if r.attendance_type else 'gate' %}
                 <span class="type-badge type-{{ atype }}">
@@ -129,9 +137,37 @@
   </div>
 </div>
 
-<div style="margin-top:1rem;display:flex;gap:.6rem;">
+<div style="margin-top:1rem;display:flex;gap:.6rem;flex-wrap:wrap;">
   <a href="{{ url_for('admin_dashboard') }}" class="btn-g btn-pink"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
-  <a href="{{ url_for('recognize') }}" class="btn-g btn-green"><i class="fas fa-camera"></i> Start Recognition</a>
+  <a href="{{ url_for('admin_gate_scan') }}" class="btn-g btn-green"><i class="fas fa-camera"></i> Start Recognition</a>
+  <a href="{{ url_for('admin_export') }}" class="btn-g btn-blue"><i class="fas fa-file-export"></i> Export Data</a>
+</div>
+
+<!-- Detail Modal -->
+<div id="adminDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;justify-content:center;align-items:center;" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--card);border-radius:20px;width:440px;max-width:92vw;box-shadow:0 16px 80px rgba(0,0,0,.25);overflow:hidden;animation:scaleIn .3s ease;">
+    <div style="padding:1.5rem;background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;text-align:center;">
+      <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.2);display:inline-flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;margin-bottom:.5rem;" id="mdAvatar">--</div>
+      <h3 style="font-size:1.1rem;margin:0;" id="mdName">—</h3>
+      <p style="font-size:.78rem;opacity:.8;margin:.2rem 0 0;" id="mdSub">—</p>
+    </div>
+    <div style="padding:1.5rem;">
+      <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.88rem;"><span style="color:var(--text2);"><i class="fas fa-id-badge"></i> User ID</span><span style="font-weight:600;" id="mdUid">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.88rem;"><span style="color:var(--text2);"><i class="fas fa-building"></i> Department</span><span style="font-weight:600;" id="mdDept">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.88rem;"><span style="color:var(--text2);"><i class="fas fa-envelope"></i> Email</span><span style="font-weight:600;" id="mdEmail">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.88rem;"><span style="color:var(--text2);"><i class="fas fa-user-tag"></i> Role</span><span style="font-weight:600;" id="mdRole">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.88rem;"><span style="color:var(--text2);"><i class="fas fa-phone"></i> Phone</span><span style="font-weight:600;" id="mdPhone">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.88rem;"><span style="color:var(--text2);"><i class="fas fa-tag"></i> Type</span><span style="font-weight:600;" id="mdType">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.88rem;"><span style="color:var(--text2);"><i class="fas fa-chalkboard"></i> Class</span><span style="font-weight:600;" id="mdClass">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.88rem;"><span style="color:var(--text2);"><i class="fas fa-user-tie"></i> Teacher</span><span style="font-weight:600;" id="mdTeacher">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.88rem;"><span style="color:var(--text2);"><i class="fas fa-user-shield"></i> Registered By</span><span style="font-weight:600;" id="mdRegisteredBy">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.88rem;"><span style="color:var(--text2);"><i class="fas fa-calendar"></i> Date</span><span style="font-weight:600;" id="mdDate">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:.5rem 0;font-size:.88rem;"><span style="color:var(--text2);"><i class="fas fa-clock"></i> Time</span><span style="font-weight:600;" id="mdTime">—</span></div>
+    </div>
+    <div style="padding:.8rem 1.5rem;border-top:1px solid var(--border);text-align:right;">
+      <button class="btn-g btn-outline" onclick="document.getElementById('adminDetailModal').style.display='none'"><i class="fas fa-times"></i> Close</button>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -140,7 +176,7 @@
 function applyFilter() {
   var date = document.getElementById('filterDate').value;
   var type = document.getElementById('filterType').value;
-  var dept = document.getElementById('filterDept').value.trim();
+  var dept = document.getElementById('filterDept').value;
   var role = document.getElementById('filterRole').value;
 
   // Convert date from YYYY-MM-DD to DD-MM-YYYY
@@ -172,7 +208,6 @@ function applyFilter() {
 }
 
 function clearFilter() {
-  document.getElementById('filterDate').value = '';
   document.getElementById('filterType').value = '';
   document.getElementById('filterDept').value = '';
   document.getElementById('filterRole').value = '';
@@ -188,18 +223,31 @@ function renderRecords(records) {
     return;
   }
 
-  var html = '<div style="overflow-x:auto;"><table class="modern-table"><thead><tr><th>Name</th><th>Type</th><th>Role</th><th>Department</th><th>Class</th><th>Teacher</th><th>Date</th><th>Time</th><th>Status</th></tr></thead><tbody>';
+  var html = '<div style="overflow-x:auto;"><table class="modern-table"><thead><tr><th>Name</th><th>User ID</th><th>Type</th><th>Role</th><th>Department</th><th>Class</th><th>Teacher</th><th>Date</th><th>Time</th><th>Status</th></tr></thead><tbody>';
   records.forEach(function(r) {
     var atype = r.attendance_type || 'gate';
     var role = r.role || 'Student';
     var typeIcon = atype === 'gate' ? 'fa-door-open' : 'fa-book-open';
-    html += '<tr>' +
+    var uid = r.user_id || '—';
+    var dept = r.department || '—';
+    var email = r.email || '—';
+    var phone = r.phone || '—';
+    var cls = r.class_name || '—';
+    var teacher = r.teacher_name || '—';
+    var registeredby = r.registered_by || '';
+    html += '<tr style="cursor:pointer;" onclick="showAdminDetail(this)" ' +
+      'data-name="' + r.student_name + '" data-uid="' + uid + '" data-dept="' + dept + '" ' +
+      'data-email="' + email + '" data-role="' + role + '" data-phone="' + phone + '" ' +
+      'data-class="' + cls + '" data-teacher="' + teacher + '" data-type="' + atype + '" ' +
+      'data-registeredby="' + registeredby + '" ' +
+      'data-date="' + r.date + '" data-time="' + r.time + '" data-status="' + r.status + '">' +
       '<td><strong>' + r.student_name + '</strong></td>' +
+      '<td style="font-family:monospace;font-size:.82rem;">' + uid + '</td>' +
       '<td><span class="type-badge type-' + atype + '"><i class="fas ' + typeIcon + '"></i> ' + atype.toUpperCase() + '</span></td>' +
       '<td><span class="role-badge role-' + role.toLowerCase() + '">' + role + '</span></td>' +
-      '<td>' + (r.department || '—') + '</td>' +
-      '<td>' + (r.class_name || '—') + '</td>' +
-      '<td>' + (r.teacher_name || '—') + '</td>' +
+      '<td>' + dept + '</td>' +
+      '<td>' + cls + '</td>' +
+      '<td>' + teacher + '</td>' +
       '<td>' + r.date + '</td>' +
       '<td><i class="fas fa-clock" style="color:var(--c7);font-size:.72rem;"></i> ' + r.time + '</td>' +
       '<td><span class="badge-g badge-green">' + r.status + '</span></td>' +
@@ -208,5 +256,38 @@ function renderRecords(records) {
   html += '</tbody></table></div>';
   container.innerHTML = html;
 }
+
+function showAdminDetail(el) {
+  var d = el.dataset;
+  document.getElementById('mdName').textContent = d.name;
+  document.getElementById('mdAvatar').textContent = d.name ? d.name.split(' ').map(function(w){return w[0]}).join('').toUpperCase().substring(0,2) : '--';
+  document.getElementById('mdSub').textContent = d.dept + ' • ' + d.role;
+  document.getElementById('mdUid').textContent = d.uid;
+  document.getElementById('mdDept').textContent = d.dept;
+  document.getElementById('mdEmail').textContent = d.email;
+  document.getElementById('mdRole').textContent = d.role;
+  document.getElementById('mdPhone').textContent = d.phone;
+  document.getElementById('mdType').textContent = d.type ? d.type.toUpperCase() : '—';
+  document.getElementById('mdClass').textContent = d.class;
+  document.getElementById('mdTeacher').textContent = d.teacher;
+  document.getElementById('mdRegisteredBy').textContent = d.registeredby || '—';
+  document.getElementById('mdDate').textContent = d.date;
+  document.getElementById('mdTime').textContent = d.time;
+  document.getElementById('adminDetailModal').style.display = 'flex';
+}
+
+// Load filter dropdown options on page load
+(function(){
+  fetch('/api/options').then(function(r){return r.json()}).then(function(data){
+    var dSel = document.getElementById('filterDept');
+    var rSel = document.getElementById('filterRole');
+    (data.departments||[]).forEach(function(d){
+      var o=document.createElement('option'); o.value=d; o.textContent=d; dSel.appendChild(o);
+    });
+    (data.roles||[]).forEach(function(r){
+      var o=document.createElement('option'); o.value=r; o.textContent=r; rSel.appendChild(o);
+    });
+  }).catch(function(e){console.error('Failed to load filter options:',e)});
+})();
 </script>
 {% endblock %}

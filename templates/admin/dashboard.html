@@ -42,13 +42,36 @@
   .chart-wrap { max-height:320px; position:relative; }
 
   .quick-actions { display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1rem; }
+
+  .ct-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9999;
+    justify-content:center; align-items:center; backdrop-filter:blur(4px); }
+  .ct-overlay.active { display:flex; }
+  .ct-modal { background:var(--card); border-radius:20px; width:90%; max-width:560px;
+    box-shadow:0 16px 80px rgba(0,0,0,.3); animation:scaleIn .3s ease; overflow:hidden; }
+  .ct-header { display:flex; align-items:center; justify-content:space-between; padding:1.2rem 1.5rem;
+    border-bottom:1px solid var(--border); background:linear-gradient(135deg,rgba(240,147,251,.06),rgba(102,126,234,.06)); }
+  .ct-header h3 { font-size:1.05rem; font-weight:700; margin:0; display:flex; align-items:center; gap:8px; }
+  .ct-close { width:32px; height:32px; border-radius:10px; border:none; background:rgba(239,71,111,.08);
+    color:var(--c6); cursor:pointer; display:flex; align-items:center; justify-content:center;
+    font-size:.85rem; transition:all .25s; }
+  .ct-close:hover { background:var(--c6); color:#fff; }
+  .ct-body { padding:1.5rem; }
+  .ct-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  @media(max-width:576px){ .ct-grid{ grid-template-columns:1fr; } }
+  .ct-field label { display:block; font-weight:600; font-size:.82rem; color:var(--text2); margin-bottom:.3rem; }
+  .ct-field label i { margin-right:4px; font-size:.78rem; }
+  .ct-footer { display:flex; justify-content:flex-end; gap:.6rem; padding:1rem 1.5rem;
+    border-top:1px solid var(--border); background:var(--bg); }
+  .ct-result { margin-top:1rem; padding:1rem; border-radius:12px; font-size:.85rem; }
+  .ct-result.success { background:rgba(6,214,160,.1); border:1px solid rgba(6,214,160,.3); color:#00a47a; }
+  .ct-result.error { background:rgba(239,71,111,.1); border:1px solid rgba(239,71,111,.3); color:var(--c6); }
 </style>
 
 <!-- Header -->
 <div class="admin-header anim-down">
   <div class="badge-pill"><i class="fas fa-shield-halved"></i> ADMIN PORTAL</div>
   <h1><i class="fas fa-gauge-high"></i> Dashboard</h1>
-  <p>College gate attendance overview — {{ today }}</p>
+  <p>College gate attendance overview — {{ today }} · {{ total_records }} total records</p>
 </div>
 
 <!-- Stats -->
@@ -122,7 +145,7 @@
       <div style="text-align:center;padding:2rem;color:var(--text2);">
         <i class="fas fa-door-closed" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.6rem;"></i>
         <p>No gate entries recorded today</p>
-        <a href="{{ url_for('recognize') }}" class="btn-g btn-pink" style="margin-top:.5rem;"><i class="fas fa-camera"></i> Start Gate Scan</a>
+        <a href="{{ url_for('admin_gate_scan') }}" class="btn-g btn-pink" style="margin-top:.5rem;"><i class="fas fa-camera"></i> Start Gate Scan</a>
       </div>
       {% endif %}
     </div>
@@ -212,7 +235,7 @@
       <div style="text-align:center;padding:2rem;color:var(--text2);">
         <i class="fas fa-user-slash" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.6rem;"></i>
         <p>No registered users yet</p>
-        <a href="{{ url_for('capture') }}" class="btn-g btn-blue" style="margin-top:.5rem;"><i class="fas fa-camera"></i> Register First User</a>
+        <a href="{{ url_for('admin_capture') }}" class="btn-g btn-blue" style="margin-top:.5rem;"><i class="fas fa-camera"></i> Register First User</a>
       </div>
       {% endif %}
     </div>
@@ -221,7 +244,7 @@
 
 <!-- Charts Tab -->
 <div class="tab-pane" id="tab-charts">
-  <div class="grid-2 anim-up">
+  <div class="grid-2 anim-up" style="margin-bottom:1rem;">
     <div class="glass-card cbar-pink">
       <div class="card-hdr"><i class="fas fa-chart-pie" style="color:#f5576c;"></i> Department Breakdown (Gate)</div>
       <div class="card-inner">
@@ -235,14 +258,99 @@
       </div>
     </div>
   </div>
+  <div class="glass-card cbar-blue anim-up" style="margin-bottom:1rem;">
+    <div class="card-hdr"><i class="fas fa-chart-line" style="color:var(--c7);"></i> Weekly Attendance Trend (Last 7 Days)</div>
+    <div class="card-inner">
+      <div class="chart-wrap"><canvas id="weekChart"></canvas></div>
+    </div>
+  </div>
+  <div class="grid-2 anim-up">
+    <div class="glass-card cbar-green">
+      <div class="card-hdr"><i class="fas fa-users" style="color:var(--c4);"></i> Role Distribution</div>
+      <div class="card-inner">
+        <div class="chart-wrap"><canvas id="roleChart"></canvas></div>
+      </div>
+    </div>
+    <div class="glass-card cbar-yellow">
+      <div class="card-hdr"><i class="fas fa-info-circle" style="color:var(--c5);"></i> System Summary</div>
+      <div class="card-inner">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
+          <div style="padding:.8rem;background:var(--bg);border-radius:12px;">
+            <div style="font-size:.72rem;color:var(--text2);text-transform:uppercase;font-weight:600;">Total Records</div>
+            <div style="font-size:1.5rem;font-weight:800;color:var(--text);">{{ total_records }}</div>
+          </div>
+          <div style="padding:.8rem;background:var(--bg);border-radius:12px;">
+            <div style="font-size:.72rem;color:var(--text2);text-transform:uppercase;font-weight:600;">Admins</div>
+            <div style="font-size:1.5rem;font-weight:800;color:var(--text);">{{ total_admins }}</div>
+          </div>
+          <div style="padding:.8rem;background:var(--bg);border-radius:12px;">
+            <div style="font-size:.72rem;color:var(--text2);text-transform:uppercase;font-weight:600;">Registered Users</div>
+            <div style="font-size:1.5rem;font-weight:800;color:var(--text);">{{ total_users }}</div>
+          </div>
+          <div style="padding:.8rem;background:var(--bg);border-radius:12px;">
+            <div style="font-size:.72rem;color:var(--text2);text-transform:uppercase;font-weight:600;">Teachers</div>
+            <div style="font-size:1.5rem;font-weight:800;color:var(--text);">{{ total_teachers }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Quick Actions -->
 <div class="quick-actions anim-up delay-4" style="margin-top:1.5rem;">
-  <a href="{{ url_for('recognize') }}" class="btn-g btn-pink"><i class="fas fa-camera"></i> Start Gate Scan</a>
+  <a href="{{ url_for('admin_gate_scan') }}" class="btn-g btn-pink"><i class="fas fa-camera"></i> Start Gate Scan</a>
   <a href="{{ url_for('admin_attendance') }}" class="btn-g btn-purple"><i class="fas fa-history"></i> Full History</a>
-  <a href="{{ url_for('capture') }}" class="btn-g btn-blue"><i class="fas fa-user-plus"></i> Register User</a>
-  <a href="{{ url_for('manage_users') }}" class="btn-g btn-green"><i class="fas fa-users-cog"></i> Manage Users</a>
+  <a href="{{ url_for('admin_capture') }}" class="btn-g btn-blue"><i class="fas fa-user-plus"></i> Register User</a>
+  <a href="{{ url_for('admin_users') }}" class="btn-g btn-green"><i class="fas fa-users-cog"></i> Manage Users</a>
+  <button type="button" class="btn-g btn-yellow" onclick="openCreateTeacher()"><i class="fas fa-chalkboard-teacher"></i> Create Teacher</button>
+</div>
+
+<!-- Create Teacher Modal -->
+<div class="ct-overlay" id="ctOverlay" onclick="if(event.target===this)closeCreateTeacher()">
+  <div class="ct-modal">
+    <div class="ct-header">
+      <h3><i class="fas fa-chalkboard-teacher"></i> Create Teacher Account</h3>
+      <button type="button" class="ct-close" onclick="closeCreateTeacher()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="ctForm" onsubmit="submitCreateTeacher(event)">
+      <div class="ct-body">
+        <div class="ct-grid">
+          <div class="ct-field">
+            <label><i class="fas fa-user"></i> Full Name *</label>
+            <input type="text" name="full_name" class="fi" required placeholder="Enter full name">
+          </div>
+          <div class="ct-field">
+            <label><i class="fas fa-envelope"></i> Email *</label>
+            <input type="email" name="email" class="fi" required placeholder="teacher@example.com">
+          </div>
+          <div class="ct-field">
+            <label><i class="fas fa-key"></i> User PIN *</label>
+            <input type="text" name="user_pin" class="fi" required placeholder="Enter 4-6 digit PIN" maxlength="6" minlength="4" pattern="[0-9]{4,6}" inputmode="numeric">
+            <small style="color:var(--text2);font-size:.72rem;">Set a 4-6 digit PIN for the teacher (will be sent via email)</small>
+          </div>
+          <div class="ct-field">
+            <label><i class="fas fa-phone"></i> Phone</label>
+            <input type="tel" name="phone" class="fi" placeholder="+91 XXXXX XXXXX">
+          </div>
+          <div class="ct-field">
+            <label><i class="fas fa-building"></i> Department</label>
+            <select name="department" class="fi" id="ctDepartment">
+              <option value="">Select Department</option>
+            </select>
+          </div>
+          <div class="ct-field">
+            <label><i class="fas fa-id-badge"></i> Designation</label>
+            <input type="text" name="designation" class="fi" placeholder="e.g. Professor, HOD">
+          </div>
+        </div>
+      </div>
+      <div class="ct-footer">
+        <button type="button" class="btn-g btn-outline" onclick="closeCreateTeacher()"><i class="fas fa-times"></i> Cancel</button>
+        <button type="submit" class="btn-g btn-green" id="ctSubmitBtn"><i class="fas fa-user-plus"></i> Create Teacher</button>
+      </div>
+    </form>
+  </div>
 </div>
 {% endblock %}
 
@@ -312,6 +420,117 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   });
+
+  // Weekly trend line chart
+  var weekLabels = {{ week_stats|map(attribute='label')|list|tojson }};
+  var weekGate = {{ week_stats|map(attribute='gate')|list|tojson }};
+  var weekClass = {{ week_stats|map(attribute='class')|list|tojson }};
+  new Chart(document.getElementById('weekChart'), {
+    type: 'line',
+    data: {
+      labels: weekLabels,
+      datasets: [
+        { label: 'Gate Entries', data: weekGate, borderColor: '#f5576c', backgroundColor: 'rgba(245,87,108,.1)', fill: true, tension: .4, pointRadius: 5, pointBackgroundColor: '#f5576c' },
+        { label: 'Class Entries', data: weekClass, borderColor: '#667eea', backgroundColor: 'rgba(102,126,234,.1)', fill: true, tension: .4, pointRadius: 5, pointBackgroundColor: '#667eea' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 12, family: 'Inter' } } } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // Role distribution pie chart
+  var roleLabels = {{ role_stats.keys()|list|tojson }};
+  var roleValues = {{ role_stats.values()|list|tojson }};
+  var roleColors = ['#667eea','#06d6a0','#f093fb','#ef476f','#ffd166','#4cc9f0'];
+  if (roleLabels.length > 0) {
+    new Chart(document.getElementById('roleChart'), {
+      type: 'doughnut',
+      data: {
+        labels: roleLabels,
+        datasets: [{ data: roleValues, backgroundColor: roleColors.slice(0, roleLabels.length), borderWidth: 0 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, font: { size: 12, family: 'Inter' } } } }
+      }
+    });
+  }
 });
+
+/* Create Teacher Modal */
+function openCreateTeacher() {
+  document.getElementById('ctOverlay').classList.add('active');
+  // Load departments
+  fetch('/api/options').then(r => r.json()).then(data => {
+    var sel = document.getElementById('ctDepartment');
+    sel.innerHTML = '<option value="">Select Department</option>';
+    (data.departments || []).forEach(function(d) {
+      sel.innerHTML += '<option value="' + d + '">' + d + '</option>';
+    });
+  });
+}
+
+function closeCreateTeacher() {
+  document.getElementById('ctOverlay').classList.remove('active');
+  document.getElementById('ctForm').reset();
+  var old = document.querySelector('.ct-result');
+  if (old) old.remove();
+}
+
+async function submitCreateTeacher(e) {
+  e.preventDefault();
+  var btn = document.getElementById('ctSubmitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+
+  var form = document.getElementById('ctForm');
+  var fd = new FormData(form);
+  var payload = {};
+  fd.forEach(function(v, k) { payload[k] = v; });
+
+  // Remove old result
+  var old = document.querySelector('.ct-result');
+  if (old) old.remove();
+
+  try {
+    var resp = await fetch('/api/admin/create_teacher', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    var res = await resp.json();
+    if (res.success) {
+      var div = document.createElement('div');
+      div.className = 'ct-result success';
+      div.innerHTML = '<strong><i class="fas fa-check-circle"></i> Account Created!</strong><br>' +
+        'Name: <strong>' + res.teacher.name + '</strong><br>' +
+        'User ID: <strong>' + res.teacher.user_id + '</strong><br>' +
+        'Email: ' + res.teacher.email + '<br>' +
+        '<small style="color:#888;">Login PIN has been sent to the email above.</small>';
+      document.querySelector('.ct-body').appendChild(div);
+      form.reset();
+      // Refresh page stats after short delay
+      setTimeout(function() { location.reload(); }, 3000);
+    } else {
+      var div = document.createElement('div');
+      div.className = 'ct-result error';
+      div.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + (res.message || 'Failed to create teacher');
+      document.querySelector('.ct-body').appendChild(div);
+    }
+  } catch(err) {
+    var div = document.createElement('div');
+    div.className = 'ct-result error';
+    div.innerHTML = '<i class="fas fa-exclamation-circle"></i> Network error: ' + err.message;
+    document.querySelector('.ct-body').appendChild(div);
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Teacher';
+}
 </script>
 {% endblock %}

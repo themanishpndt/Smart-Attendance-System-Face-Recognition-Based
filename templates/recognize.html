@@ -65,8 +65,8 @@
   <div class="pg-icon">
     <i class="fas {% if admin_logged_in %}fa-door-open{% else %}fa-user-check{% endif %}"></i>
   </div>
-  <h1>{% if admin_logged_in %}Gate Recognition{% else %}Face Recognition{% endif %}</h1>
-  <p>{% if admin_logged_in %}Scan faces at college gate — marks gate entry attendance{% else %}Identify faces and automatically record attendance{% endif %}</p>
+  <h1>{% if admin_logged_in %}Gate Recognition{% else %}Class Attendance{% endif %}</h1>
+  <p>{% if admin_logged_in %}Scan faces at college gate — marks gate entry attendance{% else %}Scan student faces to mark class attendance{% endif %}</p>
   {% if admin_logged_in %}
   <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:20px;background:rgba(255,255,255,.2);font-size:.78rem;font-weight:700;margin-top:.6rem;"><i class="fas fa-shield-halved"></i> ADMIN — GATE MODE</span>
   {% elif teacher_logged_in %}
@@ -146,7 +146,7 @@
             <div class="val" id="rRecog" style="color:var(--c4);">0</div><div class="lbl">Recognized</div>
           </div>
           <div class="cap-stat" style="flex:1;min-width:80px;">
-            <div class="val" id="rSaved" style="color:var(--c1);">0</div><div class="lbl">Saved</div>
+            <div class="val" id="rSaved" style="color:var(--c1);">0</div><div class="lbl">{% if admin_logged_in %}Gate Saved{% elif teacher_logged_in %}Attendance{% else %}Saved{% endif %}</div>
           </div>
         </div>
 
@@ -163,7 +163,7 @@
   <div>
     <div class="glass-card cbar-blue" style="height:100%;display:flex;flex-direction:column;">
       <div class="card-hdr" style="justify-content:space-between;">
-        <span><i class="fas fa-list-check" style="color:var(--c7);"></i> Recognition Log</span>
+        <span><i class="fas fa-list-check" style="color:var(--c7);"></i> {% if admin_logged_in %}Gate Entry Log{% elif teacher_logged_in %}Class Attendance Log{% else %}Recognition Log{% endif %}</span>
         <span class="badge-g badge-purple" id="logCount">0 entries</span>
       </div>
       <div class="card-inner" style="flex:1;padding-top:.5rem;">
@@ -316,6 +316,16 @@
     if (data.user_id && data.user_id !== 'N/A') detailsHtml += '<span><i class="fas fa-id-badge"></i> ' + data.user_id + '</span>';
     if (data.department && data.department !== 'N/A') detailsHtml += '<span><i class="fas fa-building"></i> ' + data.department + '</span>';
     if (data.email && data.email !== 'N/A') detailsHtml += '<span><i class="fas fa-envelope"></i> ' + data.email + '</span>';
+    {% if teacher_logged_in %}
+    var classSel = document.getElementById('classSelect');
+    if (classSel && classSel.value) {
+      var className = classSel.options[classSel.selectedIndex].text;
+      detailsHtml += '<span><i class="fas fa-chalkboard"></i> ' + className + '</span>';
+    }
+    {% endif %}
+    {% if admin_logged_in %}
+    detailsHtml += '<span><i class="fas fa-door-open"></i> Gate Entry</span>';
+    {% endif %}
 
     var html = '<div class="log-item">' +
       '<div class="log-av" style="background:' + c + ';">' + initials + '</div>' +

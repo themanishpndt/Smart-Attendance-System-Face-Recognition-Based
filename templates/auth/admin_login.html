@@ -49,7 +49,7 @@
       <div class="portal-badge"><i class="fas fa-shield-halved"></i> ADMIN PORTAL</div>
       <div class="av"><i class="fas fa-building-columns"></i></div>
       <h2>Admin Sign In</h2>
-      <p>College gate attendance management</p>
+      <p>Sign in with your email &amp; password</p>
     </div>
     <div class="auth-body">
       {% with messages = get_flashed_messages(with_categories=true) %}
@@ -65,9 +65,9 @@
 
       <form method="POST" action="{{ url_for('admin_login') }}">
         <div class="fg">
-          <label for="username"><i class="fas fa-user-shield"></i> Username</label>
-          <input type="text" class="fi" id="username" name="username" placeholder="Enter admin username"
-                 autocomplete="username" required autofocus>
+          <label for="email"><i class="fas fa-envelope"></i> Email ID</label>
+          <input type="email" class="fi" id="email" name="email" placeholder="admin@example.com"
+                 autocomplete="email" required autofocus>
         </div>
         <div class="fg">
           <label for="password"><i class="fas fa-lock"></i> Password</label>
@@ -81,18 +81,17 @@
           <label class="remember-label">
             <input type="checkbox" name="remember" value="1"> Remember me
           </label>
+          <a href="{{ url_for('forgot_password') }}" style="font-size:.82rem;color:var(--c6);font-weight:600;text-decoration:none;">
+            <i class="fas fa-key" style="font-size:.72rem;"></i> Forgot Password?
+          </a>
         </div>
         <button type="submit" class="btn-g btn-pink lg login-btn">
           <i class="fas fa-arrow-right"></i> Sign In
         </button>
       </form>
-
-      <div class="auth-divider">or</div>
-      <a href="{{ url_for('home') }}" class="btn-g btn-outline lg" style="width:100%;justify-content:center;">
-        <i class="fas fa-home"></i> Back to Home
-      </a>
     </div>
     <div class="auth-footer">
+      <div style="margin-bottom:.6rem;"><a href="{{ url_for('teacher_login') }}" style="color:var(--c1);"><i class="fas fa-key" style="font-size:.8rem;"></i> Login with User ID &amp; PIN</a></div>
       Don't have an admin account? <a href="{{ url_for('admin_register') }}">Create Account</a>
     </div>
   </div>

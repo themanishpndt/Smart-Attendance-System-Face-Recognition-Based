@@ -1,0 +1,415 @@
+CUSTOM SOFTWARE LICENSE AGREEMENT
+Smart Attendance System
+
+Copyright © 2025-2026 Manish Sharma. All Rights Reserved.
+
+================================================================================
+
+PROJECT INFORMATION
+
+Project Name:       Smart Attendance System
+Version:            2.0
+Author:             Manish Sharma
+Contact Email:      mpandat0052@gmail.com
+License Type:       Custom Proprietary License with Limited Rights
+Effective Date:     2025
+Last Updated:       June 2026
+
+================================================================================
+
+DEFINITIONS
+
+"Software" refers to the Smart Attendance System, including but not limited to:
+  - Source code (app.py, templates, static files, JavaScript, CSS)
+  - Database schemas and structure (schema.sql, SQLite databases)
+  - Face recognition models and algorithms (Haar Cascade, KNN classifier)
+  - Documentation (README.md, PROJECT_STRUCTURE.md)
+  - Configuration files and scripts
+  - All associated digital assets, images, and media files
+
+"Author" refers to Manish Sharma, the original creator and copyright holder.
+
+"User" refers to any individual or organization that accesses, downloads, views,
+or interacts with the Software.
+
+"Commercial Use" refers to any use of the Software for financial gain, including
+but not limited to selling the Software, using it in paid services, or deploying
+it in a commercial product.
+
+================================================================================
+
+GRANT OF LICENSE
+
+Subject to the terms and conditions of this License Agreement, the Author grants
+Users a limited, non-exclusive, non-transferable, revocable license to:
+
+1. VIEW AND STUDY
+   ✓ View the source code for educational and learning purposes
+   ✓ Study the Software architecture, algorithms, and implementation
+   ✓ Learn from the code structure and design patterns
+
+2. PERSONAL USE
+   ✓ Install and run the Software on personal computers
+   ✓ Use the Software for personal attendance tracking
+   ✓ Use the Software for non-commercial educational projects
+   ✓ Modify the Software for personal use only
+
+3. ACADEMIC USE
+   ✓ Use the Software in academic institutions (schools, colleges, universities)
+     for non-commercial attendance tracking purposes
+   ✓ Use the Software for educational demonstrations and training
+   ✓ Reference the Software in academic papers with proper citation
+
+4. ATTRIBUTION REQUIREMENT
+   All uses described above MUST include proper attribution:
+   
+   "Smart Attendance System by Manish Sharma (mpandat0052@gmail.com)"
+   
+   Attribution must be visible in:
+   - The Software's user interface (footer or about page)
+   - Any documentation derived from the Software
+   - Academic papers or presentations that reference the Software
+   - Any modified versions of the Software
+
+================================================================================
+
+RESTRICTIONS AND PROHIBITED USES
+
+The following actions are STRICTLY PROHIBITED without prior written consent from
+the Author:
+
+1. COMMERCIAL USE RESTRICTIONS
+   ✗ Selling, licensing, or sublicensing the Software
+   ✗ Using the Software in commercial products or services
+   ✗ Charging fees for access to the Software
+   ✗ Using the Software to provide paid attendance tracking services
+   ✗ Deploying the Software on commercial hosting for profit
+   ✗ Incorporating the Software into commercial software packages
+
+2. DISTRIBUTION RESTRICTIONS
+   ✗ Distributing copies of the Software publicly
+   ✗ Making the Software available for download on third-party platforms
+   ✗ Hosting the Software on public repositories without attribution
+   ✗ Sharing modified versions of the Software publicly
+   ✗ Creating derivative works for public distribution
+
+3. MODIFICATION RESTRICTIONS
+   ✗ Removing copyright notices or attribution from the Software
+   ✗ Removing or altering the Author's name, email, or contact information
+   ✗ Claiming authorship or ownership of the Software
+   ✗ Reverse engineering the Software for commercial purposes
+   ✗ Decompiling or disassembling the Software beyond educational study
+
+4. INTELLECTUAL PROPERTY RESTRICTIONS
+   ✗ Using the Author's name, trademarks, or branding without permission
+   ✗ Claiming endorsement by the Author without explicit approval
+   ✗ Filing patents based on the Software's algorithms or methods
+   ✗ Registering trademarks related to the Software
+
+5. USAGE RESTRICTIONS
+   ✗ Using the Software for illegal surveillance or privacy violations
+   ✗ Using the Software in violation of data protection laws (GDPR, CCPA, etc.)
+   ✗ Using the Software to discriminate based on race, gender, religion, etc.
+   ✗ Deploying the Software without proper user consent and privacy policies
+
+================================================================================
+
+COMMERCIAL LICENSE AVAILABILITY
+
+For commercial use, distribution rights, or any uses not permitted under this
+license, please contact the Author to negotiate a separate Commercial License
+Agreement.
+
+Commercial License Inquiries:
+  Email:    mpandat0052@gmail.com
+  Subject:  Smart Attendance System - Commercial License Request
+
+Commercial licenses may include:
+  - Unlimited commercial use rights
+  - White-label deployment options
+  - Distribution and resale rights
+  - Removal of attribution requirements
+  - Priority support and custom development
+  - Enterprise deployment assistance
+
+Pricing for commercial licenses will be determined on a case-by-case basis
+depending on the scope of use, number of users, and deployment requirements.
+
+================================================================================
+
+INTELLECTUAL PROPERTY RIGHTS
+
+1. COPYRIGHT OWNERSHIP
+   The Software and all intellectual property rights therein are and shall
+   remain the exclusive property of Manish Sharma. This License does not grant
+   Users any ownership rights to the Software.
+
+2. PATENT RIGHTS
+   The Author reserves all patent rights. Users may not file patents based on
+   the Software's algorithms, methods, or implementations.
+
+3. TRADEMARK RIGHTS
+   "Smart Attendance System" and any associated logos or branding are the
+   property of the Author. Users may not use these marks without permission.
+
+4. TRADE SECRETS
+   Certain algorithms, methods, and implementations in the Software may be
+   considered trade secrets. Users agree to maintain confidentiality of such
+   information.
+
+================================================================================
+
+ATTRIBUTION REQUIREMENTS
+
+When using the Software under this License, Users MUST include the following
+attribution:
+
+IN SOFTWARE USER INTERFACE:
+  Display in footer or about page:
+  "Powered by Smart Attendance System © 2025-2026 Manish Sharma"
+
+IN DOCUMENTATION:
+  Include in README or documentation:
+  "This project uses Smart Attendance System by Manish Sharma
+   (mpandat0052@gmail.com). Licensed under Custom License."
+
+IN ACADEMIC CITATIONS:
+  Sharma, M. (2025). Smart Attendance System (Version 2.0) [Software].
+  Retrieved from [source URL]
+
+IN DERIVATIVE WORKS:
+  "Based on Smart Attendance System by Manish Sharma (mpandat0052@gmail.com).
+   Original source: [source URL]"
+
+================================================================================
+
+DATA PROTECTION AND PRIVACY
+
+1. BIOMETRIC DATA RESPONSIBILITY
+   Users deploying the Software MUST comply with all applicable biometric data
+   protection laws and regulations, including but not limited to:
+   - General Data Protection Regulation (GDPR) - European Union
+   - Biometric Information Privacy Act (BIPA) - Illinois, USA
+   - California Consumer Privacy Act (CCPA) - California, USA
+   - Personal Data Protection Act (PDPA) - Singapore
+   - Any other applicable data protection laws
+
+2. USER CONSENT
+   Users MUST obtain explicit informed consent from all individuals whose faces
+   are captured and stored by the Software. Consent forms must clearly explain:
+   - What biometric data is collected (face encodings, images)
+   - How the data is stored and processed
+   - Who has access to the data
+   - How long the data is retained
+   - Rights to access, modify, or delete data
+
+3. DATA SECURITY
+   Users are responsible for implementing appropriate security measures to
+   protect biometric data collected by the Software, including:
+   - Encryption of stored face data
+   - Secure network transmission
+   - Access control and authentication
+   - Regular security audits
+   - Data breach notification procedures
+
+4. DATA RETENTION
+   Users must establish and enforce data retention policies, including:
+   - Maximum data retention periods
+   - Procedures for data deletion upon request
+   - Automated data purging mechanisms
+
+5. TRANSPARENCY
+   Users must provide clear privacy policies explaining the Software's data
+   collection, processing, and storage practices to all stakeholders.
+
+The Author is NOT responsible for Users' compliance with data protection laws.
+Users bear full responsibility for lawful deployment and operation of the
+Software.
+
+================================================================================
+
+WARRANTIES AND DISCLAIMERS
+
+1. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+2. ACCURACY DISCLAIMER
+   The face recognition system may produce false positives or false negatives.
+   The Author makes NO WARRANTY regarding the accuracy, reliability, or
+   completeness of the face recognition functionality.
+
+3. SECURITY DISCLAIMER
+   While the Software implements security measures, the Author makes NO WARRANTY
+   that the Software is free from security vulnerabilities, bugs, or errors.
+
+4. USE AT YOUR OWN RISK
+   Users acknowledge that they use the Software at their own risk. The Software
+   is intended for attendance tracking purposes only and should not be used for
+   security-critical applications without additional safeguards.
+
+5. THIRD-PARTY SERVICES
+   The Software integrates with third-party services (Cloudinary, Gmail SMTP).
+   The Author is not responsible for the availability, functionality, or
+   security of these third-party services.
+
+================================================================================
+
+LIMITATION OF LIABILITY
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW:
+
+1. NO LIABILITY FOR DAMAGES
+   IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+   OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+   WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+   OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+   ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+2. LIABILITY CAP
+   In jurisdictions where liability cannot be excluded, the Author's total
+   liability shall not exceed the amount paid by the User for the Software
+   (which is $0 for non-commercial use).
+
+3. USER RESPONSIBILITY
+   Users are solely responsible for:
+   - Compliance with applicable laws and regulations
+   - Data protection and privacy compliance
+   - Security of deployed instances
+   - Consequences of using face recognition technology
+   - Any harm resulting from misuse of the Software
+
+================================================================================
+
+INDEMNIFICATION
+
+Users agree to indemnify, defend, and hold harmless the Author from and against
+any and all claims, liabilities, damages, losses, costs, expenses, or fees
+(including reasonable attorneys' fees) arising from:
+
+  a) User's use or misuse of the Software
+  b) User's violation of this License Agreement
+  c) User's violation of any applicable laws or regulations
+  d) User's violation of third-party rights, including intellectual property
+     rights or privacy rights
+  e) Any claims related to face recognition data collected by the User
+
+================================================================================
+
+TERMINATION
+
+1. AUTOMATIC TERMINATION
+   This License automatically terminates if the User violates any terms or
+   conditions of this Agreement.
+
+2. TERMINATION BY AUTHOR
+   The Author reserves the right to terminate this License at any time for any
+   User, with or without cause, upon written notice.
+
+3. EFFECT OF TERMINATION
+   Upon termination:
+   - User must immediately cease all use of the Software
+   - User must delete all copies of the Software in their possession
+   - User must destroy all derivative works created from the Software
+   - Attribution requirements continue to apply for previously distributed works
+   - Any commercial agreements must be separately addressed
+
+4. SURVIVAL
+   The following sections survive termination: Intellectual Property Rights,
+   Warranties and Disclaimers, Limitation of Liability, Indemnification, and
+   Governing Law.
+
+================================================================================
+
+MODIFICATION OF LICENSE
+
+The Author reserves the right to modify this License Agreement at any time.
+Changes will be effective immediately upon posting the updated License with the
+Software. Continued use of the Software after changes constitutes acceptance of
+the modified License.
+
+Users are encouraged to review this License periodically for updates.
+
+================================================================================
+
+GOVERNING LAW AND JURISDICTION
+
+1. GOVERNING LAW
+   This License Agreement shall be governed by and construed in accordance with
+   the laws of India, without regard to its conflict of law principles.
+
+2. JURISDICTION
+   Any disputes arising from this License Agreement shall be subject to the
+   exclusive jurisdiction of the courts of India.
+
+3. DISPUTE RESOLUTION
+   Before initiating legal proceedings, parties agree to attempt good-faith
+   negotiation to resolve disputes. If negotiation fails, disputes may be
+   escalated to mediation before litigation.
+
+================================================================================
+
+ENTIRE AGREEMENT
+
+This License Agreement constitutes the entire agreement between the Author and
+Users regarding the Software and supersedes all prior or contemporaneous
+understandings regarding such subject matter.
+
+================================================================================
+
+SEVERABILITY
+
+If any provision of this License Agreement is held to be invalid or
+unenforceable, the remaining provisions shall remain in full force and effect.
+
+================================================================================
+
+NO WAIVER
+
+The Author's failure to enforce any right or provision of this License Agreement
+shall not constitute a waiver of such right or provision.
+
+================================================================================
+
+CONTACT INFORMATION
+
+For questions, permissions, commercial licensing inquiries, or any other matters
+related to this License Agreement, please contact:
+
+  Name:     Manish Sharma
+  Email:    mpandat0052@gmail.com
+  Subject:  Smart Attendance System - Licensing Inquiry
+
+Response time: Typically within 7-14 business days
+
+================================================================================
+
+ACKNOWLEDGMENT
+
+BY DOWNLOADING, INSTALLING, ACCESSING, OR USING THE SOFTWARE, YOU ACKNOWLEDGE
+THAT YOU HAVE READ THIS LICENSE AGREEMENT, UNDERSTAND IT, AND AGREE TO BE BOUND
+BY ITS TERMS AND CONDITIONS.
+
+IF YOU DO NOT AGREE TO THE TERMS OF THIS LICENSE AGREEMENT, DO NOT DOWNLOAD,
+INSTALL, ACCESS, OR USE THE SOFTWARE.
+
+================================================================================
+
+LICENSE VERSION INFORMATION
+
+License Version:    1.0
+License Date:       January 2025
+Last Updated:       June 2026
+Applicable To:      Smart Attendance System v2.0 and all prior versions
+
+For the most current version of this License, please contact the Author.
+
+================================================================================
+
+END OF LICENSE AGREEMENT
+
+Copyright © 2025-2026 Manish Sharma. All Rights Reserved.
+Unauthorized use, reproduction, or distribution is strictly prohibited.

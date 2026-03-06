@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Reset PIN — Smart Attendance{% endblock %}
+
+{% block content %}
+<style>
+  .auth-wrap { max-width: 460px; margin: 2rem auto; }
+  .auth-card { background: var(--card); border: 1px solid var(--border); border-radius: 22px;
+    box-shadow: var(--shadow-lg); overflow: hidden; }
+  .auth-top { background: linear-gradient(135deg, #06d6a0 0%, #1b9aaa 100%); padding: 2rem; text-align: center; color: #fff; position: relative; }
+  .auth-top::after { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 70% 30%, rgba(255,255,255,.1) 0%, transparent 60%); }
+  .auth-top * { position: relative; z-index: 1; }
+  .auth-top .av { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 1rem;
+    background: rgba(255,255,255,.2); backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+  .auth-top h2 { font-weight: 800; font-size: 1.4rem; margin-bottom: .2rem; }
+  .auth-top p { opacity: .85; font-size: .88rem; margin: 0; }
+  .auth-body { padding: 1.8rem 2rem; }
+  .auth-body label { font-weight: 600; font-size: .85rem; display: block; margin-bottom: 6px; color: var(--text2); }
+  .auth-body .fg { position: relative; margin-bottom: 1rem; }
+  .auth-body .fg i.fa-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--text2); font-size: .9rem; pointer-events: none; }
+  .auth-body input[type="text"], .auth-body input[type="password"] {
+    width: 100%; padding: .65rem .75rem .65rem 2.4rem; border: 2px solid var(--border);
+    border-radius: 12px; background: var(--bg2); color: var(--text); font-size: .9rem;
+    outline: none; transition: border-color .25s, box-shadow .25s;
+  }
+  .auth-body input:focus { border-color: #06d6a0; box-shadow: 0 0 0 3px rgba(6,214,160,.12); }
+  .auth-footer { text-align: center; padding: 1rem 2rem 1.5rem; border-top: 1px solid var(--border); }
+  .auth-footer a { color: var(--c1); font-weight: 600; }
+  .pw-toggle { position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    cursor: pointer; color: var(--text2); font-size: .9rem; z-index: 2; background: none; border: none; }
+</style>
+
+<div class="auth-wrap anim-scale">
+  <div class="auth-card">
+    <div class="auth-top">
+      <div class="av"><i class="fas fa-key"></i></div>
+      <h2>Reset Your PIN</h2>
+      <p>Create a new 4-6 digit User PIN</p>
+    </div>
+    <div class="auth-body">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div style="padding:.7rem 1rem;border-radius:10px;font-size:.85rem;margin-bottom:1rem;display:flex;align-items:center;gap:8px;
+              {% if category == 'danger' %}background:rgba(239,71,111,.08);color:var(--c6);border:1px solid rgba(239,71,111,.15);
+              {% elif category == 'success' %}background:rgba(6,214,160,.08);color:#00a47a;border:1px solid rgba(6,214,160,.15);
+              {% else %}background:rgba(76,201,240,.08);color:#0895c8;border:1px solid rgba(76,201,240,.15);{% endif %}">
+              <i class="fas {% if category == 'danger' %}fa-exclamation-circle{% elif category == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %}"></i>
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('reset_pin') }}" id="resetPinForm">
+        <label>New PIN</label>
+        <div class="fg">
+          <i class="fas fa-key fa-icon"></i>
+          <input type="password" name="new_pin" id="pin1" placeholder="Enter 4-6 digit PIN"
+                 required minlength="4" maxlength="6" inputmode="numeric" pattern="[0-9]{4,6}" autofocus>
+          <button type="button" class="pw-toggle" onclick="togglePw('pin1', this)"><i class="fas fa-eye"></i></button>
+        </div>
+
+        <label>Confirm PIN</label>
+        <div class="fg">
+          <i class="fas fa-shield-halved fa-icon"></i>
+          <input type="password" name="confirm_pin" id="pin2" placeholder="Confirm your PIN"
+                 required minlength="4" maxlength="6" inputmode="numeric" pattern="[0-9]{4,6}">
+          <button type="button" class="pw-toggle" onclick="togglePw('pin2', this)"><i class="fas fa-eye"></i></button>
+        </div>
+        <div id="matchMsg" style="font-size:.78rem;margin-top:-6px;margin-bottom:8px;"></div>
+
+        <button type="submit" class="btn-g btn-green lg" style="width:100%;justify-content:center;margin-top:.8rem;background:linear-gradient(135deg,#06d6a0,#1b9aaa);" id="resetBtn" disabled>
+          <i class="fas fa-check-circle"></i> Reset PIN
+        </button>
+      </form>
+    </div>
+    <div class="auth-footer">
+      <a href="{{ url_for('teacher_login') }}"><i class="fas fa-arrow-left"></i> Back to Login</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function togglePw(id, el) {
+  const inp = document.getElementById(id);
+  const icon = el.querySelector('i');
+  if (inp.type === 'password') { inp.type = 'text'; icon.className = 'fas fa-eye-slash'; }
+  else { inp.type = 'password'; icon.className = 'fas fa-eye'; }
+}
+
+(function(){
+  const p1 = document.getElementById('pin1');
+  const p2 = document.getElementById('pin2');
+  const match = document.getElementById('matchMsg');
+  const btn = document.getElementById('resetBtn');
+
+  function validate() {
+    const v = p1.value.replace(/\D/g, ''), c = p2.value.replace(/\D/g, '');
+    p1.value = v.slice(0, 6);
+    p2.value = c.slice(0, 6);
+
+    if (c.length > 0) {
+      if (v === c && v.length >= 4) { match.textContent = '✓ PINs match'; match.style.color = '#22c55e'; }
+      else if (v !== c) { match.textContent = '✗ PINs do not match'; match.style.color = '#ef4444'; }
+      else { match.textContent = ''; }
+    } else { match.textContent = ''; }
+
+    btn.disabled = !(v.length >= 4 && v.length <= 6 && v === c);
+  }
+
+  p1.addEventListener('input', validate);
+  p2.addEventListener('input', validate);
+})();
+</script>
+{% endblock %}

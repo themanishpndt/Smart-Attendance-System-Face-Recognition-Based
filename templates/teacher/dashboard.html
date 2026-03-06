@@ -44,7 +44,7 @@
 </div>
 
 <!-- Stats -->
-<div class="grid-3 anim-up delay-1" style="margin-bottom:1.5rem;">
+<div class="grid-4 anim-up delay-1" style="margin-bottom:1.5rem;">
   <div class="stat-pill">
     <div class="s-icon" style="background:var(--g1);"><i class="fas fa-chalkboard"></i></div>
     <div><div class="s-val">{{ classes|length }}</div><div class="s-lbl">Classes</div></div>
@@ -56,6 +56,10 @@
   <div class="stat-pill">
     <div class="s-icon" style="background:var(--g3);"><i class="fas fa-clipboard-check"></i></div>
     <div><div class="s-val">{{ recent_attendance|length }}</div><div class="s-lbl">Today's Records</div></div>
+  </div>
+  <div class="stat-pill">
+    <div class="s-icon" style="background:var(--g5);"><i class="fas fa-database"></i></div>
+    <div><div class="s-val">{{ total_records }}</div><div class="s-lbl">Total Records</div></div>
   </div>
 </div>
 
@@ -78,10 +82,10 @@
       <div class="card-hdr"><i class="fas fa-bolt" style="color:var(--c5);"></i> Quick Actions</div>
       <div class="card-inner">
         <div class="quick-actions">
-          <a href="{{ url_for('recognize') }}" class="qa"><i class="fas fa-user-check" style="color:var(--c4);"></i> Take Attendance</a>
+          <a href="{{ url_for('teacher_class_scan') }}" class="qa"><i class="fas fa-user-check" style="color:var(--c4);"></i> Take Attendance</a>
           <a href="{{ url_for('manage_classes') }}" class="qa"><i class="fas fa-plus-circle" style="color:var(--c1);"></i> Manage Classes</a>
           <a href="{{ url_for('teacher_attendance') }}" class="qa"><i class="fas fa-calendar-alt" style="color:var(--c7);"></i> View Records</a>
-          <a href="{{ url_for('export_attendance') }}" class="qa"><i class="fas fa-download" style="color:var(--c3);"></i> Export Data</a>
+          <a href="{{ url_for('teacher_export') }}" class="qa"><i class="fas fa-download" style="color:var(--c3);"></i> Export Data</a>
         </div>
       </div>
     </div>
@@ -140,7 +144,7 @@
     </div>
 
     <!-- Classes -->
-    <div class="glass-card cbar-pink">
+    <div class="glass-card cbar-pink" style="margin-bottom:1.2rem;">
       <div class="card-hdr"><i class="fas fa-chalkboard" style="color:var(--c3);"></i> Your Classes</div>
       <div class="card-inner" style="padding:.5rem;">
         {% if classes %}
@@ -159,6 +163,31 @@
           <div style="text-align:center;padding:1.5rem;color:var(--text2);font-size:.88rem;">
             No classes yet. <a href="{{ url_for('manage_classes') }}">Create one</a>
           </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Weekly Trend Chart -->
+    <div class="glass-card cbar-green" style="margin-bottom:1.2rem;">
+      <div class="card-hdr"><i class="fas fa-chart-line" style="color:var(--c4);"></i> Weekly Trend</div>
+      <div class="card-inner" style="padding:.8rem;">
+        <canvas id="weekTrendChart" height="170"></canvas>
+      </div>
+    </div>
+
+    <!-- Per-Class Today -->
+    <div class="glass-card cbar-purple">
+      <div class="card-hdr"><i class="fas fa-chart-bar" style="color:var(--c5);"></i> Today by Class</div>
+      <div class="card-inner" style="padding:.8rem;">
+        {% if class_stats %}
+          {% for cs in class_stats %}
+          <div style="display:flex;align-items:center;gap:.6rem;padding:.4rem 0;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}">
+            <span style="flex:1;font-size:.85rem;font-weight:600;">{{ cs.name }}</span>
+            <span class="badge-g badge-blue" style="font-size:.75rem;">{{ cs.count }}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div style="text-align:center;padding:1rem;color:var(--text2);font-size:.85rem;"><i class="fas fa-inbox" style="opacity:.3;"></i> No data</div>
         {% endif %}
       </div>
     </div>
@@ -190,6 +219,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
 (function(){
   function tick() {
@@ -198,6 +228,37 @@
     document.getElementById('dashDate').textContent = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
   }
   tick(); setInterval(tick, 1000);
+
+  // Weekly trend chart
+  const weekLabels = {{ week_stats|map(attribute='day')|list|tojson }};
+  const weekData = {{ week_stats|map(attribute='count')|list|tojson }};
+  const ctx = document.getElementById('weekTrendChart');
+  if (ctx) {
+    new Chart(ctx.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: weekLabels,
+        datasets: [{
+          label: 'Records',
+          data: weekData,
+          borderColor: '#667eea',
+          backgroundColor: 'rgba(102,126,234,.12)',
+          fill: true,
+          tension: .4,
+          pointBackgroundColor: '#667eea',
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1 } }
+        }
+      }
+    });
+  }
 })();
 
 function showStudentModal(el) {

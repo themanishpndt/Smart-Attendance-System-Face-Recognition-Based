@@ -44,6 +44,47 @@
     font-weight:600;font-size:.88rem;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.2);animation:scaleIn .3s ease both}
   .set-toast.success{background:linear-gradient(135deg,#06d6a0,#38f9d7);color:#1e1e2f}
   .set-toast.error{background:linear-gradient(135deg,#ef476f,#f5576c)}
+
+  /* Manage Users */
+  .mu-tab{padding:5px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card);
+    font-size:.78rem;font-weight:600;color:var(--text2);cursor:pointer;transition:all .2s;font-family:inherit}
+  .mu-tab:hover{border-color:var(--c7);color:var(--c7)}
+  .mu-tab.active{background:var(--c7);color:#fff;border-color:var(--c7)}
+  .mu-row{display:flex;align-items:center;gap:8px;padding:.6rem .4rem;border-bottom:1px solid var(--border);
+    font-size:.82rem;flex-wrap:wrap;transition:background .2s}
+  .mu-row:hover{background:rgba(102,126,234,.04)}
+  .mu-row:last-child{border:none}
+  .mu-row .mu-info{flex:1;min-width:150px}
+  .mu-row .mu-name{font-weight:700;font-size:.85rem}
+  .mu-row .mu-meta{font-size:.72rem;color:var(--text2)}
+  .mu-row .mu-actions{display:flex;gap:4px;flex-shrink:0}
+  .mu-row .mu-actions button{width:28px;height:28px;border-radius:8px;border:none;cursor:pointer;
+    font-size:.7rem;display:flex;align-items:center;justify-content:center;transition:all .2s}
+  .mu-btn-edit{background:rgba(102,126,234,.1);color:var(--c1)}
+  .mu-btn-edit:hover{background:var(--c1);color:#fff}
+  .mu-btn-toggle{background:rgba(6,214,160,.1);color:#00a47a}
+  .mu-btn-toggle:hover{background:#00a47a;color:#fff}
+  .mu-btn-toggle.inactive{background:rgba(239,71,111,.1);color:var(--c6)}
+  .mu-btn-toggle.inactive:hover{background:var(--c6);color:#fff}
+  .mu-btn-del{background:rgba(239,71,111,.08);color:var(--c6)}
+  .mu-btn-del:hover{background:var(--c6);color:#fff}
+  .mu-badge{padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:700}
+  .mu-badge-student{background:rgba(102,126,234,.1);color:var(--c1)}
+  .mu-badge-teacher{background:rgba(6,214,160,.1);color:#00a47a}
+  .mu-badge-staff{background:rgba(240,147,251,.1);color:#c44bc2}
+  .mu-badge-inactive{background:rgba(239,71,111,.1);color:var(--c6)}
+  .mu-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;
+    justify-content:center;align-items:center;backdrop-filter:blur(4px)}
+  .mu-overlay.active{display:flex}
+  .mu-modal{background:var(--card);border-radius:18px;width:90%;max-width:520px;box-shadow:0 16px 80px rgba(0,0,0,.3);
+    animation:scaleIn .3s ease;overflow:hidden}
+  .mu-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;
+    border-bottom:1px solid var(--border);background:rgba(102,126,234,.04)}
+  .ct-field label{display:block;font-weight:600;font-size:.82rem;color:var(--text2);margin-bottom:.3rem}
+  .ct-close{width:32px;height:32px;border-radius:10px;border:none;background:rgba(239,71,111,.08);
+    color:var(--c6);cursor:pointer;display:flex;align-items:center;justify-content:center;
+    font-size:.85rem;transition:all .25s}
+  .ct-close:hover{background:var(--c6);color:#fff}
 </style>
 
 <div class="pg-header anim-down">
@@ -52,7 +93,7 @@
   <p>Configure system preferences, departments, roles and recognition parameters</p>
 </div>
 
-<form method="POST" action="{{ url_for('settings') }}" id="settingsForm">
+<form method="POST" action="{{ url_for('admin_settings') }}" id="settingsForm">
 <div class="set-grid">
   <!-- Left Column -->
   <div>
@@ -168,6 +209,60 @@
       </div>
     </div>
 
+    <!-- Classes Management -->
+    <div class="glass-card cbar-green anim-up delay-2" style="margin-bottom:1.2rem;">
+      <div class="card-hdr"><i class="fas fa-chalkboard" style="color:var(--c4);"></i> Classes Management</div>
+      <div class="card-inner">
+        <p style="font-size:.78rem;color:var(--text2);margin-bottom:.8rem;">
+          Create global classes for your institution and assign them to teachers.
+        </p>
+        <!-- Add Class Form -->
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.8rem;">
+          <input type="text" id="newClassName" class="fi" placeholder="Class name" style="flex:2;min-width:120px;padding:6px 10px;font-size:.82rem;">
+          <select id="newClassType" class="fi" style="flex:1;min-width:100px;padding:6px 10px;font-size:.82rem;">
+            <option value="college">College</option>
+            <option value="school">School</option>
+          </select>
+          <select id="newClassDept" class="fi" style="flex:1;min-width:100px;padding:6px 10px;font-size:.82rem;">
+            <option value="">Department</option>
+            {% for d in settings.departments %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+          </select>
+          <button type="button" class="btn-g btn-green" onclick="addClass()" style="padding:6px 14px;font-size:.8rem;"><i class="fas fa-plus"></i> Add</button>
+        </div>
+        <!-- Classes List -->
+        <div id="adminClassesList" style="min-height:40px;">
+          <div style="text-align:center;color:var(--text2);font-size:.82rem;padding:1rem 0;"><i class="fas fa-spinner fa-spin"></i> Loading classes...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assign Classes to Teachers / HOD / Staff -->
+    <div class="glass-card cbar-purple anim-up delay-3" style="margin-bottom:1.2rem;">
+      <div class="card-hdr"><i class="fas fa-user-plus" style="color:var(--c1);"></i> Assign Classes</div>
+      <div class="card-inner">
+        <p style="font-size:.78rem;color:var(--text2);margin-bottom:.8rem;">
+          Assign classes to <strong>Teachers</strong>, <strong>HODs</strong>, or <strong>Staff</strong> members.
+        </p>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.8rem;">
+          <select id="assignClassId" class="fi" style="flex:1;min-width:120px;padding:6px 10px;font-size:.82rem;">
+            <option value="">Select Class</option>
+          </select>
+          <select id="assignRoleFilter" class="fi" style="flex:0 0 110px;padding:6px 10px;font-size:.82rem;" onchange="filterAssignDropdown()">
+            <option value="">All Roles</option>
+            <option value="teacher">Teachers</option>
+            <option value="hod">HODs</option>
+            <option value="staff">Staff</option>
+          </select>
+          <select id="assignTeacherId" class="fi" style="flex:1;min-width:140px;padding:6px 10px;font-size:.82rem;">
+            <option value="">Select Person</option>
+          </select>
+          <button type="button" class="btn-g btn-purple" onclick="assignTeacher()" style="padding:6px 14px;font-size:.8rem;"><i class="fas fa-link"></i> Assign</button>
+        </div>
+        <!-- Current Assignments -->
+        <div id="assignmentsList" style="min-height:30px;"></div>
+      </div>
+    </div>
+
     <!-- System Status -->
     <div class="glass-card cbar-yellow anim-up delay-3" style="margin-bottom:1.2rem;">
       <div class="card-hdr"><i class="fas fa-server" style="color:var(--c5);"></i> System Status</div>
@@ -232,10 +327,57 @@
 
 <!-- Save Button -->
 <div style="display:flex;gap:.7rem;justify-content:flex-end;margin-top:.5rem;" class="anim-up delay-4">
-  <a href="{{ url_for('home') }}" class="btn-g btn-outline"><i class="fas fa-times"></i> Cancel</a>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn-g btn-outline"><i class="fas fa-times"></i> Cancel</a>
   <button type="submit" class="btn-g btn-purple lg"><i class="fas fa-save"></i> Save Settings</button>
 </div>
 </form>
+
+<!-- Manage Users (Full Width, outside form) -->
+<div class="glass-card cbar-blue anim-up delay-4" style="margin-top:1.2rem;margin-bottom:1.2rem;">
+  <div class="card-hdr" style="justify-content:space-between;">
+    <span><i class="fas fa-users-cog" style="color:var(--c7);"></i> Manage Users</span>
+    <a href="{{ url_for('admin_capture') }}" class="btn-g btn-blue" style="padding:4px 12px;font-size:.78rem;"><i class="fas fa-user-plus"></i> Register New User</a>
+  </div>
+  <div class="card-inner">
+    <!-- Filter Tabs -->
+    <div style="display:flex;gap:4px;margin-bottom:.8rem;flex-wrap:wrap;">
+      <button type="button" class="mu-tab active" onclick="filterMU('all',this)">All</button>
+      <button type="button" class="mu-tab" onclick="filterMU('Student',this)">Students</button>
+      <button type="button" class="mu-tab" onclick="filterMU('Teacher',this)">Teachers</button>
+      <button type="button" class="mu-tab" onclick="filterMU('Staff',this)">Staff</button>
+      <input type="text" id="muSearch" class="fi" placeholder="Search by name, ID, email..." oninput="filterMU(null,null)" style="margin-left:auto;max-width:220px;padding:5px 10px;font-size:.8rem;">
+    </div>
+    <div id="muList" style="min-height:80px;max-height:500px;overflow-y:auto;">
+      <div style="text-align:center;color:var(--text2);font-size:.82rem;padding:1rem 0;"><i class="fas fa-spinner fa-spin"></i> Loading users...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="mu-overlay" id="muEditOverlay" onclick="if(event.target===this)closeMUEdit()">
+  <div class="mu-modal">
+    <div class="mu-modal-hdr">
+      <h4 style="margin:0;font-weight:700;display:flex;align-items:center;gap:8px;"><i class="fas fa-user-edit"></i> Edit User</h4>
+      <button type="button" class="ct-close" onclick="closeMUEdit()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="muEditForm" onsubmit="saveMUEdit(event)">
+      <input type="hidden" id="muEditId">
+      <div style="padding:1.2rem;display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
+        <div class="ct-field"><label>Full Name *</label><input type="text" id="muEditName" class="fi" required></div>
+        <div class="ct-field"><label>User ID</label><input type="text" id="muEditUserId" class="fi" readonly style="background:var(--bg);"></div>
+        <div class="ct-field"><label>Email *</label><input type="email" id="muEditEmail" class="fi" required></div>
+        <div class="ct-field"><label>Phone</label><input type="tel" id="muEditPhone" class="fi"></div>
+        <div class="ct-field"><label>Department</label><select id="muEditDept" class="fi"><option value="">Select</option></select></div>
+        <div class="ct-field"><label>Role</label><select id="muEditRole" class="fi"><option value="Student">Student</option><option value="Teacher">Teacher</option><option value="Staff">Staff</option></select></div>
+        <div class="ct-field" style="grid-column:1/-1;"><label>Notes</label><textarea id="muEditNotes" class="fi" rows="2"></textarea></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:.5rem;padding:.8rem 1.2rem;border-top:1px solid var(--border);background:var(--bg);">
+        <button type="button" class="btn-g btn-outline" onclick="closeMUEdit()">Cancel</button>
+        <button type="submit" class="btn-g btn-blue"><i class="fas fa-save"></i> Save</button>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -253,7 +395,7 @@
     data = data || {};
     data.action = action;
     try {
-      var resp = await fetch('/settings', {
+      var resp = await fetch('{{ url_for("admin_settings") }}', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
@@ -341,6 +483,305 @@
       toast(res.message || 'Failed', 'error');
     }
   };
+
+  // ── Classes Management ──
+  var allAdminClasses = [];
+  var allTeachers = [];
+
+  async function loadAdminClasses() {
+    try {
+      var resp = await fetch('/api/admin/classes');
+      var data = await resp.json();
+      allAdminClasses = data.classes || [];
+      renderAdminClasses();
+      populateClassDropdown();
+    } catch(e) {
+      document.getElementById('adminClassesList').innerHTML = '<div style="color:var(--c6);font-size:.82rem;">Failed to load classes</div>';
+    }
+  }
+
+  function renderAdminClasses() {
+    var container = document.getElementById('adminClassesList');
+    if (!allAdminClasses.length) {
+      container.innerHTML = '<div style="text-align:center;color:var(--text2);font-size:.82rem;padding:.6rem 0;">No classes yet. Add one above.</div>';
+      return;
+    }
+    var html = '';
+    allAdminClasses.forEach(function(c) {
+      var typeBadge = c.institution_type === 'school'
+        ? '<span style="background:rgba(6,214,160,.12);color:#00a47a;padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:700;">SCHOOL</span>'
+        : '<span style="background:rgba(102,126,234,.12);color:var(--c1);padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:700;">COLLEGE</span>';
+      var teachers = c.teachers.map(function(t) {
+        return '<span class="tag-item" style="font-size:.72rem;padding:2px 8px;">' + t.name +
+          ' <button type="button" class="rm" onclick="unassignTeacher(' + c.id + ',' + t.id + ')" title="Remove"><i class="fas fa-times"></i></button></span>';
+      }).join(' ');
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);gap:8px;flex-wrap:wrap;">' +
+        '<div style="flex:1;min-width:120px;">' +
+          '<div style="font-weight:600;font-size:.85rem;">' + c.name + ' ' + typeBadge + '</div>' +
+          (c.department ? '<div style="font-size:.72rem;color:var(--text2);">' + c.department + '</div>' : '') +
+          (teachers ? '<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;">' + teachers + '</div>' : '') +
+        '</div>' +
+        '<button type="button" class="rm" onclick="deleteClass(' + c.id + ',\'' + c.name.replace(/'/g, "\\'") + '\')" title="Delete" style="width:24px;height:24px;"><i class="fas fa-trash-alt"></i></button>' +
+      '</div>';
+    });
+    container.innerHTML = html;
+  }
+
+  function populateClassDropdown() {
+    var sel = document.getElementById('assignClassId');
+    sel.innerHTML = '<option value="">Select Class</option>';
+    allAdminClasses.forEach(function(c) {
+      var label = c.name + ' (' + c.institution_type + ')';
+      sel.innerHTML += '<option value="' + c.id + '" data-type="' + c.institution_type + '">' + label + '</option>';
+    });
+  }
+
+  async function loadTeachers() {
+    try {
+      var resp = await fetch('/api/admin/teachers');
+      var data = await resp.json();
+      allTeachers = data.teachers || [];
+      renderTeacherDropdown();
+    } catch(e) { console.error('Failed to load teachers:', e); }
+  }
+
+  function renderTeacherDropdown(roleFilter) {
+    var sel = document.getElementById('assignTeacherId');
+    sel.innerHTML = '<option value="">Select Person</option>';
+    allTeachers.forEach(function(t) {
+      var desg = (t.designation || '').toLowerCase();
+      // Filter by role if selected
+      if (roleFilter) {
+        if (roleFilter === 'hod' && desg !== 'hod') return;
+        if (roleFilter === 'teacher' && desg === 'hod') return;
+        if (roleFilter === 'staff' && desg !== 'staff') return;
+      }
+      var roleBadge = desg === 'hod' ? ' [HOD]' : desg === 'staff' ? ' [Staff]' : '';
+      var label = t.name + roleBadge + (t.user_id ? ' — ' + t.user_id : '');
+      sel.innerHTML += '<option value="' + t.id + '" data-designation="' + (t.designation || '') + '">' + label + '</option>';
+    });
+  }
+
+  window.filterAssignDropdown = function() {
+    var role = document.getElementById('assignRoleFilter').value;
+    renderTeacherDropdown(role);
+  };
+
+  window.addClass = async function() {
+    var name = document.getElementById('newClassName').value.trim();
+    var instType = document.getElementById('newClassType').value;
+    var dept = document.getElementById('newClassDept').value;
+    if (!name) { toast('Enter a class name', 'error'); return; }
+    try {
+      var resp = await fetch('/api/admin/classes', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name: name, institution_type: instType, department: dept })
+      });
+      var res = await resp.json();
+      if (res.success) {
+        toast('Class "' + name + '" created', 'success');
+        document.getElementById('newClassName').value = '';
+        loadAdminClasses();
+      } else { toast(res.message || 'Failed', 'error'); }
+    } catch(e) { toast('Network error', 'error'); }
+  };
+
+  window.deleteClass = async function(classId, className) {
+    if (!confirm('Delete class "' + className + '"? This will also remove all teacher assignments.')) return;
+    try {
+      var resp = await fetch('/api/admin/classes/' + classId, { method: 'DELETE' });
+      var res = await resp.json();
+      if (res.success) {
+        toast('Class deleted', 'success');
+        loadAdminClasses();
+      } else { toast(res.message || 'Failed', 'error'); }
+    } catch(e) { toast('Network error', 'error'); }
+  };
+
+  window.assignTeacher = async function() {
+    var classId = document.getElementById('assignClassId').value;
+    var teacherId = document.getElementById('assignTeacherId').value;
+    if (!classId || !teacherId) { toast('Select both a class and a teacher', 'error'); return; }
+    try {
+      var resp = await fetch('/api/admin/classes/' + classId + '/assign', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ teacher_id: parseInt(teacherId) })
+      });
+      var res = await resp.json();
+      if (res.success) {
+        toast('Teacher assigned', 'success');
+        loadAdminClasses();
+      } else { toast(res.message || 'Failed', 'error'); }
+    } catch(e) { toast('Network error', 'error'); }
+  };
+
+  window.unassignTeacher = async function(classId, teacherId) {
+    if (!confirm('Remove this teacher from the class?')) return;
+    try {
+      var resp = await fetch('/api/admin/classes/' + classId + '/unassign/' + teacherId, { method: 'DELETE' });
+      var res = await resp.json();
+      if (res.success) {
+        toast('Teacher removed', 'success');
+        loadAdminClasses();
+      } else { toast(res.message || 'Failed', 'error'); }
+    } catch(e) { toast('Network error', 'error'); }
+  };
+
+  // Load on page init
+  loadAdminClasses();
+  loadTeachers();
+
+  // ── Manage Users ──
+  var allMU = [];
+  var muFilter = 'all';
+  var muDepts = [];
+
+  async function loadMU() {
+    try {
+      var resp = await fetch('/api/admin/all_users');
+      var data = await resp.json();
+      allMU = data.users || [];
+      renderMU();
+      // Also load dept options for edit modal
+      var optResp = await fetch('/api/options');
+      var optData = await optResp.json();
+      muDepts = optData.departments || [];
+    } catch(e) {
+      document.getElementById('muList').innerHTML = '<div style="color:var(--c6);font-size:.82rem;">Failed to load users</div>';
+    }
+  }
+
+  function renderMU() {
+    var container = document.getElementById('muList');
+    var search = (document.getElementById('muSearch').value || '').toLowerCase();
+    var filtered = allMU.filter(function(u) {
+      if (muFilter !== 'all' && u.role !== muFilter) return false;
+      if (search) {
+        var s = (u.name + ' ' + u.user_id + ' ' + u.email + ' ' + u.department).toLowerCase();
+        if (!s.includes(search)) return false;
+      }
+      return true;
+    });
+
+    if (!filtered.length) {
+      container.innerHTML = '<div style="text-align:center;color:var(--text2);font-size:.82rem;padding:1rem 0;"><i class="fas fa-user-slash" style="display:block;font-size:1.3rem;opacity:.3;margin-bottom:.4rem;"></i>No users found</div>';
+      return;
+    }
+
+    var html = '';
+    filtered.forEach(function(u) {
+      var roleCls = u.role === 'Student' ? 'student' : u.role === 'Teacher' ? 'teacher' : 'staff';
+      var statusBadge = u.is_active
+        ? '<span class="mu-badge mu-badge-' + roleCls + '">' + u.role + '</span>'
+        : '<span class="mu-badge mu-badge-inactive">Inactive</span>';
+      var toggleIcon = u.is_active ? 'fa-toggle-on' : 'fa-toggle-off';
+      var toggleCls = u.is_active ? '' : ' inactive';
+      var toggleTitle = u.is_active ? 'Deactivate' : 'Activate';
+
+      html += '<div class="mu-row" data-role="' + u.role + '" style="' + (u.is_active ? '' : 'opacity:.6;') + '">' +
+        '<div class="mu-info">' +
+          '<div class="mu-name">' + u.name + ' ' + statusBadge + '</div>' +
+          '<div class="mu-meta"><i class="fas fa-id-badge"></i> ' + u.user_id + ' &nbsp; <i class="fas fa-envelope"></i> ' + u.email +
+            (u.department ? ' &nbsp; <i class="fas fa-building"></i> ' + u.department : '') +
+            (u.phone ? ' &nbsp; <i class="fas fa-phone"></i> ' + u.phone : '') +
+            (u.registered_by ? ' &nbsp; <i class="fas fa-user-shield"></i> ' + u.registered_by : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="mu-actions">' +
+          '<button type="button" class="mu-btn-edit" onclick="editMU(' + u.id + ')" title="Edit"><i class="fas fa-pen"></i></button>' +
+          '<button type="button" class="mu-btn-toggle' + toggleCls + '" onclick="toggleMU(' + u.id + ')" title="' + toggleTitle + '"><i class="fas ' + toggleIcon + '"></i></button>' +
+          '<button type="button" class="mu-btn-del" onclick="deleteMU(' + u.id + ',\'' + u.name.replace(/'/g, "\\'") + '\')" title="Delete"><i class="fas fa-trash-alt"></i></button>' +
+        '</div>' +
+      '</div>';
+    });
+    container.innerHTML = html;
+  }
+
+  window.filterMU = function(role, btn) {
+    if (role !== null) {
+      muFilter = role;
+      document.querySelectorAll('.mu-tab').forEach(function(t) { t.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+    }
+    renderMU();
+  };
+
+  window.editMU = function(id) {
+    var u = allMU.find(function(x) { return x.id === id; });
+    if (!u) return;
+    document.getElementById('muEditId').value = u.id;
+    document.getElementById('muEditName').value = u.name;
+    document.getElementById('muEditUserId').value = u.user_id;
+    document.getElementById('muEditEmail').value = u.email;
+    document.getElementById('muEditPhone').value = u.phone || '';
+    document.getElementById('muEditNotes').value = u.notes || '';
+
+    var deptSel = document.getElementById('muEditDept');
+    deptSel.innerHTML = '<option value="">Select</option>';
+    muDepts.forEach(function(d) {
+      deptSel.innerHTML += '<option value="' + d + '"' + (d === u.department ? ' selected' : '') + '>' + d + '</option>';
+    });
+
+    document.getElementById('muEditRole').value = u.role;
+    document.getElementById('muEditOverlay').classList.add('active');
+  };
+
+  window.closeMUEdit = function() {
+    document.getElementById('muEditOverlay').classList.remove('active');
+  };
+
+  window.saveMUEdit = async function(e) {
+    e.preventDefault();
+    var id = document.getElementById('muEditId').value;
+    try {
+      var resp = await fetch('/api/admin/users/' + id + '/update', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          name: document.getElementById('muEditName').value.trim(),
+          email: document.getElementById('muEditEmail').value.trim(),
+          user_id: document.getElementById('muEditUserId').value.trim(),
+          department: document.getElementById('muEditDept').value,
+          phone: document.getElementById('muEditPhone').value.trim(),
+          role: document.getElementById('muEditRole').value,
+          notes: document.getElementById('muEditNotes').value.trim()
+        })
+      });
+      var res = await resp.json();
+      if (res.success) {
+        toast('User updated', 'success');
+        closeMUEdit();
+        loadMU();
+      } else { toast(res.message || 'Update failed', 'error'); }
+    } catch(err) { toast('Network error', 'error'); }
+  };
+
+  window.toggleMU = async function(id) {
+    try {
+      var resp = await fetch('/api/admin/users/' + id + '/toggle_active', { method: 'POST' });
+      var res = await resp.json();
+      if (res.success) {
+        toast(res.message, 'success');
+        loadMU();
+      } else { toast(res.message || 'Failed', 'error'); }
+    } catch(e) { toast('Network error', 'error'); }
+  };
+
+  window.deleteMU = async function(id, name) {
+    if (!confirm('Delete user "' + name + '"? This will also remove their face data and cannot be undone.')) return;
+    try {
+      var resp = await fetch('/api/admin/users/' + id + '/delete', { method: 'DELETE' });
+      var res = await resp.json();
+      if (res.success) {
+        toast('User deleted', 'success');
+        loadMU();
+      } else { toast(res.message || 'Failed', 'error'); }
+    } catch(e) { toast('Network error', 'error'); }
+  };
+
+  loadMU();
 })();
 </script>
 {% endblock %}

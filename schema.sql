@@ -77,5 +77,28 @@ CREATE TABLE IF NOT EXISTS users (
     phone TEXT,
     role TEXT NOT NULL,
     notes TEXT,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    registered_by TEXT DEFAULT '',
+    registered_by_role TEXT DEFAULT ''
+);
+
+-- Global classes managed by admin (for school & college)
+CREATE TABLE IF NOT EXISTS admin_classes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    institution_type TEXT NOT NULL DEFAULT 'college',
+    department TEXT DEFAULT '',
+    description TEXT DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Assign admin-managed classes to teachers/HODs
+CREATE TABLE IF NOT EXISTS teacher_class_assignments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    admin_class_id INTEGER NOT NULL,
+    teacher_id INTEGER NOT NULL,
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(admin_class_id, teacher_id),
+    FOREIGN KEY (admin_class_id) REFERENCES admin_classes (id) ON DELETE CASCADE,
+    FOREIGN KEY (teacher_id) REFERENCES teachers (id) ON DELETE CASCADE
 );

@@ -86,10 +86,20 @@
 <div class="cap-toast" id="capToast"></div>
 
 <!-- Header -->
-<div class="pg-header anim-down">
-  <div class="pg-icon"><i class="fas fa-camera-retro"></i></div>
+<div class="pg-header anim-down" {% if session.get('admin_id') %}style="background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);"{% endif %}>
+  <div class="pg-icon"><i class="fas {% if session.get('admin_id') %}fa-user-plus{% else %}fa-camera-retro{% endif %}"></i></div>
+  {% if session.get('teacher_id') %}
+  <h1>Register Student</h1>
+  <p>Capture face data to register a new student in your classes</p>
+  <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:20px;background:rgba(255,255,255,.2);font-size:.78rem;font-weight:700;margin-top:.6rem;"><i class="fas fa-chalkboard-teacher"></i> TEACHER PORTAL</span>
+  {% elif session.get('admin_id') %}
+  <h1>User Registration</h1>
+  <p>Register students, staff & faculty with face capture for gate attendance</p>
+  <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:20px;background:rgba(255,255,255,.2);font-size:.78rem;font-weight:700;margin-top:.6rem;"><i class="fas fa-shield-halved"></i> ADMIN PORTAL</span>
+  {% else %}
   <h1>Face Registration</h1>
   <p>Capture face data to register a new user in the system</p>
+  {% endif %}
 </div>
 
 {% if error %}
@@ -108,20 +118,20 @@
 <!-- Step 1: User Details -->
 <div class="step-panel active" id="step1">
   <div class="glass-card cbar-purple">
-    <div class="card-hdr"><i class="fas fa-user-edit" style="color:var(--c1)"></i> User Details</div>
+    <div class="card-hdr"><i class="fas fa-user-edit" style="color:var(--c1)"></i> {% if session.get('teacher_id') %}Student Details{% elif session.get('admin_id') %}User / Staff Details{% else %}User Details{% endif %}</div>
     <div class="card-inner cap-form">
       <div class="form-grid">
         <div class="fg">
-          <label for="cap-name"><i class="fas fa-user"></i> Full Name *</label>
-          <input type="text" class="fi" id="cap-name" placeholder="e.g. John Doe" required>
+          <label for="cap-name"><i class="fas fa-user"></i> {% if session.get('teacher_id') %}Student Name{% else %}Full Name{% endif %} *</label>
+          <input type="text" class="fi" id="cap-name" placeholder="{% if session.get('teacher_id') %}e.g. Rahul Sharma{% else %}e.g. John Doe{% endif %}" required>
         </div>
         <div class="fg">
           <label for="cap-email"><i class="fas fa-envelope"></i> Email *</label>
           <input type="email" class="fi" id="cap-email" placeholder="john@example.com" required>
         </div>
         <div class="fg">
-          <label for="cap-id"><i class="fas fa-id-badge"></i> User ID *</label>
-          <input type="text" class="fi" id="cap-id" placeholder="e.g. STU001" required>
+          <label for="cap-id"><i class="fas fa-id-badge"></i> {% if session.get('teacher_id') %}Student ID{% elif session.get('admin_id') %}User / Staff ID{% else %}User ID{% endif %} *</label>
+          <input type="text" class="fi" id="cap-id" placeholder="Auto-generated" readonly required style="background:var(--bg);cursor:not-allowed;">
         </div>
         <div class="fg">
           <label for="cap-dept"><i class="fas fa-building"></i> Department *</label>
@@ -135,10 +145,27 @@
         </div>
         <div class="fg">
           <label for="cap-role"><i class="fas fa-user-tag"></i> Role *</label>
-          <select class="fi" id="cap-role">
+          <select class="fi" id="cap-role" {% if session.get('teacher_id') %}disabled{% endif %} onchange="onRoleChange()">
+            {% if session.get('teacher_id') %}
+            <option value="Student" selected>Student</option>
+            {% else %}
             <option value="">Select Role</option>
+            {% endif %}
           </select>
         </div>
+        <div class="fg" id="cap-class-wrap" style="{% if not session.get('teacher_id') %}display:none;{% endif %}">
+          <label for="cap-class"><i class="fas fa-chalkboard"></i> Class</label>
+          <select class="fi" id="cap-class">
+            <option value="">Select Class (Optional)</option>
+          </select>
+        </div>
+        {% if session.get('admin_id') %}
+        <div class="fg" id="cap-pin-wrap" style="display:none;">
+          <label for="cap-pin"><i class="fas fa-key"></i> User PIN *</label>
+          <input type="text" class="fi" id="cap-pin" placeholder="Enter 4-6 digit PIN" maxlength="6" minlength="4" pattern="[0-9]{4,6}" inputmode="numeric" style="font-size:1.1rem;letter-spacing:4px;font-weight:700;">
+          <small style="color:var(--text2);font-size:.72rem;">Set a PIN for login — credentials will be emailed</small>
+        </div>
+        {% endif %}
         <div class="fg full-w">
           <label for="cap-notes"><i class="fas fa-sticky-note"></i> Notes</label>
           <textarea class="fi" id="cap-notes" rows="2" placeholder="Any additional info..."></textarea>
@@ -201,9 +228,19 @@
     </p>
     <div style="margin-bottom:1.5rem" id="regDetails"></div>
     <div style="display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;">
+      {% if session.get('teacher_id') %}
+      <a href="{{ url_for('teacher_capture') }}" class="btn-g btn-purple"><i class="fas fa-plus"></i> Register Another</a>
+      <a href="{{ url_for('teacher_class_scan') }}" class="btn-g btn-green"><i class="fas fa-user-check"></i> Class Scan</a>
+      <a href="{{ url_for('teacher_dashboard') }}" class="btn-g btn-outline"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      {% elif session.get('admin_id') %}
+      <a href="{{ url_for('admin_capture') }}" class="btn-g btn-purple"><i class="fas fa-plus"></i> Register Another</a>
+      <a href="{{ url_for('admin_gate_scan') }}" class="btn-g btn-green"><i class="fas fa-user-check"></i> Gate Scan</a>
+      <a href="{{ url_for('admin_users') }}" class="btn-g btn-outline"><i class="fas fa-users"></i> Manage Users</a>
+      {% else %}
       <a href="{{ url_for('capture') }}" class="btn-g btn-purple"><i class="fas fa-plus"></i> Register Another</a>
       <a href="{{ url_for('recognize') }}" class="btn-g btn-green"><i class="fas fa-user-check"></i> Recognize</a>
       <a href="{{ url_for('home') }}" class="btn-g btn-outline"><i class="fas fa-home"></i> Home</a>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -246,6 +283,13 @@
       if (!email || !email.includes('@')) { toast('Please enter a valid email address', 'error'); return; }
       if (!uid) { toast('Please enter a User ID', 'error'); return; }
       if (!dept) { toast('Please select a department', 'error'); return; }
+      // Validate PIN for non-Student roles
+      var pinInput = document.getElementById('cap-pin');
+      var role = document.getElementById('cap-role').value;
+      if (pinInput && role && role !== 'Student') {
+        var pin = pinInput.value.trim();
+        if (!pin || !/^[0-9]{4,6}$/.test(pin)) { toast('Please enter a valid 4-6 digit PIN for this user', 'error'); return; }
+      }
     }
     document.querySelectorAll('.step-panel').forEach(function(p){ p.classList.remove('active'); });
     document.getElementById('step' + n).classList.add('active');
@@ -443,7 +487,9 @@
           department: document.getElementById('cap-dept').value,
           phone: document.getElementById('cap-phone').value.trim(),
           role: document.getElementById('cap-role').value,
-          notes: document.getElementById('cap-notes').value.trim()
+          notes: document.getElementById('cap-notes').value.trim(),
+          class_id: document.getElementById('cap-class') ? document.getElementById('cap-class').value : '',
+          user_pin: document.getElementById('cap-pin') ? document.getElementById('cap-pin').value.trim() : ''
         })
       });
 
@@ -453,11 +499,14 @@
         document.getElementById('regName').textContent = name;
         var details = document.getElementById('regDetails');
         var ud = data.userData || {};
-        details.innerHTML =
+        var html = '<span class="reg-detail"><i class="fas fa-id-badge"></i> ' + (ud.userId||'') + '</span> ' +
           '<span class="reg-detail"><i class="fas fa-envelope"></i> ' + (ud.email||'') + '</span> ' +
-          '<span class="reg-detail"><i class="fas fa-id-badge"></i> ' + (ud.userId||'') + '</span> ' +
           '<span class="reg-detail"><i class="fas fa-building"></i> ' + (ud.department||'') + '</span> ' +
-          '<span class="reg-detail"><i class="fas fa-images"></i> ' + (data.totalSamples||capturedFrames.length) + ' samples</span>';
+          '<span class="reg-detail"><i class="fas fa-user-tag"></i> ' + (ud.role||'') + '</span> ';
+        if (ud.phone) html += '<span class="reg-detail"><i class="fas fa-phone"></i> ' + ud.phone + '</span> ';
+        html += '<span class="reg-detail"><i class="fas fa-images"></i> ' + (data.totalSamples||capturedFrames.length) + ' samples</span>';
+        if (ud.registeredBy) html += '<span class="reg-detail"><i class="fas fa-user-shield"></i> Registered by: ' + ud.registeredBy + ' (' + (ud.registeredByRole||'') + ')</span>';
+        details.innerHTML = html;
         goToStep(3);
         toast('Registration successful!', 'success');
       } else {
@@ -495,12 +544,65 @@
         var o = document.createElement('option'); o.value = d; o.textContent = d;
         deptSel.appendChild(o);
       });
+      {% if not session.get('teacher_id') %}
       (data.roles || []).forEach(function(r) {
         var o = document.createElement('option'); o.value = r; o.textContent = r;
         roleSel.appendChild(o);
       });
+      {% endif %}
     } catch(e) { console.error('Failed to load options:', e); }
   })();
+
+  // Load classes for capture dropdown
+  (async function loadCaptureClasses() {
+    try {
+      var resp = await fetch('/api/classes/for_capture');
+      var data = await resp.json();
+      var sel = document.getElementById('cap-class');
+      if (sel && data.classes) {
+        data.classes.forEach(function(c) {
+          var o = document.createElement('option');
+          o.value = c.id;
+          o.textContent = c.name;
+          sel.appendChild(o);
+        });
+      }
+    } catch(e) { console.error('Failed to load classes:', e); }
+  })();
+
+  // Show/hide class dropdown based on role & auto-generate ID
+  window.onRoleChange = function() {
+    var role = document.getElementById('cap-role').value;
+    var wrap = document.getElementById('cap-class-wrap');
+    if (wrap) {
+      wrap.style.display = (role === 'Student') ? '' : 'none';
+    }
+    // Show PIN field for non-Student roles (admin only)
+    var pinWrap = document.getElementById('cap-pin-wrap');
+    if (pinWrap) {
+      var isNonStudent = role && role !== 'Student';
+      pinWrap.style.display = isNonStudent ? '' : 'none';
+      var pinInput = document.getElementById('cap-pin');
+      if (pinInput) { if (isNonStudent) pinInput.setAttribute('required',''); else pinInput.removeAttribute('required'); }
+    }
+    // Auto-generate user ID based on role
+    if (role) {
+      fetch('/api/next_user_id?role=' + encodeURIComponent(role))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.user_id) document.getElementById('cap-id').value = data.user_id;
+        })
+        .catch(function(e) { console.error('Failed to get next ID:', e); });
+    }
+  };
+  {% if session.get('teacher_id') %}
+  // Teacher portal: always show class dropdown and auto-generate student ID
+  document.getElementById('cap-class-wrap').style.display = '';
+  fetch('/api/next_user_id?role=Student')
+    .then(function(r) { return r.json(); })
+    .then(function(data) { if (data.user_id) document.getElementById('cap-id').value = data.user_id; })
+    .catch(function(e) { console.error('Failed to get next ID:', e); });
+  {% endif %}
 })();
 </script>
 {% endblock %}

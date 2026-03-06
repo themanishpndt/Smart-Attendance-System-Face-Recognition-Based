@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Export Attendance — Smart Attendance{% endblock %}
+{% block title %}{% if session.get('admin_id') %}Export Gate Records{% elif session.get('teacher_id') %}Export Class Records{% else %}Export Attendance{% endif %} — Smart Attendance{% endblock %}
 
 {% block content %}
 <style>
@@ -21,33 +21,43 @@
   .chk-row input[type="checkbox"]{accent-color:var(--c1);width:18px;height:18px}
 </style>
 
-<div class="pg-header anim-down">
-  <div class="pg-icon"><i class="fas fa-file-export"></i></div>
+<div class="pg-header anim-down" {% if session.get('admin_id') %}style="background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);"{% endif %}>
+  <div class="pg-icon"><i class="fas {% if session.get('admin_id') %}fa-file-export{% elif session.get('teacher_id') %}fa-file-arrow-down{% else %}fa-file-export{% endif %}"></i></div>
+  {% if session.get('admin_id') %}
+  <h1>Export Gate Records</h1>
+  <p>Download gate attendance data with filters in CSV or JSON</p>
+  <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:20px;background:rgba(255,255,255,.2);font-size:.78rem;font-weight:700;margin-top:.6rem;"><i class="fas fa-shield-halved"></i> ADMIN PORTAL</span>
+  {% elif session.get('teacher_id') %}
+  <h1>Export Class Records</h1>
+  <p>Download your class attendance data with filters in CSV or JSON</p>
+  <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:20px;background:rgba(255,255,255,.2);font-size:.78rem;font-weight:700;margin-top:.6rem;"><i class="fas fa-chalkboard-teacher"></i> TEACHER PORTAL</span>
+  {% else %}
   <h1>Export Attendance</h1>
   <p>Download attendance data with filters in CSV or JSON</p>
+  {% endif %}
 </div>
 
 <!-- Stats -->
 <div class="grid-4 anim-up delay-1" style="margin-bottom:1.5rem;">
   <div class="stat-pill">
     <div class="s-icon" style="background:var(--g1);"><i class="fas fa-database"></i></div>
-    <div><div class="s-val">{{ stats.total_records }}</div><div class="s-lbl">Total Records</div></div>
+    <div><div class="s-val">{{ stats.total_records }}</div><div class="s-lbl">{% if session.get('admin_id') %}Gate Records{% elif session.get('teacher_id') %}Class Records{% else %}Total Records{% endif %}</div></div>
   </div>
   <div class="stat-pill">
     <div class="s-icon" style="background:var(--g4);"><i class="fas fa-users"></i></div>
-    <div><div class="s-val">{{ stats.total_users }}</div><div class="s-lbl">Registered</div></div>
+    <div><div class="s-val">{{ stats.total_users }}</div><div class="s-lbl">{% if session.get('teacher_id') %}Your Students{% else %}Registered{% endif %}</div></div>
   </div>
   <div class="stat-pill">
     <div class="s-icon" style="background:var(--g3);"><i class="fas fa-user-check"></i></div>
-    <div><div class="s-val">{{ stats.unique_recorded }}</div><div class="s-lbl">Recorded Users</div></div>
+    <div><div class="s-val">{{ stats.unique_recorded }}</div><div class="s-lbl">{% if session.get('teacher_id') %}Students Recorded{% else %}Recorded Users{% endif %}</div></div>
   </div>
   <div class="stat-pill">
     <div class="s-icon" style="background:var(--g2);"><i class="fas fa-calendar-day"></i></div>
-    <div><div class="s-val">{{ stats.today_count }}</div><div class="s-lbl">Today</div></div>
+    <div><div class="s-val">{{ stats.today_count }}</div><div class="s-lbl">{% if session.get('admin_id') %}Gate Today{% else %}Today{% endif %}</div></div>
   </div>
 </div>
 
-<form method="POST" action="{{ url_for('export_attendance') }}" id="exportForm">
+<form method="POST" action="{% if session.get('admin_id') %}{{ url_for('admin_export') }}{% elif session.get('teacher_id') %}{{ url_for('teacher_export') }}{% else %}{{ url_for('export_attendance') }}{% endif %}" id="exportForm">
 <div class="export-form-grid anim-up delay-2">
   <!-- Left Column: Filters -->
   <div>
@@ -112,6 +122,17 @@
           <label style="font-weight:600;font-size:.82rem;display:block;margin-bottom:3px;">Name / User ID</label>
           <input type="text" class="fi" name="name" id="nameFilter" placeholder="Search by name or ID...">
         </div>
+        {% if session.get('teacher_id') and classes %}
+        <div style="margin-top:.8rem;">
+          <label style="font-weight:600;font-size:.82rem;display:block;margin-bottom:3px;">Class</label>
+          <select class="fi" name="class_id" id="classFilter">
+            <option value="">All Classes</option>
+            {% for c in classes %}
+              <option value="{{ c.id }}">{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -150,6 +171,11 @@
           <span class="badge-g badge-yellow" style="font-size:.72rem;">Date</span>
           <span class="badge-g badge-blue" style="font-size:.72rem;">Time</span>
           <span class="badge-g badge-green" style="font-size:.72rem;">Status</span>
+          {% if session.get('admin_id') %}
+          <span class="badge-g badge-pink" style="font-size:.72rem;">Attendance Type</span>
+          {% elif session.get('teacher_id') %}
+          <span class="badge-g badge-pink" style="font-size:.72rem;">Class</span>
+          {% endif %}
         </div>
         <p style="font-size:.75rem;color:var(--text2);margin:.6rem 0 0;">All user details from the database will be included in the export.</p>
       </div>
@@ -175,7 +201,7 @@
 
 <!-- Export Button -->
 <div style="margin-top:1.5rem;display:flex;gap:.7rem;justify-content:center;" class="anim-up delay-3">
-  <a href="{{ url_for('show_attendance') }}" class="btn-g btn-outline"><i class="fas fa-arrow-left"></i> Attendance</a>
+  <a href="{% if session.get('admin_id') %}{{ url_for('admin_attendance') }}{% elif session.get('teacher_id') %}{{ url_for('teacher_attendance') }}{% else %}{{ url_for('show_attendance') }}{% endif %}" class="btn-g btn-outline"><i class="fas fa-arrow-left"></i> {% if session.get('admin_id') %}Gate Records{% elif session.get('teacher_id') %}Class Records{% else %}Attendance{% endif %}</a>
   <button type="submit" class="btn-g btn-purple lg" id="exportBtn"><i class="fas fa-download"></i> Export Data</button>
 </div>
 </form>

@@ -1,27 +1,32 @@
 # 🎓 Smart Attendance System — Face Recognition-Based Attendance Tracker
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
-[![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg)](https://flask.palletsprojects.com/)
-[![OpenCV](https://img.shields.io/badge/OpenCV-4.0+-red.svg)](https://opencv.org/)
+[![Flask](https://img.shields.io/badge/Flask-3.1+-green.svg)](https://flask.palletsprojects.com/)
+[![OpenCV](https://img.shields.io/badge/OpenCV-4.12+-red.svg)](https://opencv.org/)
 [![SQLite](https://img.shields.io/badge/Database-SQLite-orange.svg)](https://www.sqlite.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Custom-yellow.svg)](LICENSE)
 
-**Repository:** [Smart Attendence System](https://github.com/themanishpndt/Face-Recognition-Attendance-System)  
+**Author:** Manish Sharma  
 **Primary Language:** Python (Flask)  
-**Last Updated:** 2026-02-14  
+**Version:** 2.0  
+**Last Updated:** March 6, 2026  
 
 ---
 
 ## 📖 Project Overview
 
-The **Smart Attendance System** is a production-ready, self-hosted face recognition attendance tracker built with Flask and OpenCV. It automates attendance marking by recognizing faces in real time, eliminating manual roll calls and preventing proxy attendance.
+The **Smart Attendance System** is a production-ready, self-hosted face recognition attendance tracker built with Flask, OpenCV, and SQLite. It features **dual portal architecture** for institutional administrators (gate entry management) and teachers (classroom attendance management), automating attendance marking through real-time face recognition.
+
+📚 **For complete technical documentation, see [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)**
 
 ### 🔑 Key Benefits
-- **Contactless & Hygienic** – No physical touchpoints.  
-- **Prevents Proxy Attendance** – Each face is uniquely identified.  
-- **Real-Time Logging** – Attendance stored in SQLite and daily CSV files.  
-- **Secure & Scalable** – Role-based access, password hashing, and cloud-ready architecture.  
-- **Cost-Effective** – Open-source alternative to proprietary biometric systems.
+- **Dual Portal System** – Separate admin (gate entry) and teacher (classroom) portals  
+- **Contactless & Hygienic** – No physical touchpoints  
+- **Prevents Proxy Attendance** – Each face is uniquely identified via KNN classifier  
+- **Real-Time Logging** – Attendance stored in SQLite with daily CSV exports  
+- **OTP-Based Authentication** – Secure email verification for password/PIN resets  
+- **Comprehensive User Management** – Admin control over teachers, students, and classes  
+- **Profile Management** – Cloudinary-integrated image uploads for all users
 
 ### 🎯 Target Users
 - Educational institutions (schools, colleges, coaching centers)  
@@ -37,16 +42,40 @@ With the rise of contactless solutions post-pandemic, automated face recognition
 
 ## ✨ Core Features
 
-- **Real-Time Face Detection & Recognition** – Uses OpenCV Haar cascade for detection and custom encoding/matching for recognition.  
-- **Role-Based Access** – Separate dashboards for Admin, Teacher, and Student with appropriate permissions.  
-- **Automated Attendance Logging** – Records stored in SQLite (`attendance_records`) and as daily CSV files under `Attendance/`.  
-- **User Management** – Register, view, edit, and delete users via web interface.  
-- **Face Registration (Capture)** – Capture multiple face samples via webcam; encodings stored in `data/faces_data.pkl`.  
-- **Settings Persistence** – Camera index, recognition threshold, sample count saved in `data/settings.pkl`.  
-- **Export Reports** – Download attendance as CSV/Excel with date filters.  
-- **Responsive Web UI** – Bootstrap 4, custom CSS/JS, mobile-friendly.  
-- **Secure Authentication** – Passwords hashed (bcrypt recommended), session management.  
-- **Extensible Architecture** – Modular design allows swapping recognition models or databases.
+### Admin Portal
+- ✅ Gate attendance management (institution-wide entry/exit tracking)
+- ✅ Create and manage teacher/staff accounts with auto-generated credentials
+- ✅ Manage institution-wide classes and assign teachers
+- ✅ Complete user management (view, edit, activate/deactivate students)
+- ✅ View all attendance records (gate + class) with filtering
+- ✅ Dashboard analytics with weekly trends and statistics
+- ✅ Profile management with Cloudinary image uploads
+
+### Teacher Portal
+- ✅ Create and manage multiple classes
+- ✅ Face registration (capture) for students with 50+ samples
+- ✅ Class-based attendance via real-time face recognition
+- ✅ Add/remove students from classes
+- ✅ View per-student and per-class attendance rates
+- ✅ Export attendance reports (CSV)
+- ✅ Contact admin functionality
+- ✅ Dashboard with class and student statistics
+
+### Face Recognition System
+- ✅ OpenCV Haar Cascade for face detection
+- ✅ K-Nearest Neighbors (KNN) classifier for recognition
+- ✅ 50+ face samples per person for accurate matching
+- ✅ Confidence-based recognition with threshold filtering
+- ✅ Real-time webcam processing (DirectShow backend)
+- ✅ Duplicate prevention (1 gate + 1 class entry per day)
+
+### Authentication & Security
+- ✅ Dual authentication: Email+Password OR User ID+PIN
+- ✅ OTP-based password/PIN reset via email (5-digit codes, 10-min expiry)
+- ✅ Email verification for new accounts
+- ✅ SHA256 password hashing (bcrypt recommended for production)
+- ✅ Role-based access control with decorators
+- ✅ Session management with 30-day persistence
 
 ---
 
@@ -71,11 +100,13 @@ flowchart TD
 | Layer         | Technologies                                                                 |
 |---------------|------------------------------------------------------------------------------|
 | **Frontend**  | HTML5, CSS3, JavaScript, Bootstrap 4, Font Awesome                           |
-| **Backend**   | Python 3.8+, Flask, Jinja2, Gunicorn                                         |
-| **Computer Vision** | OpenCV (Haar cascade), NumPy, Pickle (serialization)                   |
-| **Database**  | SQLite (default), extensible to MySQL/PostgreSQL                             |
-| **Security**  | bcrypt (or SHA256), Flask sessions, environment variables                    |
-| **DevOps**    | Git, Docker, Nginx, Heroku/Railway/AWS                                       |
+| **Backend**   | Python 3.8+, Flask 3.1.2, Jinja2, Werkzeug                                   |
+| **Computer Vision** | OpenCV 4.12, NumPy 2.2.6, Scikit-learn 1.8.0 (KNN), Pickle              |
+| **Database**  | SQLite (10 tables: teachers, admins, users, classes, attendance_records, etc.)|
+| **Email**     | Gmail SMTP (OTP delivery, credentials, notifications)                        |
+| **Cloud Storage** | Cloudinary (profile image uploads)                                       |
+| **Security**  | SHA256 hashing, session management, OTP verification                         |
+| **DevOps**    | Git, virtualenv, Gunicorn-ready                                              |
 
 ---
 
@@ -146,30 +177,33 @@ flowchart TD
 
 ---
 
-## 🧠 Algorithms Used
+## 🧠 Face Recognition System
 
-### Face Detection
-- **OpenCV Haar Cascade Classifier** – Pre-trained model `haarcascade_frontalface_default.xml` detects frontal faces.
-- **Preprocessing**: Convert frame to grayscale, apply histogram equalization, detect faces, and resize ROI to fixed dimensions (e.g., 100x100).
+### Detection Algorithm
+- **OpenCV Haar Cascade** – Pre-trained frontal face detector from `haarcascade_frontalface_default.xml`
+- **Preprocessing:** Grayscale conversion → face detection → ROI extraction
 
-### Face Recognition
-- **Encoding Method**: Simple pixel vector or a lightweight embedding (e.g., using OpenCV LBPH or a custom CNN). The project stores encodings in `faces_data.pkl` and corresponding names in `names.pkl`.
-- **Matching**: Euclidean distance or cosine similarity between the encoding of the detected face and all stored encodings.
-- **Threshold**: If the smallest distance < `RECOGNITION_THRESHOLD`, the face is recognized; otherwise, rejected.
+### Recognition Algorithm
+- **K-Nearest Neighbors (KNN) Classifier** from Scikit-learn
+- **Training:** 50+ face samples per person stored as NumPy arrays in `faces_data.pkl`
+- **Matching:** KNN predicts name based on k nearest neighbors in feature space
+- **Confidence:** Calculated from voting distribution of neighbors
+- **Threshold:** Configurable confidence threshold for acceptance
 
-### Attendance Marking Logic
-```python
-def mark_attendance(name, class_id, teacher_id):
-    date = datetime.now().strftime("%d-%m-%Y")
-    if not already_marked_today(name, class_id, date):
-        time = datetime.now().strftime("%H:%M:%S")
-        insert_into_db(name, class_id, teacher_id, date, time, "Present")
-        append_to_csv(f"Attendance/Attendance_{date}.csv", [name, date, time, "Present"])
-```
+### Attendance Workflow
+1. Camera captures frame → Haar Cascade detects faces
+2. Face ROI extracted and encoded
+3. KNN classifier compares with `faces_data.pkl`
+4. If match confidence > threshold:
+   - Check for duplicates (same student, same day, same type/class)
+   - If unique: Save to `attendance_records` table + daily CSV
+   - If duplicate: Show "Already marked" message
+5. Update real-time dashboard statistics
 
-### Business Rules
-- Prevent duplicate attendance for the same student in the same day/class.
-- If a student is not recognized, they can be redirected to registration.
+### Duplicate Prevention Rules
+- **Gate Attendance:** 1 entry per student per day (admin portal)
+- **Class Attendance:** 1 entry per student per day per class (teacher portal)
+- Database-level duplicate checks before insertion
 
 ---
 
@@ -362,79 +396,99 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Typical `requirements.txt`:
+Core dependencies (from `requirements.txt`):
 ```
-Flask>=2.0
-opencv-python>=4.5
-numpy
-bcrypt
-python-dotenv
-gunicorn
+Flask==3.1.2
+opencv-python==4.12.0.88
+numpy==2.2.6
+scikit-learn==1.8.0
+cloudinary>=1.36.0
+Jinja2==3.1.6
+Werkzeug==3.1.4
 ```
 
 ### Step 4: Initialize Database
-```bash
-sqlite3 attendance.db < schema.sql
-```
-(Or run the app once; it may auto-create tables if configured.)
+The database will auto-create on first run. Tables are defined in `schema.sql`:
+- **10 tables:** teachers, admins, users, classes, admin_classes, class_students, teacher_class_assignments, attendance_records, email_verifications, password_resets
 
-### Step 5: Configure Environment Variables
-Create a `.env` file in the project root:
+### Step 5: Configure Credentials (⚠️ Important)
+Update the following in `app.py` (lines 50-70) or use environment variables:
+```python
+# Email Configuration (for OTP delivery)
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+SMTP_USERNAME = "your-email@gmail.com"
+SMTP_PASSWORD = "your-app-password"  # Use Gmail App Password
+
+# Cloudinary Configuration (for profile images)
+cloudinary.config(
+    cloud_name = "your-cloud-name",
+    api_key = "your-api-key",
+    api_secret = "your-api-secret"
+)
 ```
-FLASK_APP=app.py
-FLASK_ENV=development
-SECRET_KEY=your-strong-secret-key
-DATABASE_URL=sqlite:///attendance.db
-RECOGNITION_THRESHOLD=0.6
-CAMERA_INDEX=0
-```
+
+**⚠️ Security Best Practice:** Use environment variables instead of hardcoding!
 
 ### Step 6: Run Application
 ```bash
 python app.py
-# or
-flask run
 ```
+Application starts on `http://127.0.0.1:5000/`
 
-### Step 7: Access in Browser
-```
-http://127.0.0.1:5000/
-```
+### Step 7: Create Admin Account
+1. Navigate to `/admin/register`
+2. Complete registration with email verification (5-digit OTP)
+3. Log in to admin portal and start managing the system
 
 ---
 
 ## 🗂 Configuration & Data Files
 
-- **`data/faces_data.pkl`** – Pickled list/array of face encodings.
-- **`data/names.pkl`** – Pickled list of names corresponding to encodings.
-- **`data/face_recognizer.pkl`** – Optional trained recognizer (e.g., LBPH model) for faster matching.
-- **`data/settings.pkl`** – Dictionary with keys: `camera_index`, `recognition_threshold`, `sample_count`, `notifications`.
-- **`Attendance/Attendance_*.csv`** – Daily attendance files with format: `Student_ID,Name,Date,Time,Status`.
+- **`data/faces_data.pkl`** – NumPy array of face encodings (50+ samples per person)
+- **`data/names.pkl`** – List of names corresponding to encodings
+- **`Attendance/Attendance_DD-MM-YYYY.csv`** – Daily attendance exports
+- **`db.sqlite3` / `attendance.db`** – SQLite databases (10 tables)
+- **`haarcascade_frontalface_default.xml`** – OpenCV face detection model
+- **`.flask_secret`** – Session secret key (auto-generated)
 
-If these files are missing, the app will start with empty state (no registered faces) and default settings.
+📚 **For complete database schema and API documentation, see [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)**
 
 ---
 
-## 🌐 Routes & Pages (Typical)
+## 🌐 Key Routes & Pages
 
-| Route                 | Method | Description                          | Auth Required |
-|-----------------------|--------|--------------------------------------|---------------|
-| `/`                   | GET    | Landing page (index.html)            | No            |
-| `/login`              | GET/POST | User login                          | No            |
-| `/register`           | GET/POST | New user registration                | No            |
-| `/logout`             | GET    | Log out                              | Yes           |
-| `/capture`            | GET    | Face capture page                    | Yes           |
-| `/capture`            | POST   | Receive captured frames              | Yes           |
-| `/recognize`          | GET    | Face recognition page                | Yes           |
-| `/recognize`          | POST   | Receive frame and return recognition | Yes           |
-| `/attendance`         | GET    | Attendance dashboard                 | Yes (teacher/admin) |
-| `/export_attendance`  | GET    | Export attendance (CSV/Excel)        | Yes (teacher/admin) |
-| `/manage_users`       | GET/POST | User management (admin only)       | Yes (admin)   |
-| `/settings`           | GET/POST | System settings                    | Yes (admin)   |
-| `/teacher/dashboard`  | GET    | Teacher dashboard                    | Yes (teacher) |
-| `/teacher/classes`    | GET    | List classes                         | Yes (teacher) |
-| `/teacher/class/<id>` | GET    | Class details and attendance         | Yes (teacher) |
-| `/static/<path>`      | GET    | Serve static files                   | No            |
+### Authentication Routes
+- `/auth/login` – Teacher/staff PIN login (User ID + PIN)
+- `/auth/pin` – Alternative PIN login endpoint
+- `/admin/login` – Admin email + password login
+- `/admin/register` – Admin self-registration with email verification
+- `/auth/forgot-password` – Password reset (OTP-based)
+- `/auth/forgot-pin` – PIN reset (OTP-based)
+
+### Admin Portal (`/admin/*`)
+- `/admin/dashboard` – Dashboard with statistics and trends
+- `/admin/attendance` – View all attendance (defaults to today)
+- `/admin/profile` – Profile management with image upload
+- `/api/admin/users` – User management API
+- `/api/admin/classes` – Class management API
+- `/api/admin/create_teacher` – Create teacher accounts
+
+### Teacher Portal (`/teacher/*`)
+- `/teacher/dashboard` – Teacher dashboard with class stats
+- `/teacher/classes` – Manage classes
+- `/teacher/class/<id>` – Class details and student list
+- `/teacher/attendance` – View class attendance
+- `/teacher/profile` – Profile management
+
+### Face Recognition
+- `/capture` – Face registration (50+ samples)
+- `/recognize` – Real-time face recognition attendance
+- `/api/upload_capture` – Upload face samples
+- `/api/capture_frame` – Process recognition frames
+- `/api/save_attendance` – Save attendance records
+
+📚 **Complete API documentation (50+ endpoints) in [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)**
 
 ---
 
@@ -462,23 +516,35 @@ All non-GET endpoints require authentication (session cookie).
 
 ---
 
-## 🔒 Security Implementation
+## 🔒 Security Features
 
-- **Authentication**: Session-based with Flask. Passwords hashed using `bcrypt` (recommended) or SHA256.
-- **Authorization**: Role checks (`current_user.role`) on routes; templates conditionally show admin/teacher actions.
-- **Data Protection**:
-  - Face encodings stored as pickled files – consider encryption at rest in production.
-  - Database passwords and secret keys stored in environment variables.
-- **CSRF Protection**: Implement using Flask-WTF or custom token validation for forms.
-- **HTTPS**: Enforce in production via reverse proxy (Nginx).
-- **Input Validation**: Server-side validation for all form inputs.
-- **Logging**: Admin actions logged for audit (optional).
+### ✅ Implemented
+- **SHA256 Password Hashing** (upgrade to bcrypt recommended)
+- **Session-Based Authentication** with 30-day persistence
+- **OTP Email Verification** (5-digit codes, 10-minute expiry)
+- **Role-Based Access Control** via decorators (`@admin_login_required`, `@teacher_login_required`)
+- **SQL Injection Prevention** via parameterized queries
+- **CSRF Protection** (Flask default)
+- **Duplicate Attendance Prevention** (database-level checks)
 
-### Recommendations for Production
-- Replace SQLite with PostgreSQL.
-- Store face embeddings in encrypted form.
-- Use a secrets manager for environment variables.
-- Enable rate limiting on recognition endpoints.
+### ⚠️ Security Recommendations for Production
+1. **Move credentials to environment variables** (SMTP, Cloudinary)
+2. **Upgrade to bcrypt/argon2** for password hashing
+3. **Enable HTTPS/TLS** via reverse proxy
+4. **Add rate limiting** on login/OTP endpoints
+5. **Encrypt face data** at rest
+6. **Disable debug mode** (`app.debug = False`)
+7. **Implement input validation** for all forms
+8. **Add structured logging** for security events
+
+### 🔐 Data Protection & Privacy
+**⚠️ Important:** This system collects biometric data. Users deploying the system MUST:
+- Obtain explicit user consent for face data collection
+- Comply with GDPR, BIPA, CCPA, and local biometric privacy laws
+- Implement data retention and deletion policies
+- Provide clear privacy policies to all stakeholders
+
+See [LICENSE](LICENSE) for detailed data protection requirements.
 
 ---
 
@@ -538,46 +604,67 @@ docker run -p 5000:5000 attendance-system
 
 ---
 
-## 📈 Scalability Plan
+## � Project Statistics
 
-- **Horizontal Scaling**: Run multiple Gunicorn workers behind a load balancer.
-- **Database**: Migrate from SQLite to PostgreSQL for concurrent writes.
-- **Recognition Microservice**: Offload face encoding/matching to a dedicated service (GPU-enabled) using Celery or gRPC.
-- **Vector Database**: Store embeddings in FAISS or Milvus for fast similarity search.
-- **Caching**: Cache frequent recognitions with Redis.
-- **CDN**: Serve static assets via CDN.
+| Metric | Count |
+|--------|-------|
+| **Total Lines (app.py)** | ~6,000+ |
+| **Database Tables** | 10 |
+| **API Endpoints** | 50+ |
+| **HTML Templates** | 28 |
+| **Authentication Flows** | 4 (login, register, password reset, PIN reset) |
+| **User Roles** | 3 (Admin, Teacher, Student) |
+| **Face Samples per Person** | 50+ |
+
+## 📈 Scalability Recommendations
+
+- **Database Migration:** SQLite → PostgreSQL for concurrent writes
+- **Recognition Service:** Offload to GPU-enabled microservice (Celery/gRPC)
+- **Vector Database:** FAISS or Milvus for fast similarity search
+- **Horizontal Scaling:** Multiple Gunicorn workers + load balancer
+- **Caching Layer:** Redis for frequent recognitions
+- **CDN:** Cloudinary CDN for static asset delivery
 
 ---
 
 ## 🔮 Future Enhancements
 
-- **Deep Learning Models**: Replace Haar cascade with MTCNN or YOLO for face detection; use FaceNet/ArcFace for robust embeddings.
-- **Anti-Spoofing**: Liveness detection to prevent photo/video attacks.
-- **Mobile App**: Native Android/iOS app with on-device recognition.
-- **Integration**: Connect with school MIS, HR systems via REST API.
-- **Multi-Face Handling**: Recognize multiple faces in a single frame.
-- **Emotion/Engagement Analysis**: Additional analytics for classrooms.
-- **GDPR Compliance**: Data retention policies, consent management, encryption at rest.
+- **Deep Learning Models:** FaceNet/ArcFace embeddings, MTCNN/YOLO detection
+- **Anti-Spoofing:** Liveness detection to prevent photo/video attacks
+- **Mobile App:** React Native or Flutter app with on-device recognition
+- **API Documentation:** Swagger/OpenAPI documentation
+- **Testing Suite:** pytest unit and integration tests
+- **Multi-Face Recognition:** Process multiple faces simultaneously
+- **Modular Architecture:** Refactor into Flask blueprints
+- **Background Jobs:** Celery for email sending and model training
+- **Multi-Tenancy:** Support for multiple institutions
+- **Advanced Analytics:** Attendance trends visualization, engagement metrics
 
 ---
 
-## 📜 Limitations
+## ⚠️ Known Limitations
 
-- **Lighting Conditions**: Accuracy decreases in poor lighting.
-- **Camera Quality**: Low-resolution cameras may affect detection.
-- **Hardware Dependency**: Performance relies on CPU/GPU.
-- **Privacy Concerns**: Biometric data requires careful handling.
-- **Single-Face Focus**: Currently optimized for one face per frame.
+- **Monolithic Architecture:** All code in single `app.py` file (~6,000 lines)
+- **Lighting Sensitivity:** Recognition accuracy affected by poor lighting
+- **Camera Dependency:** Requires good quality webcam
+- **Windows-Only:** `pywin32` dependency limits cross-platform support
+- **No Automated Tests:** Manual testing only
+- **Hardcoded Credentials:** SMTP/Cloudinary credentials in code (should use env vars)
+- **SQLite Scalability:** Consider PostgreSQL for high-concurrency deployments
+
+📚 **See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for detailed limitations and improvement roadmap**
 
 ---
 
-## 📌 Applications
+## 📌 Use Cases
 
-- **Educational Institutions**: Student attendance in classrooms.
-- **Corporate Offices**: Employee check-in/out.
-- **Events**: Entry management and attendee tracking.
-- **Healthcare**: Staff attendance logging in hospitals.
-- **Security**: Access control in restricted areas.
+- **Schools & Colleges:** Automated classroom attendance + gate entry tracking
+- **Corporate Offices:** Employee time tracking and access control
+- **Training Centers:** Workshop and seminar attendance
+- **Events:** Conference entry management and attendee tracking
+- **Healthcare:** Hospital staff attendance and shift logging
+- **Government:** Public facility access control
+- **Coaching Institutes:** Student attendance across multiple batches
 
 ---
 
@@ -592,7 +679,16 @@ docker run -p 5000:5000 attendance-system
 
 ## 📄 License
 
-This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for details.
+This project is licensed under a **Custom Proprietary License** – see the [LICENSE](LICENSE) file for full terms.
+
+**Copyright © 2025-2026 Manish Sharma. All Rights Reserved.**
+
+### License Summary
+✅ **Permitted:** Personal use, academic use, educational study (with attribution)  
+❌ **Prohibited:** Commercial use, public distribution, unauthorized modifications  
+📧 **Commercial licensing available:** Contact mpandat0052@gmail.com
+
+**Attribution Required:** All uses must include visible attribution to the author.
 
 ---
 
@@ -628,27 +724,39 @@ Contributions are welcome! Please follow these steps:
 
 ## 📎 Appendix
 
-### Recommended Environment Variables
-```
-FLASK_APP=app.py
-FLASK_ENV=production
-SECRET_KEY=<long-random-string>
-DATABASE_URL=sqlite:///attendance.db   # or postgresql://user:pass@host/db
-RECOGNITION_THRESHOLD=0.6
-CAMERA_INDEX=0
-SMTP_HOST=smtp.example.com   # for email notifications (optional)
-SMTP_PORT=587
-SMTP_USER=user@example.com
-SMTP_PASSWORD=strongpassword
+### Required Configuration
+```python
+# Email Configuration (in app.py or .env)
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+SMTP_USERNAME = "your-email@gmail.com"
+SMTP_PASSWORD = "your-gmail-app-password"
+
+# Cloudinary Configuration
+CLOUDINARY_CLOUD_NAME = "your-cloud-name"
+CLOUDINARY_API_KEY = "your-api-key"
+CLOUDINARY_API_SECRET = "your-api-secret"
+
+# Flask Configuration
+SECRET_KEY = "your-secure-random-key"  # Auto-generated in .flask_secret
 ```
 
 ### Quick Operational Checklist
-- [ ] Ensure `Attendance/` and `data/` directories are writable.
-- [ ] Verify `haarcascade_frontalface_default.xml` exists and is readable.
-- [ ] Confirm `requirements.txt` is up-to-date.
-- [ ] Set strong `SECRET_KEY` in production.
-- [ ] Enable HTTPS in production.
-- [ ] Backup `data/*.pkl` and database regularly.
+- [ ] Configure SMTP credentials for email (OTP, notifications)
+- [ ] Configure Cloudinary credentials for profile images
+- [ ] Verify `haarcascade_frontalface_default.xml` exists
+- [ ] Ensure `Attendance/` and `data/` directories exist and are writable
+- [ ] Install all dependencies from `requirements.txt`
+- [ ] Create admin account via `/admin/register`
+- [ ] Test webcam access on `/capture` and `/recognize` pages
+- [ ] Backup `data/faces_data.pkl`, `data/names.pkl`, and database daily
+
+## 📚 Documentation
+
+- **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** – Complete technical documentation (database schemas, all 50+ API endpoints, feature breakdown, security recommendations)
+- **[LICENSE](LICENSE)** – Custom license terms and data protection requirements
+- **[schema.sql](schema.sql)** – Database schema reference
+- **[requirements.txt](requirements.txt)** – Python dependencies
 
 ---
 
